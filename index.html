@@ -529,7 +529,7 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
     </div>
     <div class="reg-field">
       <label>Номер телефона</label>
-      <input type="tel" id="reg-phone" placeholder="+996 700 000 000" />
+      <input type="tel" id="reg-phone" placeholder="+996 700 000 000" value="+996 " onfocus="srbPhoneFocus(this)" />
     </div>
 
     <button class="reg-btn" id="reg-btn" onclick="registerClient()">Получить код →</button>
@@ -899,6 +899,19 @@ function calculate() {
 /* Enter для регистрации */
 document.getElementById('reg-phone').addEventListener('keydown', e => {
   if (e.key === 'Enter') registerClient();
+});
+
+/* Защита префикса +996 */
+function srbPhoneFocus(el) {
+  if (!el.value.startsWith('+996')) el.value = '+996 ';
+}
+document.getElementById('reg-phone').addEventListener('keydown', function(e) {
+  // Не дать удалить +996
+  const val = this.value;
+  const pos = this.selectionStart;
+  if ((e.key === 'Backspace' || e.key === 'Delete') && pos <= 5 && val.startsWith('+996')) {
+    e.preventDefault();
+  }
 });
 </script>
 
