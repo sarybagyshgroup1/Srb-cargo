@@ -325,9 +325,9 @@ async function gsSave(sheet,rows){
     setTimeout(async()=>{
       const fresh=await gsGet(sheet);
       if(fresh!==null){
-        if(sheet==='Доставки') shipments=rowsToObj(fresh).map(s=>({...s,kg:parseFloat(s.kg)||0,sum:parseFloat(s.sum)||0}));
-        if(sheet==='Финансы') transactions=rowsToObj(fresh).map(t=>({...t,amount:parseFloat(t.amount)||0}));
-        if(sheet==='Цели') goals=rowsToObj(fresh).map(g=>({...g,target:parseFloat(g.target)||0}));
+        if(sheet==='Shipments') shipments=rowsToObj(fresh).map(s=>({...s,kg:parseFloat(s.kg)||0,sum:parseFloat(s.sum)||0}));
+        if(sheet==='Transactions') transactions=rowsToObj(fresh).map(t=>({...t,amount:parseFloat(t.amount)||0}));
+        if(sheet==='Goals') goals=rowsToObj(fresh).map(g=>({...g,target:parseFloat(g.target)||0}));
         setSS('ok','Синхронизировано');renderAll();
       }
     },2000);
@@ -635,7 +635,7 @@ function renderAll(){renderCargo();renderFinance();renderGoals();}
 setInterval(async()=>{
   if(!currentUser)return;
   try{
-    const[sr,tr,gr]=await Promise.all([gsGet('Доставки'),gsGet('Финансы'),gsGet('Цели')]);
+    const[sr,tr,gr]=await Promise.all([gsGet('Shipments'),gsGet('Transactions'),gsGet('Goals')]);
     if(sr!==null){
       shipments=rowsToObj(sr).map(s=>({...s,kg:parseFloat(s.kg)||0,sum:parseFloat(s.sum)||0}));
       transactions=rowsToObj(tr).map(t=>({...t,amount:parseFloat(t.amount)||0}));
