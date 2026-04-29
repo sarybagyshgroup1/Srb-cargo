@@ -782,6 +782,7 @@ async function registerClient() {
   const code     = getNextCode();
   const fullCode = 'SRB' + code;
   const date     = new Date().toLocaleString('ru-RU');
+  const phoneClear = phone.replace(/\s+/g, ''); // убираем все пробелы из номера
 
   // Отправка в Google Sheets
   try {
@@ -789,7 +790,7 @@ async function registerClient() {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, phone, code: fullCode, date })
+      body: JSON.stringify({ name, phone: phoneClear, code: fullCode, date })
     });
   } catch(e) {
     console.warn('GS error:', e);
