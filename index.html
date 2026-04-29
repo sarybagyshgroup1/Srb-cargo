@@ -261,6 +261,19 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
   padding:14px 16px;
   margin-bottom:8px;
 }
+.address-pre{
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  color:rgba(255,255,255,0.85);
+  line-height:1.7;
+  white-space:pre-wrap;
+  word-break:break-all;
+  background:transparent;
+  border:none;
+  margin:0;
+  padding:0;
+  user-select:all;
+}
 .address-city{
   font-family:'Unbounded',sans-serif;
   font-size:11px;font-weight:600;
@@ -482,6 +495,43 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
 }
 .r-hint{font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px;line-height:1.5;}
 
+.gabrit-note{
+  background:#1a2a1f;
+  border:1px solid rgba(26,170,110,0.25);
+  border-radius:var(--radius);
+  padding:1.25rem 1.5rem;
+  font-size:14px;
+  color:rgba(255,255,255,0.8);
+  line-height:1.6;
+  margin-top:0.5rem;
+  text-align:center;
+}
+
+.wa-buttons{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  max-width:400px;
+  margin:0 auto 2rem;
+}
+.wa-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:14px 20px;
+  background:#25D366;
+  color:#fff;
+  border-radius:var(--radius-sm);
+  font-family:'Unbounded',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  text-decoration:none;
+  transition:background 0.2s,transform 0.15s;
+  letter-spacing:0.02em;
+}
+.wa-btn:hover{background:#1ebe5a;transform:scale(1.02);}
+
 /* Footer */
 .site-footer{
   background:var(--black);
@@ -562,23 +612,20 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
 
     <div class="address-block">
       <div class="address-city">Фошань</div>
-      <div class="address-srb" id="addr-foshan-code">SRB051</div>
-      <div class="address-text">广东省佛山市南海区里水镇大石社区石紫岗工业区石一石二工业路27号321国际仓</div>
-      <div class="address-phone">📞 13763369694</div>
+      <pre class="address-pre" id="addr-foshan-full">SRB051 广东省佛山市南海区里水镇大石社区石紫岗工业区石一石二工业路27号321国际仓 13763369694
+SRB051 Город Фошань</pre>
     </div>
 
     <div class="address-block">
       <div class="address-city">Иу</div>
-      <div class="address-srb" id="addr-yiwu-code">SRB051</div>
-      <div class="address-text">义乌市福田街道荷叶塘工业功能区物华路60号院里321库房</div>
-      <div class="address-phone">📞 马经理：17699862999</div>
+      <pre class="address-pre" id="addr-yiwu-full">SRB051 义乌市福田街道荷叶塘工业功能区物华路60号院里321库房 马经理联系电话:17699862999
+SRB051 Город Иу</pre>
     </div>
 
     <div class="address-block">
       <div class="address-city">Урумчи</div>
-      <div class="address-srb" id="addr-urumqi-code">SRB051</div>
-      <div class="address-text">乌鲁木齐市沙依巴克区兵团物流园北区玉树环宇B区23-27号9999库房</div>
-      <div class="address-phone">📞 马成：17509082999</div>
+      <pre class="address-pre" id="addr-urumqi-full">SRB051 乌鲁木齐市沙依巴克区兵团 物流园北区玉树环宇B区23-27号9999库房 马成 17509082999
+SRB051 Город Урумчи</pre>
     </div>
 
     <button class="popup-copy-btn" onclick="copyAddresses()">Скопировать все адреса</button>
@@ -672,11 +719,28 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
       <p class="r-hint" id="r-hint"></p>
     </div>
 
+    <div class="gabrit-note">
+      📦 Большой груз? Чем больше объём — тем выгоднее цена. Напишите нам для индивидуального расчёта.
+    </div>
+
   </div>
 </section>
 
 <!-- FOOTER -->
 <footer class="site-footer">
+  <div class="footer-logo">SRB<span>.</span></div>
+
+  <div class="wa-buttons">
+    <a class="wa-btn" href="https://wa.me/996708888313" target="_blank">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.117 1.528 5.845L0 24l6.335-1.508A11.956 11.956 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.877 9.877 0 01-5.031-1.378l-.361-.214-3.741.981.999-3.648-.235-.374A9.859 9.859 0 012.106 12C2.106 6.58 6.58 2.106 12 2.106c5.421 0 9.894 4.474 9.894 9.894 0 5.421-4.473 9.894-9.894 9.894z"/></svg>
+      +996 708 888 313
+    </a>
+    <a class="wa-btn" href="https://wa.me/996550021168" target="_blank">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.117 1.528 5.845L0 24l6.335-1.508A11.956 11.956 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.877 9.877 0 01-5.031-1.378l-.361-.214-3.741.981.999-3.648-.235-.374A9.859 9.859 0 012.106 12C2.106 6.58 6.58 2.106 12 2.106c5.421 0 9.894 4.474 9.894 9.894 0 5.421-4.473 9.894-9.894 9.894z"/></svg>
+      +996 550 021 168
+    </a>
+  </div>
+
   <div class="footer-logo">SRB<span>.</span></div>
   <div class="footer-text">
     Для вопросов по товару, упаковке и страховке груза:<br>
@@ -741,9 +805,19 @@ async function registerClient() {
 function showPopup(name, fullCode) {
   document.getElementById('popup-client-name').textContent = name + ', добро пожаловать!';
   document.getElementById('popup-code').textContent = fullCode;
-  document.getElementById('addr-foshan-code').textContent = fullCode;
-  document.getElementById('addr-yiwu-code').textContent = fullCode;
-  document.getElementById('addr-urumqi-code').textContent = fullCode;
+
+  document.getElementById('addr-foshan-full').textContent =
+    fullCode + ' 广东省佛山市南海区里水镇大石社区石紫岗工业区石一石二工业路27号321国际仓 13763369694\n' +
+    fullCode + ' Город Фошань';
+
+  document.getElementById('addr-yiwu-full').textContent =
+    fullCode + ' 义乌市福田街道荷叶塘工业功能区物华路60号院里321库房 马经理联系电话:17699862999\n' +
+    fullCode + ' Город Иу';
+
+  document.getElementById('addr-urumqi-full').textContent =
+    fullCode + ' 乌鲁木齐市沙依巴克区兵团 物流园北区玉树环宇B区23-27号9999库房 马成 17509082999\n' +
+    fullCode + ' Город Урумчи';
+
   document.getElementById('popup-overlay').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -760,21 +834,16 @@ function closePopupOutside(e) {
 function copyAddresses() {
   const code = document.getElementById('popup-code').textContent;
   const text =
-`${code} — Фошань
-广东省佛山市南海区里水镇大石社区石紫岗工业区石一石二工业路27号321国际仓
-📞 13763369694
-
-${code} — Иу
-义乌市福田街道荷叶塘工业功能区物华路60号院里321库房
-📞 马经理：17699862999
-
-${code} — Урумчи
-乌鲁木齐市沙依巴克区兵团物流园北区玉树环宇B区23-27号9999库房
-📞 马成：17509082999`;
+code + ' 广东省佛山市南海区里水镇大石社区石紫岗工业区石一石二工业路27号321国际仓 13763369694\n' +
+code + ' Город Фошань\n\n' +
+code + ' 义乌市福田街道荷叶塘工业功能区物华路60号院里321库房 马经理联系电话:17699862999\n' +
+code + ' Город Иу\n\n' +
+code + ' 乌鲁木齐市沙依巴克区兵团 物流园北区玉树环宇B区23-27号9999库房 马成 17509082999\n' +
+code + ' Город Урумчи';
 
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.querySelector('.popup-copy-btn');
-    btn.textContent = '✓ Скопировано!';
+    btn.textContent = 'Скопировано!';
     setTimeout(() => { btn.textContent = 'Скопировать все адреса'; }, 2000);
   });
 }
