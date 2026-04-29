@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ru">
 <head>
 <meta charset="UTF-8"/>
@@ -144,6 +145,7 @@ th.sortable:hover{color:var(--bk);}
   </div>
 
   <!-- CARGO -->
+
   <div class="content active" id="tab-cargo">
     <div class="stats-row" id="cargo-stats"></div>
     <div class="stale-alert" id="stale-alert">⚠️ Есть отправки без смены статуса более 14 дней. Проверьте список.</div>
@@ -226,6 +228,7 @@ th.sortable:hover{color:var(--bk);}
   </div>
 
   <!-- FINANCE -->
+
   <div class="content" id="tab-finance">
     <div class="stats-row" id="fin-stats"></div>
     <div class="grid2" style="margin-bottom:1rem;">
@@ -248,6 +251,7 @@ th.sortable:hover{color:var(--bk);}
   </div>
 
   <!-- GOALS -->
+
   <div class="content" id="tab-goals">
     <div class="card">
       <div class="card-title">Добавить цель</div>
@@ -265,7 +269,7 @@ th.sortable:hover{color:var(--bk);}
 </div>
 
 <script>
-const GS='https://script.google.com/macros/s/AKfycbzcigzZtzVAHOieSxDljAKpQ0YFqUEDi6oz8rbkdg1-lOdOFRAuGsdbbeud6TtFnTFWkg/exec';
+const GS='https://script.google.com/macros/s/AKfycbzv7ODJgB00fW_sRTkq10bciyOSb41GdvgkEYklC1UjPoUg53_S1nqdRqj-80UuO4PXOQ/exec';
 const PWD='srb2024';
 const MONTHS=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const ST={
@@ -315,8 +319,20 @@ async function gsGet(sheet){
   catch(e){return null;}
 }
 async function gsSave(sheet,rows){
-  try{await fetch(GS,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save',sheet,rows})});setSS('ok','Сохранено');return true;}
-  catch(e){setSS('err','Ошибка');return false;}
+  try{
+    await fetch(GS,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save',sheet,rows})});
+    setSS('ok','Сохранено');
+    setTimeout(async()=>{
+      const fresh=await gsGet(sheet);
+      if(fresh!==null){
+        if(sheet==='Доставки') shipments=rowsToObj(fresh).map(s=>({...s,kg:parseFloat(s.kg)||0,sum:parseFloat(s.sum)||0}));
+        if(sheet==='Финансы') transactions=rowsToObj(fresh).map(t=>({...t,amount:parseFloat(t.amount)||0}));
+        if(sheet==='Цели') goals=rowsToObj(fresh).map(g=>({...g,target:parseFloat(g.target)||0}));
+        setSS('ok','Синхронизировано');renderAll();
+      }
+    },2000);
+    return true;
+  }catch(e){setSS('err','Ошибка');return false;}
 }
 function rowsToObj(rows){
   if(!rows||rows.length<2)return[];
@@ -328,7 +344,7 @@ function toRows(headers,arr){return [headers,...arr.map(x=>headers.map(k=>x[k]??
 async function loadAll(){
   showLoading(true);setSS('loading','Загрузка...');
   try{
-    const[sr,tr,gr]=await Promise.all([gsGet('Доставки'),gsGet('Финансы'),gsGet('Цели')]);
+    const[sr,tr,gr]=await Promise.all([gsGet('Shipments'),gsGet('Transactions'),gsGet('Goals')]);
     if(sr===null){setSS('err','Нет соединения');showLoading(false);return;}
     shipments=rowsToObj(sr).map(s=>({...s,kg:parseFloat(s.kg)||0,sum:parseFloat(s.sum)||0}));
     transactions=rowsToObj(tr).map(t=>({...t,amount:parseFloat(t.amount)||0}));
@@ -360,8 +376,8 @@ async function addShipment(){
   const gm=document.getElementById('sh-gmonth').value;
   if(!code||!kg||!date){alert('Заполните код, вес и дату');return;}
   shipments.push({id:uid(),code,kg,city,cat,status,date,track,sum,note,goalMonth:gm,addedBy:currentUser});
-  await gsSave('Доставки',toRows(SH_H,shipments));
-  if(sum>0){transactions.push({id:uid(),type:'income',amount:sum,cat:'Оплата клиента',date,desc:code,addedBy:currentUser});await gsSave('Финансы',toRows(TR_H,transactions));}
+  await gsSave('Shipments',toRows(SH_H,shipments));
+  if(sum>0){transactions.push({id:uid(),type:'income',amount:sum,cat:'Оплата клиента',date,desc:code,addedBy:currentUser});await gsSave('Transactions',toRows(TR_H,transactions));}
   ['sh-code','sh-kg','sh-track','sh-sum','sh-note'].forEach(i=>document.getElementById(i).value='');
   renderAll();
 }
@@ -369,16 +385,15 @@ async function addShipment(){
 async function nextStatus(id){
   const s=shipments.find(x=>x.id==id);if(!s||!ST[s.status]?.next)return;
   s.status=ST[s.status].next;
-  await gsSave('Доставки',toRows(SH_H,shipments));renderAll();
+  await gsSave('Shipments',toRows(SH_H,shipments));renderAll();
 }
 
-async function archiveShipment(id){const s=shipments.find(x=>x.id==id);if(!s)return;if(!confirm("Отправить в архив? Можно будет восстановить."))return;s.archived="1";s.archivedAt=new Date().toISOString().split("T")[0];s.archivedBy=currentUser;await gsSave("Доставки",toRows(SH_H,shipments));renderAll();}
-async function restoreShipment(id){const s=shipments.find(x=>x.id==id);if(!s)return;s.archived="";s.archivedAt="";s.archivedBy="";await gsSave("Доставки",toRows(SH_H,shipments));renderAll();}
-async function hardDelete(id){if(!confirm("Удалить навсегда? Это действие нельзя отменить."))return;shipments=shipments.filter(s=>s.id!=id);await gsSave("Доставки",toRows(SH_H,shipments));renderAll();}
+async function archiveShipment(id){const s=shipments.find(x=>x.id==id);if(!s)return;if(!confirm("Отправить в архив? Можно будет восстановить."))return;s.archived="1";s.archivedAt=new Date().toISOString().split("T")[0];s.archivedBy=currentUser;await gsSave("Shipments",toRows(SH_H,shipments));renderAll();}
+async function restoreShipment(id){const s=shipments.find(x=>x.id==id);if(!s)return;s.archived="";s.archivedAt="";s.archivedBy="";await gsSave("Shipments",toRows(SH_H,shipments));renderAll();}
 async function deleteShipment(id){
   if(!confirm('Удалить?'))return;
   shipments=shipments.filter(s=>s.id!=id);
-  await gsSave('Доставки',toRows(SH_H,shipments));renderAll();
+  await gsSave('Shipments',toRows(SH_H,shipments));renderAll();
 }
 
 function toggleArchive(){
@@ -461,10 +476,7 @@ function renderShipmentsTable(){
         <td style="font-size:12px;${dc}">${d}д</td>
         <td style="font-size:11px;color:#aaa;">${s.goalMonth||'—'}</td>
         <td style="font-size:11px;color:#aaa;">${s.addedBy||''}</td>
-        <td style="white-space:nowrap;">${showArchive
-  ?`<button class="next-btn" style="border-color:#1aaa6e;color:#0d8a58;margin-right:4px;" onclick="restoreShipment('${s.id}')">↩ Восстановить</button><button class="del-btn" style="color:#e24b4a;font-size:12px;" onclick="hardDelete('${s.id}')">🗑 Удалить</button>`
-  :`<button class="del-btn" onclick="archiveShipment('${s.id}')">📦 Архив</button>`
-}</td>
+        <td>${showArchive?`<button class="next-btn" style="border-color:#1aaa6e;color:#0d8a58;" onclick="restoreShipment('${s.id}')">↩ Восстановить</button>`:`<button class="del-btn" onclick="archiveShipment('${s.id}')">📦 Архив</button>`}</td>
       </tr>`;
     }).join('');
   }
@@ -491,7 +503,7 @@ async function addTransaction(){
   const desc=document.getElementById('tr-desc').value.trim();
   if(!amount||!date){alert('Заполните сумму и дату');return;}
   transactions.push({id:uid(),type,amount,cat,date,desc,addedBy:currentUser});
-  await gsSave('Финансы',toRows(TR_H,transactions));
+  await gsSave('Transactions',toRows(TR_H,transactions));
   document.getElementById('tr-amount').value='';document.getElementById('tr-desc').value='';
   renderFinance();
 }
@@ -499,7 +511,7 @@ async function addTransaction(){
 async function deleteTransaction(id){
   if(!confirm('Удалить?'))return;
   transactions=transactions.filter(t=>t.id!=id);
-  await gsSave('Финансы',toRows(TR_H,transactions));renderFinance();
+  await gsSave('Transactions',toRows(TR_H,transactions));renderFinance();
 }
 
 function renderFinance(){
@@ -561,12 +573,12 @@ async function addGoal(){
   const unit=type==='manual'?document.getElementById('gl-unit').value:'';
   if(!name||!target){alert('Заполните название и цель');return;}
   goals.push({id:uid(),name,month,type,target,unit,addedBy:currentUser});
-  await gsSave('Цели',toRows(GL_H,goals));
+  await gsSave('Goals',toRows(GL_H,goals));
   document.getElementById('gl-name').value='';document.getElementById('gl-target').value='';
   renderGoals();
 }
 
-async function deleteGoal(id){if(!confirm('Удалить?'))return;goals=goals.filter(g=>g.id!=id);await gsSave('Цели',toRows(GL_H,goals));renderGoals();}
+async function deleteGoal(id){if(!confirm('Удалить?'))return;goals=goals.filter(g=>g.id!=id);await gsSave('Goals',toRows(GL_H,goals));renderGoals();}
 
 function getGoalCurrent(g){
   if(g.type==='kg')return shipments.filter(s=>s.status==='bishkek'&&(!g.month||s.goalMonth===g.month)).reduce((s,x)=>s+(parseFloat(x.kg)||0),0);
@@ -618,6 +630,21 @@ function renderGoals(){
 }
 
 function renderAll(){renderCargo();renderFinance();renderGoals();}
+
+// Автообновление каждые 30 сек
+setInterval(async()=>{
+  if(!currentUser)return;
+  try{
+    const[sr,tr,gr]=await Promise.all([gsGet('Доставки'),gsGet('Финансы'),gsGet('Цели')]);
+    if(sr!==null){
+      shipments=rowsToObj(sr).map(s=>({...s,kg:parseFloat(s.kg)||0,sum:parseFloat(s.sum)||0}));
+      transactions=rowsToObj(tr).map(t=>({...t,amount:parseFloat(t.amount)||0}));
+      goals=rowsToObj(gr).map(g=>({...g,target:parseFloat(g.target)||0}));
+      setSS('ok','Синхронизировано');renderAll();
+    }
+  }catch(e){}
+},30000);
 </script>
+
 </body>
 </html>
