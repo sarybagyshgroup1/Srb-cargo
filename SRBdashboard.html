@@ -282,10 +282,25 @@ let shipments=[],transactions=[],goals=[];
 let cityFilter='all',statusFilter='all',sortField='date',sortDir=-1,showArchive=false;
 let currentUser='';
 
+// Безопасный парсинг дат (Safari fix)
+function safeDate(d){
+  if(!d) return '—';
+  const s = String(d).replace(/-/g,'/');
+  const dt = new Date(s);
+  if(isNaN(dt)) return String(d);
+  return dt.toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
+}
+function safeDaysDiff(d){
+  if(!d) return 0;
+  const s = String(d).replace(/-/g,'/');
+  const dt = new Date(s);
+  if(isNaN(dt)) return 0;
+  return Math.floor((Date.now()-dt)/(864e5));
+}
 function uid(){return Date.now()+'_'+Math.random().toString(36).slice(2,6);}
 function fmt$(n){return '$'+(n||0).toLocaleString('en',{minimumFractionDigits:0});}
 function fmtKg(n){return (n||0).toLocaleString('ru')+' кг';}
-function daysDiff(d){return Math.floor((Date.now()-new Date(d))/(864e5));}
+
 function showLoading(v){document.getElementById('loading').style.display=v?'flex':'none';}
 function setSS(s,t){const d=document.getElementById('sync-dot');const tx=document.getElementById('sync-txt');if(d){d.className='sync-dot '+s;tx.textContent=t;}}
 
@@ -311,24 +326,38 @@ window.addEventListener('load',()=>{
 
 // GS
 async function gsGet(sheet){
-  try{const r=await fetch(GS+'?sheet='+encodeURIComponent(sheet));return (await r.json()).rows||[];}
-  catch(e){return null;}
+  for(let attempt=1; attempt<=3; attempt++){
+    try{
+      const r=await fetch(GS+'?sheet='+encodeURIComponent(sheet)+'&t='+Date.now());
+      const data=await r.json();
+      return data.rows||[];
+    }catch(e){
+      if(attempt===3) return null;
+      await new Promise(r=>setTimeout(r,800));
+    }
+  }
 }
 async function gsSave(sheet,rows){
-  try{
-    await fetch(GS,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save',sheet,rows})});
-    setSS('ok','Сохранено');
-    setTimeout(async()=>{
-      const fresh=await gsGet(sheet);
-      if(fresh!==null){
-        if(sheet==='Shipments') shipments=rowsToObj(fresh).map(s=>({...s,kg:parseFloat(s.kg)||0,sum:parseFloat(s.sum)||0}));
-        if(sheet==='Transactions') transactions=rowsToObj(fresh).map(t=>({...t,amount:parseFloat(t.amount)||0}));
-        if(sheet==='Goals') goals=rowsToObj(fresh).map(g=>({...g,target:parseFloat(g.target)||0}));
-        setSS('ok','Синхронизировано');renderAll();
-      }
-    },2000);
-    return true;
-  }catch(e){setSS('err','Ошибка');return false;}
+  for(let attempt=1; attempt<=3; attempt++){
+    try{
+      await fetch(GS,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save',sheet,rows})});
+      setSS('ok','Сохранено ✓');
+      // Перезагрузить через 2 сек для подтверждения
+      setTimeout(async()=>{
+        const fresh=await gsGet(sheet);
+        if(fresh!==null){
+          if(sheet==='Shipments') shipments=rowsToObj(fresh).map(s=>({...s,kg:parseFloat(s.kg)||0,sum:parseFloat(s.sum)||0}));
+          if(sheet==='Transactions') transactions=rowsToObj(fresh).map(t=>({...t,amount:parseFloat(t.amount)||0}));
+          if(sheet==='Goals') goals=rowsToObj(fresh).map(g=>({...g,target:parseFloat(g.target)||0}));
+          setSS('ok','Синхронизировано ✓');renderAll();
+        }
+      },2500);
+      return true;
+    }catch(e){
+      if(attempt===3){setSS('err','Ошибка сети — попробуйте снова');return false;}
+      await new Promise(r=>setTimeout(r,1000)); // подождать 1 сек перед retry
+    }
+  }
 }
 function rowsToObj(rows){
   if(!rows||rows.length<2)return[];
@@ -417,7 +446,7 @@ function renderCargo(){
     <div class="stat"><div class="stat-label">Склад Китай</div><div class="stat-val o">${fmtKg(byS('china'))}</div><div class="stat-sub">собираем</div></div>
     <div class="stat"><div class="stat-label">В пути</div><div class="stat-val b">${fmtKg(byS('transit'))}</div><div class="stat-sub">едут</div></div>
   `;
-  const stale=shipments.filter(s=>s.status!=='bishkek'&&daysDiff(s.date)>14);
+  const stale=shipments.filter(s=>s.status!=='bishkek'&&safeDaysDiff(s.date)>14);
   document.getElementById('stale-alert').className='stale-alert'+(stale.length?' show':'');
 
   const cities=['Фошань','Иу','Урумчи'],colors=['#1aaa6e','#3b82f6','#f5a623'];
@@ -461,14 +490,14 @@ function renderShipmentsTable(){
   else{
     tbody.innerHTML=list.map(s=>{
       const st=ST[s.status]||ST.supplier;
-      const d=daysDiff(s.date);
+      const d=safeDaysDiff(s.date);
       const dc=d>14&&s.status!=='bishkek'?'color:#e24b4a;font-weight:600':'color:#aaa';
       return `<tr>
-        <td style="white-space:nowrap;">${new Date(s.date).toLocaleDateString('ru-RU',{day:'numeric',month:'short'})}</td>
+        <td style="white-space:nowrap;">${safeDate(s.date)}</td>
         <td><strong>${s.code||''}</strong></td>
         <td style="font-size:11px;color:#aaa;">${s.track||'—'}</td>
         <td>${s.city||''}</td>
-        <td style="font-size:11px;color:#6b7280;">${CAT[s.cat]||'Кат.'+s.cat}</td>
+        <td style="font-size:11px;color:#6b7280;">${CAT[String(s.cat)]||'Кат.'+s.cat}</td>
         <td><strong>${s.kg} кг</strong></td>
         <td style="color:${s.sum>0?'#1aaa6e':'#aaa'};">${s.sum>0?fmt$(s.sum):'—'}</td>
         <td><span class="sb ${st.cls}">${st.l}</span></td>
@@ -545,7 +574,7 @@ function renderFinance(){
     const d=byM[m];const p=d.inc-d.exp;const[yr,mo]=m.split('-');
     const mn=MONTHS[parseInt(mo)-1]+' '+yr;
     const rows=d.items.sort((a,b)=>String(b.date).localeCompare(String(a.date))).map(t=>`<tr>
-      <td>${new Date(t.date).toLocaleDateString('ru-RU',{day:'numeric',month:'short'})}</td>
+      <td>${safeDate(t.date)}</td>
       <td><span class="sb ${t.type==='income'?'sb-bk':'sb-cn'}">${t.type==='income'?'Доход':'Расход'}</span></td>
       <td style="font-size:12px;color:#6b7280;">${t.cat||''}</td>
       <td>${t.desc||'—'}</td>
