@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SRB Cargo — Доставка из Китая</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+
+:root{
+  --green:#1aaa6e;
+  --green-dark:#0d8a58;
+  --green-light:#e6f9f1;
+  --black:#0f1210;
+  --white:#ffffff;
+  --gray:#f4f5f3;
+  --muted:#6b7280;
+  --border:#e4e7e2;
+  --red:#e24b4a;
+  --radius:16px;
+  --radius-sm:10px;
+}
+
+body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);overflow-x:hidden;}
+
+/* ═══════════════════════════════════════
+   HERO BLOCK
+═══════════════════════════════════════ */
+.hero{
+  min-height:100vh;
+  background:var(--black);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:3rem 1.5rem;
+  position:relative;
+  overflow:hidden;
+}
+
+.hero::before{
+  content:'';
+  position:absolute;
+  width:600px;height:600px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(26,170,110,0.18) 0%,transparent 70%);
+  top:-100px;left:-100px;
+  pointer-events:none;
+}
+.hero::after{
+  content:'';
+  position:absolute;
+  width:400px;height:400px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(26,170,110,0.12) 0%,transparent 70%);
+  bottom:-80px;right:-80px;
+  pointer-events:none;
+}
+
+.hero-badge{
+  font-family:'Unbounded',sans-serif;
+  font-size:11px;font-weight:600;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:var(--green);
+  border:1px solid rgba(26,170,110,0.35);
+  border-radius:100px;
+  padding:6px 16px;
+  margin-bottom:2rem;
+}
+
+.hero-logo{
+  font-family:'Unbounded',sans-serif;
+  font-size:clamp(52px,12vw,96px);
+  font-weight:900;
+  color:var(--white);
+  letter-spacing:-0.02em;
+  line-height:1;
+  text-align:center;
+  margin-bottom:0.5rem;
+}
+
+.hero-logo span{color:var(--green);}
+
+.hero-tagline{
+  font-size:clamp(13px,2vw,16px);
+  color:rgba(255,255,255,0.45);
+  text-align:center;
+  margin-bottom:3rem;
+  letter-spacing:0.02em;
+}
+
+/* Registration card */
+.reg-card{
+  width:100%;max-width:480px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:var(--radius);
+  padding:2rem;
+  position:relative;z-index:1;
+  backdrop-filter:blur(10px);
+}
+
+.reg-title{
+  font-family:'Unbounded',sans-serif;
+  font-size:16px;font-weight:600;
+  color:var(--white);
+  margin-bottom:6px;
+}
+
+.reg-sub{
+  font-size:13px;
+  color:rgba(255,255,255,0.4);
+  margin-bottom:1.5rem;
+  line-height:1.5;
+}
+
+.reg-field{
+  display:flex;flex-direction:column;gap:6px;
+  margin-bottom:14px;
+}
+
+.reg-field label{
+  font-size:12px;font-weight:500;
+  color:rgba(255,255,255,0.5);
+  letter-spacing:0.04em;
+}
+
+.reg-field input{
+  font-family:'Inter',sans-serif;
+  font-size:15px;
+  padding:13px 16px;
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:var(--radius-sm);
+  background:rgba(255,255,255,0.06);
+  color:var(--white);
+  outline:none;
+  transition:border-color 0.2s,background 0.2s;
+}
+.reg-field input::placeholder{color:rgba(255,255,255,0.2);}
+.reg-field input:focus{border-color:var(--green);background:rgba(26,170,110,0.08);}
+
+.reg-btn{
+  width:100%;
+  padding:15px;
+  background:var(--green);
+  border:none;
+  border-radius:var(--radius-sm);
+  font-family:'Unbounded',sans-serif;
+  font-size:13px;font-weight:600;
+  color:var(--white);
+  cursor:pointer;
+  transition:background 0.2s,transform 0.15s;
+  margin-top:6px;
+  letter-spacing:0.04em;
+}
+.reg-btn:hover{background:var(--green-dark);}
+.reg-btn:active{transform:scale(0.98);}
+.reg-btn:disabled{opacity:0.6;cursor:not-allowed;}
+
+.scroll-hint{
+  position:absolute;
+  bottom:2rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  color:rgba(255,255,255,0.25);
+  font-size:11px;letter-spacing:0.08em;
+  animation:bounce 2s infinite;
+}
+.scroll-hint svg{width:18px;height:18px;}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
+
+/* ═══════════════════════════════════════
+   POPUP
+═══════════════════════════════════════ */
+.popup-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.75);
+  display:flex;align-items:center;justify-content:center;
+  z-index:1000;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.3s;
+  padding:1rem;
+  backdrop-filter:blur(4px);
+}
+.popup-overlay.active{opacity:1;pointer-events:all;}
+
+.popup{
+  background:var(--black);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:20px;
+  padding:2.5rem 2rem;
+  width:100%;max-width:500px;
+  position:relative;
+  transform:translateY(30px) scale(0.96);
+  transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  max-height:90vh;
+  overflow-y:auto;
+}
+.popup-overlay.active .popup{transform:translateY(0) scale(1);}
+
+.popup-close{
+  position:absolute;top:1.25rem;right:1.25rem;
+  width:32px;height:32px;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:50%;
+  background:transparent;
+  color:rgba(255,255,255,0.5);
+  font-size:18px;line-height:1;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+}
+.popup-close:hover{background:rgba(255,255,255,0.08);color:var(--white);}
+
+.popup-congrats{
+  font-size:12px;font-weight:500;
+  color:var(--green);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+.popup-name{
+  font-family:'Unbounded',sans-serif;
+  font-size:20px;font-weight:700;
+  color:var(--white);
+  margin-bottom:1.5rem;
+}
+
+.code-badge{
+  display:inline-flex;align-items:center;gap:10px;
+  background:rgba(26,170,110,0.12);
+  border:1px solid rgba(26,170,110,0.3);
+  border-radius:12px;
+  padding:14px 20px;
+  margin-bottom:1.75rem;
+}
+.code-label{font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:2px;}
+.code-value{
+  font-family:'Unbounded',sans-serif;
+  font-size:32px;font-weight:900;
+  color:var(--green);
+  letter-spacing:0.05em;
+}
+
+.popup-section-title{
+  font-size:11px;font-weight:600;
+  color:rgba(255,255,255,0.35);
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+  margin-top:1.25rem;
+}
+
+.address-block{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;
+  padding:14px 16px;
+  margin-bottom:8px;
+}
+.address-pre{
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  color:rgba(255,255,255,0.85);
+  line-height:1.7;
+  white-space:pre-wrap;
+  word-break:break-all;
+  background:transparent;
+  border:none;
+  margin:0;
+  padding:0;
+  user-select:all;
+}
+.address-city{
+  font-family:'Unbounded',sans-serif;
+  font-size:11px;font-weight:600;
+  color:var(--green);
+  letter-spacing:0.06em;
+  margin-bottom:6px;
+}
+.address-srb{
+  font-size:13px;font-weight:600;
+  color:var(--white);
+  margin-bottom:4px;
+}
+.address-text{
+  font-size:12px;
+  color:rgba(255,255,255,0.5);
+  line-height:1.6;
+}
+.address-phone{
+  font-size:12px;font-weight:500;
+  color:rgba(255,255,255,0.7);
+  margin-top:4px;
+}
+
+.popup-copy-btn{
+  width:100%;
+  margin-top:1.5rem;
+  padding:13px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:var(--radius-sm);
+  font-family:'Inter',sans-serif;
+  font-size:13px;font-weight:500;
+  color:rgba(255,255,255,0.6);
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.popup-copy-btn:hover{border-color:var(--green);color:var(--green);}
+
+/* ═══════════════════════════════════════
+   CALCULATOR BLOCK
+═══════════════════════════════════════ */
+.calc-section{
+  background:var(--gray);
+  padding:5rem 1.5rem;
+}
+
+.section-header{
+  text-align:center;
+  margin-bottom:3rem;
+}
+
+.section-eyebrow{
+  font-family:'Unbounded',sans-serif;
+  font-size:11px;font-weight:600;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:var(--green);
+  margin-bottom:12px;
+}
+
+.section-title{
+  font-family:'Unbounded',sans-serif;
+  font-size:clamp(24px,5vw,36px);
+  font-weight:700;
+  color:var(--black);
+  line-height:1.2;
+}
+
+.calc-wrap{
+  max-width:640px;
+  margin:0 auto;
+}
+
+.calc-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:1.75rem;
+  margin-bottom:1rem;
+}
+
+.step-label{
+  font-family:'Unbounded',sans-serif;
+  font-size:10px;font-weight:600;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.step-num{
+  width:20px;height:20px;
+  background:var(--black);
+  color:var(--white);
+  border-radius:50%;
+  font-size:10px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+
+.city-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+
+.city-btn{
+  padding:13px 8px;
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  background:transparent;
+  color:var(--black);
+  font-family:'Inter',sans-serif;
+  font-size:14px;font-weight:500;
+  cursor:pointer;
+  transition:all 0.18s;
+  text-align:center;
+}
+.city-btn:hover{border-color:var(--green);color:var(--green);}
+.city-btn.active{
+  border-color:var(--green);
+  background:var(--green-light);
+  color:var(--green-dark);
+  font-weight:600;
+}
+
+.inputs-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.input-group{display:flex;flex-direction:column;gap:6px;}
+
+.input-group label{
+  font-size:13px;color:var(--muted);font-weight:500;
+}
+
+.input-group input{
+  font-family:'Inter',sans-serif;
+  font-size:15px;
+  padding:11px 14px;
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  background:var(--gray);
+  color:var(--black);
+  outline:none;
+  transition:border-color 0.15s,background 0.15s;
+}
+.input-group input:focus{border-color:var(--green);background:var(--white);}
+.input-group input::placeholder{color:#c0c5bc;}
+.input-group input.error{border-color:var(--red);background:#fff5f5;}
+
+.err-msg{font-size:12px;color:var(--red);display:none;}
+.err-msg.visible{display:block;}
+
+.cat-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.cat-card{
+  padding:14px;
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  cursor:pointer;
+  background:transparent;
+  text-align:left;
+  transition:all 0.18s;
+}
+.cat-card:hover{border-color:var(--green);background:var(--green-light);}
+.cat-card.active{border-color:var(--green);background:var(--green-light);}
+
+.cat-num{
+  font-family:'Unbounded',sans-serif;
+  font-size:10px;font-weight:600;
+  color:var(--green);
+  letter-spacing:0.08em;
+  margin-bottom:5px;
+}
+.cat-name{font-size:12px;color:var(--black);line-height:1.45;}
+
+/* Result */
+.result-card{
+  background:var(--black);
+  border-radius:var(--radius);
+  padding:1.75rem;
+  margin-bottom:1rem;
+}
+
+.result-rows{margin-bottom:1rem;}
+
+.result-row{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding:5px 0;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.result-row:last-child{border-bottom:none;}
+
+.r-label{font-size:13px;color:rgba(255,255,255,0.45);}
+.r-val{font-size:13px;color:rgba(255,255,255,0.9);font-weight:500;}
+
+.result-total{
+  display:flex;justify-content:space-between;align-items:baseline;
+  border-top:1px solid rgba(255,255,255,0.12);
+  padding-top:14px;margin-top:4px;
+}
+.r-total-label{
+  font-family:'Unbounded',sans-serif;
+  font-size:11px;font-weight:600;
+  color:rgba(255,255,255,0.5);
+  letter-spacing:0.06em;text-transform:uppercase;
+}
+.r-total-val{
+  font-family:'Unbounded',sans-serif;
+  font-size:28px;font-weight:700;
+  color:var(--green);letter-spacing:-0.02em;
+}
+.r-hint{font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px;line-height:1.5;}
+
+.gabrit-note{
+  background:#1a2a1f;
+  border:1px solid rgba(26,170,110,0.25);
+  border-radius:var(--radius);
+  padding:1.25rem 1.5rem;
+  font-size:14px;
+  color:rgba(255,255,255,0.8);
+  line-height:1.6;
+  margin-top:0.5rem;
+  text-align:center;
+}
+
+.wa-buttons{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  max-width:400px;
+  margin:0 auto 2rem;
+}
+.wa-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:14px 20px;
+  background:#25D366;
+  color:#fff;
+  border-radius:var(--radius-sm);
+  font-family:'Unbounded',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  text-decoration:none;
+  transition:background 0.2s,transform 0.15s;
+  letter-spacing:0.02em;
+}
+.wa-btn:hover{background:#1ebe5a;transform:scale(1.02);}
+
+/* Footer */
+.site-footer{
+  background:var(--black);
+  padding:2.5rem 1.5rem;
+  text-align:center;
+}
+.footer-logo{
+  font-family:'Unbounded',sans-serif;
+  font-size:18px;font-weight:700;
+  color:var(--white);margin-bottom:8px;
+}
+.footer-logo span{color:var(--green);}
+.footer-text{font-size:13px;color:rgba(255,255,255,0.35);line-height:1.6;}
+.footer-text a{color:var(--green);text-decoration:none;}
+
+/* Responsive */
+@media(max-width:480px){
+  .hero-logo{font-size:48px;}
+  .city-row{grid-template-columns:1fr 1fr 1fr;}
+  .inputs-row{grid-template-columns:1fr;}
+  .cat-grid{grid-template-columns:1fr;}
+  .r-total-val{font-size:22px;}
+  .reg-card{padding:1.5rem;}
+  .popup{padding:2rem 1.5rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     BLOCK 1 — HERO + REGISTRATION
+══════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-badge">Доставка из Китая · Cargo</div>
+  <div class="hero-logo">SRB<span>.</span></div>
+  <div class="hero-tagline">Фошань · Иу · Урумчи → Кыргызстан</div>
+
+  <div class="reg-card">
+    <div class="reg-title">Получить код клиента</div>
+    <div class="reg-sub">Введите ваши данные — мы создадим персональный код для отправки грузов на наши склады.</div>
+
+    <div class="reg-field">
+      <label>Ваше имя</label>
+      <input type="text" id="reg-name" placeholder="Например: Айбек Турсунов" />
+    </div>
+    <div class="reg-field">
+      <label>Номер телефона</label>
+      <input type="tel" id="reg-phone" placeholder="+996 700 000 000" value="+996 " onfocus="srbPhoneFocus(this)" />
+    </div>
+
+    <button class="reg-btn" id="reg-btn" onclick="registerClient()">Получить код →</button>
+  </div>
+
+  <div class="scroll-hint">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    Калькулятор доставки
+  </div>
+</section>
+
+<!-- POPUP -->
+<div class="popup-overlay" id="popup-overlay" onclick="closePopupOutside(event)">
+  <div class="popup" id="popup">
+    <button class="popup-close" onclick="closePopup()">✕</button>
+
+    <div class="popup-congrats">Регистрация успешна</div>
+    <div class="popup-name" id="popup-client-name">Добро пожаловать!</div>
+
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:1.75rem;">
+      <div class="code-badge">
+        <div>
+          <div class="code-label">Ваш код клиента</div>
+          <div class="code-value" id="popup-code">SRB051</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="popup-section-title">Адреса складов с вашим кодом</div>
+
+    <div class="address-block">
+      <div class="address-city">Фошань</div>
+      <pre class="address-pre" id="addr-foshan-full">SRB051 广东省佛山市南海区里水镇大石社区石紫岗工业区石一石二工业路27号321国际仓 13763369694
+SRB051 Город Фошань</pre>
+    </div>
+
+    <div class="address-block">
+      <div class="address-city">Иу</div>
+      <pre class="address-pre" id="addr-yiwu-full">SRB051 义乌市福田街道荷叶塘工业功能区物华路60号院里321库房 马经理联系电话:17699862999
+SRB051 Город Иу</pre>
+    </div>
+
+    <div class="address-block">
+      <div class="address-city">Урумчи</div>
+      <pre class="address-pre" id="addr-urumqi-full">SRB051 乌鲁木齐市沙依巴克区兵团 物流园北区玉树环宇B区23-27号9999库房 马成 17509082999
+SRB051 Город Урумчи</pre>
+    </div>
+
+    <button class="popup-copy-btn" onclick="copyAddresses()">Скопировать все адреса</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     BLOCK 2 — CALCULATOR
+══════════════════════════════════ -->
+<section class="calc-section" id="calculator">
+  <div class="section-header">
+    <div class="section-eyebrow">Тарифы SRB Cargo</div>
+    <div class="section-title">Посчитайте ваш груз</div>
+  </div>
+
+  <div class="calc-wrap">
+
+    <!-- Step 1 -->
+    <div class="calc-card">
+      <div class="step-label"><span class="step-num">1</span> Город отправки</div>
+      <div class="city-row">
+        <button class="city-btn active" data-city="foshan" onclick="selectCity(this)">Фошань</button>
+        <button class="city-btn" data-city="yiwu" onclick="selectCity(this)">Иу</button>
+        <button class="city-btn" data-city="urumqi" onclick="selectCity(this)">Урумчи</button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="calc-card">
+      <div class="step-label"><span class="step-num">2</span> Вес и объём груза</div>
+      <div class="inputs-row">
+        <div class="input-group">
+          <label>Вес (кг)</label>
+          <input type="number" id="weight" min="1" placeholder="например: 250" oninput="calculate()"/>
+          <span class="err-msg" id="weight-error">Груз не может быть ниже 50 кг</span>
+        </div>
+        <div class="input-group">
+          <label>Объём (м³) — для лёгких грузов</label>
+          <input type="number" id="volume" min="0" step="0.01" placeholder="например: 0.5" oninput="calculate()"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="calc-card">
+      <div class="step-label"><span class="step-num">3</span> Категория товара</div>
+      <div class="cat-grid">
+        <button class="cat-card active" data-cat="1" onclick="selectCat(this)">
+          <div class="cat-num">Категория 1</div>
+          <div class="cat-name">Мебель, посуда, канцтовары, ткань, велосипед, зонт, полки, шурупы и тд</div>
+        </button>
+        <button class="cat-card" data-cat="2" onclick="selectCat(this)">
+          <div class="cat-num">Категория 2</div>
+          <div class="cat-name">Автозапчасти, игрушки, спорт, парики, постельное бельё, носки и тд</div>
+        </button>
+        <button class="cat-card" data-cat="3" onclick="selectCat(this)">
+          <div class="cat-num">Категория 3</div>
+          <div class="cat-name">Бытовая техника, электроинструменты, аккумуляторы, принтеры и тд</div>
+        </button>
+        <button class="cat-card" data-cat="4" onclick="selectCat(this)">
+          <div class="cat-num">Категория 4</div>
+          <div class="cat-name">Мотоциклы, электросамокаты, косметика, аксессуары, шапки, часы, очки</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-card">
+      <div class="result-rows">
+        <div class="result-row">
+          <span class="r-label">Город</span>
+          <span class="r-val" id="r-city">Фошань</span>
+        </div>
+        <div class="result-row">
+          <span class="r-label">Категория</span>
+          <span class="r-val" id="r-cat">Категория 1</span>
+        </div>
+        <div class="result-row">
+          <span class="r-label">Ставка</span>
+          <span class="r-val" id="r-rate">Введите вес выше</span>
+        </div>
+        <div class="result-row">
+          <span class="r-label">Расчётный вес</span>
+          <span class="r-val" id="r-weight">—</span>
+        </div>
+      </div>
+      <div class="result-total">
+        <span class="r-total-label">Итого</span>
+        <span class="r-total-val" id="r-total">—</span>
+      </div>
+      <p class="r-hint" id="r-hint"></p>
+    </div>
+
+    <div class="gabrit-note">
+      📦 Большой груз? Чем больше объём — тем выгоднее цена. Напишите нам для индивидуального расчёта.
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-logo">SRB<span>.</span></div>
+
+  <div class="wa-buttons">
+    <a class="wa-btn" href="https://wa.me/996708888313" target="_blank">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.117 1.528 5.845L0 24l6.335-1.508A11.956 11.956 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.877 9.877 0 01-5.031-1.378l-.361-.214-3.741.981.999-3.648-.235-.374A9.859 9.859 0 012.106 12C2.106 6.58 6.58 2.106 12 2.106c5.421 0 9.894 4.474 9.894 9.894 0 5.421-4.473 9.894-9.894 9.894z"/></svg>
+      +996 708 888 313
+    </a>
+    <a class="wa-btn" href="https://wa.me/996550021168" target="_blank">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.117 1.528 5.845L0 24l6.335-1.508A11.956 11.956 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.877 9.877 0 01-5.031-1.378l-.361-.214-3.741.981.999-3.648-.235-.374A9.859 9.859 0 012.106 12C2.106 6.58 6.58 2.106 12 2.106c5.421 0 9.894 4.474 9.894 9.894 0 5.421-4.473 9.894-9.894 9.894z"/></svg>
+      +996 550 021 168
+    </a>
+  </div>
+
+  <div class="footer-logo">SRB<span>.</span></div>
+  <div class="footer-text">
+    Для вопросов по товару, упаковке и страховке груза:<br>
+    <a href="tel:0708888313">0708-888-313</a>
+  </div>
+</footer>
+
+
+<script>
+/* ════════════════════════════════════════
+   Telegram бот — уведомления о новых клиентах
+════════════════════════════════════════ */
+const GS_URL = 'https://script.google.com/macros/s/AKfycbwO7Jxm0LopE1baqiLIlFcZQYclRWhYmQTcssZhbpeFSQObY6MfcLUtkAJhUi-YKIuaAQ/exec';
+
+/* ════════════════════════════════════════
+   НУМЕРАЦИЯ — начинаем с 051
+════════════════════════════════════════ */
+function getNextCode() {
+  const stored = parseInt(localStorage.getItem('srb_last_code') || '51');
+  const next = stored + 1;
+  localStorage.setItem('srb_last_code', next);
+  return String(next).padStart(3, '0');
+}
+
+/* ════════════════════════════════════════
+   РЕГИСТРАЦИЯ КЛИЕНТА
+════════════════════════════════════════ */
+async function registerClient() {
+  const name  = document.getElementById('reg-name').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim();
+  const btn   = document.getElementById('reg-btn');
+
+  if (!name)  { document.getElementById('reg-name').focus();  return; }
+  if (!phone) { document.getElementById('reg-phone').focus(); return; }
+
+  btn.disabled    = true;
+  btn.textContent = 'Создаём код...';
+
+  const code     = getNextCode();
+  const fullCode = 'SRB' + code;
+  const date     = new Date().toLocaleString('ru-RU');
+  const phoneClear = phone.replace(/\s+/g, ''); // убираем все пробелы из номера
+
+  // Отправка в Google Sheets
+  try {
+    await fetch(GS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, phone: phoneClear, code: fullCode, date })
+    });
+  } catch(e) {
+    console.warn('GS error:', e);
+  }
+
+  // Показать попап
+  showPopup(name, fullCode);
+
+  btn.disabled    = false;
+  btn.textContent = 'Получить код →';
+}
+
+function showPopup(name, fullCode) {
+  document.getElementById('popup-client-name').textContent = name + ', добро пожаловать!';
+  document.getElementById('popup-code').textContent = fullCode;
+
+  document.getElementById('addr-foshan-full').textContent =
+    fullCode + ' 广东省佛山市南海区里水镇大石社区石紫岗工业区石一石二工业路27号321国际仓 13763369694\n' +
+    fullCode + ' Город Фошань';
+
+  document.getElementById('addr-yiwu-full').textContent =
+    fullCode + ' 义乌市福田街道荷叶塘工业功能区物华路60号院里321库房 马经理联系电话:17699862999\n' +
+    fullCode + ' Город Иу';
+
+  document.getElementById('addr-urumqi-full').textContent =
+    fullCode + ' 乌鲁木齐市沙依巴克区兵团 物流园北区玉树环宇B区23-27号9999库房 马成 17509082999\n' +
+    fullCode + ' Город Урумчи';
+
+  document.getElementById('popup-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePopup() {
+  document.getElementById('popup-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function closePopupOutside(e) {
+  if (e.target === document.getElementById('popup-overlay')) closePopup();
+}
+
+function copyAddresses() {
+  const code = document.getElementById('popup-code').textContent;
+  const text =
+code + ' 广东省佛山市南海区里水镇大石社区石紫岗工业区石一石二工业路27号321国际仓 13763369694\n' +
+code + ' Город Фошань\n\n' +
+code + ' 义乌市福田街道荷叶塘工业功能区物华路60号院里321库房 马经理联系电话:17699862999\n' +
+code + ' Город Иу\n\n' +
+code + ' 乌鲁木齐市沙依巴克区兵团 物流园北区玉树环宇B区23-27号9999库房 马成 17509082999\n' +
+code + ' Город Урумчи';
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.popup-copy-btn');
+    btn.textContent = 'Скопировано!';
+    setTimeout(() => { btn.textContent = 'Скопировать все адреса'; }, 2000);
+  });
+}
+
+/* ════════════════════════════════════════
+   CALCULATOR
+   Тарифы точно по таблице SRB Cargo:
+   Строки: 600+, 400-599, 300-399, 200-299, 150-199, 100-149, <100 (м³)
+   Урумчи: скидка $0.10/кг от тарифа Фошань/Иу
+════════════════════════════════════════ */
+// Цены для клиентов: себестоимость + $0.20/кг, +$20/м³
+const RATES = {
+  cat1: { r600:0.85, r400:0.90, r300:0.95, r200:1.00, r150:1.05, r100:1.10, m3:140 },
+  cat2: { r600:1.00, r400:1.10, r300:1.20, r200:1.25, r150:1.40, r100:1.50, m3:160 },
+  cat3: { r600:1.20, r400:1.25, r300:1.35, r200:1.45, r150:1.55, r100:1.70, m3:190 },
+  cat4: { r600:1.70, r400:1.80, r300:1.90, r200:2.00, r150:2.10, r100:2.20, m3:230 }
+};
+// Урумчи: -$0.10/кг и -$10/м³ от клиентской цены
+const RATES_URUMQI = {
+  cat1: { r600:0.75, r400:0.80, r300:0.85, r200:0.90, r150:0.95, r100:1.00, m3:130 },
+  cat2: { r600:0.90, r400:1.00, r300:1.10, r200:1.15, r150:1.30, r100:1.40, m3:150 },
+  cat3: { r600:1.10, r400:1.15, r300:1.25, r200:1.35, r150:1.45, r100:1.60, m3:180 },
+  cat4: { r600:1.60, r400:1.70, r300:1.80, r200:1.90, r150:2.00, r100:2.10, m3:220 }
+};
+
+const CITY_NAMES = { foshan:'Фошань', yiwu:'Иу', urumqi:'Урумчи' };
+let selectedCity = 'foshan';
+let selectedCat = '1';
+
+function selectCity(el) {
+  document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  selectedCity = el.dataset.city;
+  document.getElementById('r-city').textContent = CITY_NAMES[selectedCity];
+  calculate();
+}
+
+function selectCat(el) {
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedCat = el.dataset.cat;
+  document.getElementById('r-cat').textContent = 'Категория ' + selectedCat;
+  calculate();
+}
+
+// Ставка по плотности или весу (кг/м³ или просто кг если м³ не указан)
+// Таблица строк: 600+, 400-599, 300-399, 200-299, 150-199, 100-149
+// Когда указан объём — смотрим на ПЛОТНОСТЬ (кг/м³) для определения диапазона
+// Когда объём не указан — смотрим на физический вес
+function getRate(catRates, kg, m3) {
+  var val = (m3 > 0 && kg > 0) ? kg / m3 : kg; // плотность или вес
+  if (val >= 600) return catRates.r600;
+  if (val >= 400) return catRates.r400;
+  if (val >= 300) return catRates.r300;
+  if (val >= 200) return catRates.r200;
+  if (val >= 150) return catRates.r150;
+  return catRates.r100;
+}
+
+function fmt(num) {
+  return parseFloat(num).toLocaleString('ru-RU', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function calculate() {
+  const kg  = parseFloat(document.getElementById('weight').value) || 0;
+  const m3  = parseFloat(document.getElementById('volume').value) || 0;
+  const isUrumqi = selectedCity === 'urumqi';
+  const catRates = isUrumqi ? RATES_URUMQI['cat'+selectedCat] : RATES['cat'+selectedCat];
+
+  const weightInput = document.getElementById('weight');
+  const weightError = document.getElementById('weight-error');
+  const rRate  = document.getElementById('r-rate');
+  const rWeight= document.getElementById('r-weight');
+  const rTotal = document.getElementById('r-total');
+  const rHint  = document.getElementById('r-hint');
+
+  const hasWeight = document.getElementById('weight').value !== '';
+
+  // Проверка минимума
+  if (hasWeight && kg > 0 && kg < 50) {
+    weightInput.classList.add('error');
+    weightError.classList.add('visible');
+    rRate.textContent='—'; rWeight.textContent='—'; rTotal.textContent='—'; rHint.textContent='';
+    return;
+  }
+  weightInput.classList.remove('error');
+  weightError.classList.remove('visible');
+
+  // Ничего не введено
+  if (kg === 0 && m3 === 0) {
+    rRate.textContent='Введите вес выше'; rWeight.textContent='—'; rTotal.textContent='—'; rHint.textContent='';
+    return;
+  }
+
+  let hint = '';
+  const density = (m3 > 0 && kg > 0) ? kg / m3 : null;
+
+  // Если плотность < 100 кг/м³ → считаем за м³
+  if (density !== null && density < 100) {
+    const rate  = catRates.m3;
+    const total = rate * m3;
+    rRate.textContent  = '$' + rate + ' / м³';
+    rWeight.textContent= m3.toFixed(2) + ' м³ (плотность ' + density.toFixed(0) + ' кг/м³)';
+    rTotal.textContent = '$' + fmt(total);
+    hint = 'Плотность ниже 100 кг/м³ — расчёт по объёму.';
+  } else {
+    // Плотность ≥ 100 или объём не указан
+    // Ставка определяется по ПЛОТНОСТИ (если есть м³) или по весу
+    const rate  = getRate(catRates, kg, m3);
+    const total = rate * kg;
+    rRate.textContent  = '$' + rate.toFixed(2) + ' / кг';
+    rWeight.textContent= kg.toLocaleString('ru-RU') + ' кг' + (density ? ' (плотность ' + density.toFixed(0) + ' кг/м³)' : '');
+    rTotal.textContent = '$' + fmt(total);
+    if (density !== null) hint = 'Плотность ' + density.toFixed(0) + ' кг/м³ — ставка по диапазону плотности.';
+    if (kg >= 50 && kg < 100) hint += (hint?' ':'') + 'Применён минимальный тариф (100–149).';
+  }
+
+  if (isUrumqi) hint += (hint?' ':'') + 'Скидка $0.10/кг для Урумчи.';
+  rHint.textContent = hint;
+}
+
+/* Enter для регистрации */
+document.getElementById('reg-phone').addEventListener('keydown', e => {
+  if (e.key === 'Enter') registerClient();
+});
+
+/* Защита префикса +996 */
+function srbPhoneFocus(el) {
+  if (!el.value.startsWith('+996')) el.value = '+996 ';
+}
+document.getElementById('reg-phone').addEventListener('keydown', function(e) {
+  // Не дать удалить +996
+  const val = this.value;
+  const pos = this.selectionStart;
+  if ((e.key === 'Backspace' || e.key === 'Delete') && pos <= 5 && val.startsWith('+996')) {
+    e.preventDefault();
+  }
+});
+</script>
+
+<!--
+════════════════════════════════════════════════════════
+  📋 GOOGLE APPS SCRIPT — вставьте в script.google.com
+════════════════════════════════════════════════════════
+
+function doPost(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const data = JSON.parse(e.postData.contents);
+
+  // Заголовки (только первый раз)
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['Дата', 'Имя', 'Телефон', 'Код клиента']);
+  }
+
+  sheet.appendRow([data.date, data.name, data.phone, data.code]);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({status: 'ok'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+════════════════════════════════════════════════════════
+-->
+
+</body>
+</html>
