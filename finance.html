@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Финансы</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f4fb;
+    --bg2: #ffffff;
+    --bg3: #eceaf8;
+    --border: rgba(0,0,0,0.07);
+    --border2: rgba(0,0,0,0.13);
+    --text: #1a1830;
+    --muted: #8884a8;
+    --accent: #6c5ce7;
+    --accent2: #6c5ce7;
+    --green: #059669;
+    --red: #dc2626;
+    --amber: #b45309;
+    --blue: #2563eb;
+    --teal: #0d9488;
+  }
+  [data-theme="dark"] {
+    --bg: #0f0f11;
+    --bg2: #16161a;
+    --bg3: #1e1e24;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0eefc;
+    --muted: #7b7a8e;
+    --accent: #7c6af7;
+    --accent2: #a78bfa;
+    --green: #34d399;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --blue: #60a5fa;
+    --teal: #2dd4bf;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* TOP NAV */
+  nav { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; gap: 4px; position: sticky; top: 0; z-index: 100; }
+  .nav-logo { font-weight: 700; font-size: 14px; color: var(--accent2); padding: 16px 12px 16px 0; border-right: 1px solid var(--border); margin-right: 8px; letter-spacing: 0.04em; white-space: nowrap; }
+  .nav-tab { padding: 18px 14px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent2); border-bottom-color: var(--accent); }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .sync-btn { background: var(--bg3); border: 1px solid var(--border2); color: var(--muted); font-size: 12px; font-family: 'Manrope', sans-serif; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+  .sync-btn:hover { color: var(--text); border-color: var(--accent); }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .sync-dot.err { background: var(--red); }
+  .sync-dot.loading { background: var(--amber); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .theme-btn { background: var(--bg3); border: 1px solid var(--border2); color: var(--muted); font-size: 16px; width: 34px; height: 34px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+  .theme-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* SECTIONS */
+  .section { display: none; padding: 28px 24px; max-width: 1200px; }
+  .section.active { display: block; }
+
+  /* CONFIG BANNER */
+  .config-banner { background: var(--bg3); border: 1px solid rgba(251,191,36,0.3); border-radius: 12px; padding: 14px 18px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--amber); }
+  .config-banner a { color: var(--amber); }
+  .config-banner input { flex: 1; background: var(--bg2); border: 1px solid var(--border2); border-radius: 8px; padding: 6px 12px; color: var(--text); font-size: 13px; font-family: 'Manrope', sans-serif; }
+  .config-banner button { background: var(--amber); color: #000; border: none; border-radius: 8px; padding: 7px 16px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; white-space: nowrap; }
+
+  /* GRID */
+  .grid { display: grid; gap: 16px; }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .g3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .g4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+
+  /* CARDS */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+  .card-sm { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .card-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .card-value { font-size: 26px; font-weight: 700; font-family: 'JetBrains Mono', monospace; line-height: 1; }
+  .card-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .card-icon { font-size: 20px; margin-bottom: 10px; }
+  .v-green { color: var(--green); }
+  .v-red { color: var(--red); }
+  .v-amber { color: var(--amber); }
+  .v-blue { color: var(--blue); }
+  .v-teal { color: var(--teal); }
+  .v-accent { color: var(--accent2); }
+
+  /* SECTION HEADER */
+  .sec-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+  .sec-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  /* ACCOUNT ROWS */
+  .acct-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .acct-row:last-child { border-bottom: none; }
+  .acct-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .acct-name { font-size: 14px; font-weight: 600; }
+  .acct-tag { font-size: 11px; color: var(--muted); }
+  .acct-amount { margin-left: auto; font-size: 15px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+  /* CREDIT PROGRESS */
+  .credit-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+  .credit-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .credit-name { font-size: 14px; font-weight: 700; }
+  .credit-bank { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .credit-nums { text-align: right; }
+  .credit-paid { font-size: 12px; color: var(--green); font-weight: 600; }
+  .credit-remain { font-size: 20px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--red); }
+  .progress-bar { background: var(--bg3); border-radius: 99px; height: 6px; overflow: hidden; margin-top: 12px; }
+  .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width 0.6s; }
+  .credit-footer { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--muted); }
+
+  /* OBLIGATIONS */
+  .oblig-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+  .oblig-row:last-child { border-bottom: none; }
+  .oblig-info { flex: 1; }
+  .oblig-name { font-size: 14px; font-weight: 600; }
+  .oblig-from { font-size: 11px; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+  .from-tag { background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; padding: 2px 7px; font-size: 10px; color: var(--muted); }
+  .oblig-amount { font-size: 16px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--amber); }
+
+  /* TRANSACTIONS */
+  .tx-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .tx-row:last-child { border-bottom: none; }
+  .tx-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .tx-info { flex: 1; }
+  .tx-name { font-size: 13px; font-weight: 600; }
+  .tx-cat { font-size: 11px; color: var(--muted); }
+  .tx-date { font-size: 11px; color: var(--muted); }
+  .tx-amount { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; }
+
+  /* GOALS */
+  .goal-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+  .goal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .goal-title { font-size: 14px; font-weight: 700; }
+  .goal-period { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .goal-pct { font-size: 20px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .goal-progress { background: var(--bg3); border-radius: 99px; height: 5px; overflow: hidden; margin: 10px 0; }
+  .goal-fill { height: 100%; border-radius: 99px; }
+  .goal-footer { font-size: 12px; color: var(--muted); }
+
+  /* BUSINESS */
+  .biz-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .biz-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--border); gap: 8px; }
+  .biz-row:last-child { border-bottom: none; }
+  .biz-cat { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .biz-name { font-size: 13px; font-weight: 600; margin-top: 1px; }
+  .biz-amount { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; }
+  .badge-personal { background: rgba(124,106,247,0.15); color: var(--accent2); }
+  .badge-business { background: rgba(45,212,191,0.15); color: var(--teal); }
+
+  .settings-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+  .settings-title { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 16px; }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label { font-size: 13px; font-weight: 600; }
+  .setting-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .setting-input { background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 7px 12px; color: var(--text); font-size: 13px; font-family: 'Manrope', sans-serif; width: 260px; }
+  .save-btn { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 10px 24px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Manrope', sans-serif; transition: opacity 0.2s; }
+  .save-btn:hover { opacity: 0.85; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+
+  /* ERROR */
+  .err-box { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); border-radius: 10px; padding: 12px 16px; font-size: 12px; color: var(--red); margin-bottom: 16px; }
+
+  /* MONTH SELECTOR */
+  .month-sel { background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 7px 12px; color: var(--text); font-size: 13px; font-family: 'Manrope', sans-serif; }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    nav { gap: 0; padding: 0 12px; overflow-x: auto; }
+    .nav-tab { padding: 16px 10px; font-size: 12px; }
+    .section { padding: 20px 14px; }
+    .biz-summary { grid-template-columns: 1fr; }
+    .card-value { font-size: 20px; }
+    .nav-right { display: none; }
+  }
+
+  /* LOADING SKELETON */
+  .skeleton { background: linear-gradient(90deg, var(--bg3) 25%, var(--bg2) 50%, var(--bg3) 75%); background-size: 200%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+  @keyframes shimmer { 0%{background-position:200%} 100%{background-position:-200%} }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">💎 Финансы</div>
+  <div class="nav-tab active" onclick="switchTab('main')">Главная</div>
+  <div class="nav-tab" onclick="switchTab('personal')">Личное</div>
+  <div class="nav-tab" onclick="switchTab('business')">Бизнес</div>
+  <div class="nav-tab" onclick="switchTab('goals')">Цели</div>
+  <div class="nav-tab" onclick="switchTab('settings')">Настройки</div>
+  <div class="nav-right">
+    <div class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Сменить тему">🌙</div>
+    <div class="sync-btn" onclick="loadAll()">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncText">Обновить</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ===================== MAIN ===================== -->
+<div id="tab-main" class="section active">
+  <div id="main-error"></div>
+
+  <div class="sec-row">
+    <div class="sec-title">Все счета</div>
+    <div style="font-size:12px; color:var(--muted)" id="lastSync">—</div>
+  </div>
+
+  <!-- TOTAL -->
+  <div class="card" style="margin-bottom:16px; background: linear-gradient(135deg, #ede9fd 0%, #f0eeff 100%); border-color:rgba(108,92,231,0.15);">
+    <div class="card-label">Общий баланс</div>
+    <div class="card-value v-accent" id="totalBalance">загрузка…</div>
+    <div class="card-sub">Все счета / Личные + Бизнес</div>
+  </div>
+
+  <!-- ACCOUNTS -->
+  <div class="grid g2" style="margin-bottom:24px;">
+    <!-- Personal -->
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+        <div class="card-label">Личные счета</div>
+        <span class="badge badge-personal">Личное</span>
+      </div>
+      <div id="personalAccounts"><div class="empty">нет данных</div></div>
+      <hr class="divider">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--muted)">Итого личные</span>
+        <span class="card-value" style="font-size:18px;" id="personalTotal">—</span>
+      </div>
+    </div>
+
+    <!-- Business -->
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+        <div class="card-label">Бизнес счета</div>
+        <span class="badge badge-business">Бизнес</span>
+      </div>
+      <div id="businessAccounts"><div class="empty">нет данных</div></div>
+      <hr class="divider">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--muted)">Итого бизнес</span>
+        <span class="card-value" style="font-size:18px;" id="businessTotal">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK STATS -->
+  <div class="sec-title">Быстрый обзор</div>
+  <div class="grid g4" style="margin-bottom:24px;">
+    <div class="card-sm">
+      <div class="card-label">Долг по кредитам</div>
+      <div class="card-value v-red" style="font-size:20px;" id="creditDebt">—</div>
+    </div>
+    <div class="card-sm">
+      <div class="card-label">Расход этот месяц</div>
+      <div class="card-value v-amber" style="font-size:20px;" id="monthExpense">—</div>
+    </div>
+    <div class="card-sm">
+      <div class="card-label">Доход бизнеса</div>
+      <div class="card-value v-green" style="font-size:20px;" id="bizIncome">—</div>
+    </div>
+    <div class="card-sm">
+      <div class="card-label">Прибыль бизнеса</div>
+      <div class="card-value v-teal" style="font-size:20px;" id="bizProfit">—</div>
+    </div>
+  </div>
+
+  <!-- OBLIGATIONS PREVIEW -->
+  <div class="sec-title">Ближайшие платежи</div>
+  <div class="card" id="obligationsPreview">
+    <div class="empty">нет данных</div>
+  </div>
+</div>
+
+<!-- ===================== PERSONAL ===================== -->
+<div id="tab-personal" class="section">
+  <div id="personal-error"></div>
+
+  <!-- CREDITS -->
+  <div class="sec-title">Кредиты</div>
+  <div class="grid g2" id="creditsGrid" style="margin-bottom:24px;">
+    <div class="empty">нет данных</div>
+  </div>
+
+  <!-- OBLIGATIONS -->
+  <div class="sec-title">Ежемесячные обязательства</div>
+  <div class="card" style="margin-bottom:24px;">
+    <div id="obligationsList"><div class="empty">нет данных</div></div>
+  </div>
+
+  <!-- RECENT PERSONAL TX -->
+  <div class="sec-row">
+    <div class="sec-title" style="margin-bottom:0">Расходы / Доходы</div>
+    <select class="month-sel" id="personalMonthSel" onchange="renderPersonalTx()">
+      <option value="all">Все</option>
+    </select>
+  </div>
+  <div class="card" style="margin-top:12px;">
+    <div id="personalTxList"><div class="empty">нет данных</div></div>
+  </div>
+</div>
+
+<!-- ===================== BUSINESS ===================== -->
+<div id="tab-business" class="section">
+  <div id="biz-error"></div>
+
+  <div class="sec-row">
+    <div class="sec-title" style="margin-bottom:0">Финансы бизнеса</div>
+    <select class="month-sel" id="bizMonthSel" onchange="renderBizMonth()">
+      <option value="all">Все месяцы</option>
+    </select>
+  </div>
+
+  <!-- BIZ SUMMARY CARDS -->
+  <div class="biz-summary" style="margin:16px 0 24px;">
+    <div class="card-sm">
+      <div class="card-label">Доход</div>
+      <div class="card-value v-green" style="font-size:22px;" id="bizIncomeDetail">—</div>
+    </div>
+    <div class="card-sm">
+      <div class="card-label">Расходы</div>
+      <div class="card-value v-red" style="font-size:22px;" id="bizExpenseDetail">—</div>
+    </div>
+    <div class="card-sm">
+      <div class="card-label">Прибыль</div>
+      <div class="card-value v-teal" style="font-size:22px;" id="bizProfitDetail">—</div>
+    </div>
+  </div>
+
+  <!-- BIZ INCOME -->
+  <div class="sec-title">Доходы</div>
+  <div class="card" style="margin-bottom:24px;">
+    <div id="bizIncomeList"><div class="empty">нет данных</div></div>
+  </div>
+
+  <!-- BIZ EXPENSES BY CATEGORY -->
+  <div class="sec-title">Расходы</div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="card-label" style="margin-bottom:12px;">Зарплата сотрудников</div>
+      <div id="bizSalary"><div class="empty">нет данных</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label" style="margin-bottom:12px;">Налоги</div>
+      <div id="bizTax"><div class="empty">нет данных</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label" style="margin-bottom:12px;">Реклама и маркетинг</div>
+      <div id="bizAds"><div class="empty">нет данных</div></div>
+    </div>
+    <div class="card">
+      <div class="card-label" style="margin-bottom:12px;">Прочие расходы</div>
+      <div id="bizOther"><div class="empty">нет данных</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== GOALS ===================== -->
+<div id="tab-goals" class="section">
+  <div id="goals-error"></div>
+  <div class="sec-title">Мои цели</div>
+  <div class="grid g2" id="goalsGrid">
+    <div class="empty">нет данных</div>
+  </div>
+</div>
+
+<!-- ===================== SETTINGS ===================== -->
+<div id="tab-settings" class="section">
+
+  <div class="settings-block">
+    <div class="settings-title">Подключение Google Sheets</div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">ID таблицы</div>
+        <div class="setting-desc">Из URL: docs.google.com/spreadsheets/d/<b>ВОТ_ЭТО</b>/edit</div>
+      </div>
+      <input class="setting-input" id="sheetId" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" value="">
+    </div>
+    <div style="margin-top:14px; display:flex; gap:10px; align-items:center;">
+      <button class="save-btn" onclick="saveSettings()">Сохранить</button>
+      <button class="save-btn" style="background:var(--bg3); color:var(--muted); border:1px solid var(--border2);" onclick="loadAll()">Проверить подключение</button>
+    </div>
+  </div>
+
+  <div class="settings-block">
+    <div class="settings-title">Структура Google Sheets</div>
+    <p style="font-size:13px; color:var(--muted); line-height:1.8; margin-bottom:12px;">
+      Таблица должна называться <b style="color:var(--text)">«Финансы»</b> и содержать следующие листы:
+    </p>
+    <div style="font-size:12px; color:var(--muted); line-height:2;">
+      <div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; gap:10px;"><span style="color:var(--accent2); font-weight:700; min-width:110px; font-family:'JetBrains Mono',monospace;">Счета</span><span>A: Название, B: Тип (личный/бизнес), C: Сумма</span></div>
+      <div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; gap:10px;"><span style="color:var(--accent2); font-weight:700; min-width:110px; font-family:'JetBrains Mono',monospace;">Кредиты</span><span>A: Название, B: Банк, C: Изначально, D: Выплачено, E: Остаток, F: Ежем.платёж</span></div>
+      <div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; gap:10px;"><span style="color:var(--accent2); font-weight:700; min-width:110px; font-family:'JetBrains Mono',monospace;">Обязательства</span><span>A: Название, B: Сумма, C: Счёт списания, D: Дата</span></div>
+      <div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; gap:10px;"><span style="color:var(--accent2); font-weight:700; min-width:110px; font-family:'JetBrains Mono',monospace;">Личные</span><span>A: Дата (ДД.ММ.ГГГГ), B: Описание, C: Категория, D: Приход, E: Расход, F: Счёт</span></div>
+      <div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; gap:10px;"><span style="color:var(--accent2); font-weight:700; min-width:110px; font-family:'JetBrains Mono',monospace;">Бизнес</span><span>A: Дата, B: Описание, C: Категория, D: Приход, E: Расход, F: Счёт</span></div>
+      <div style="padding:8px 0; display:flex; gap:10px;"><span style="color:var(--accent2); font-weight:700; min-width:110px; font-family:'JetBrains Mono',monospace;">Цели</span><span>A: Название, B: Период, C: Целевая сумма, D: Текущая, E: Срок, F: Цвет (hex)</span></div>
+    </div>
+    <div style="margin-top:16px;">
+      <a href="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/copy" target="_blank" style="display:inline-flex; align-items:center; gap:6px; background:var(--green); color:#000; font-size:12px; font-weight:700; padding:8px 16px; border-radius:8px; text-decoration:none;">
+        📋 Скопировать шаблон Google Sheets
+      </a>
+      <div style="font-size:11px; color:var(--muted); margin-top:8px;">* После копирования: Файл → Поделиться → Доступ по ссылке → «Все, у кого есть ссылка» — просмотр</div>
+    </div>
+  </div>
+
+  <div class="settings-block">
+    <div class="settings-title">Инструкция — 3 шага</div>
+    <div style="counter-reset: steps;">
+      <div style="display:flex; gap:14px; padding:10px 0; border-bottom:1px solid var(--border);">
+        <div style="width:24px; height:24px; border-radius:50%; background:var(--accent); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">1</div>
+        <div style="font-size:13px; color:var(--muted); line-height:1.6;">Скопируй шаблон Google Sheets выше. Заполни листы своими данными — счета, кредиты, транзакции.</div>
+      </div>
+      <div style="display:flex; gap:14px; padding:10px 0; border-bottom:1px solid var(--border);">
+        <div style="width:24px; height:24px; border-radius:50%; background:var(--accent); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">2</div>
+        <div style="font-size:13px; color:var(--muted); line-height:1.6;">Открой доступ: <b style="color:var(--text)">Файл → Поделиться → Доступ по ссылке → Просмотр</b>. Скопируй ID из URL (длинный код между /d/ и /edit).</div>
+      </div>
+      <div style="display:flex; gap:14px; padding:10px 0;">
+        <div style="width:24px; height:24px; border-radius:50%; background:var(--accent); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">3</div>
+        <div style="font-size:13px; color:var(--muted); line-height:1.6;">Вставь ID в поле выше → Сохранить. Сайт будет автоматически подтягивать данные при каждом открытии.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ==================== STATE ====================
+let DATA = { accounts: [], credits: [], obligations: [], personal: [], business: [], goals: [] };
+let SHEET_ID = localStorage.getItem('sheetId') || '';
+const SHEET_NAMES = { accounts: 'Счета', credits: 'Кредиты', obligations: 'Обязательства', personal: 'Личные', business: 'Бизнес', goals: 'Цели' };
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+  if (SHEET_ID) {
+    document.getElementById('sheetId').value = SHEET_ID;
+    loadAll();
+  } else {
+    showConfigBanner();
+  }
+});
+
+function showConfigBanner() {
+  const banners = document.querySelectorAll('#tab-main, #tab-personal, #tab-business, #tab-goals');
+  banners.forEach(t => {
+    const b = document.createElement('div');
+    b.className = 'config-banner';
+    b.id = 'configBanner-' + t.id;
+    b.innerHTML = '⚠️ Сначала вставь ID Google Sheets в <b onclick="switchTab(\'settings\')" style="cursor:pointer;text-decoration:underline;">Настройках</b>';
+    t.insertBefore(b, t.firstChild);
+  });
+}
+
+// ==================== NAV ====================
+function switchTab(name) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ==================== SETTINGS ====================
+function saveSettings() {
+  SHEET_ID = document.getElementById('sheetId').value.trim();
+  localStorage.setItem('sheetId', SHEET_ID);
+  loadAll();
+}
+
+// ==================== FETCH ====================
+async function fetchSheet(sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/)[1]);
+  if (!json.table || !json.table.rows) return [];
+  return json.table.rows.map(row => row.c.map(cell => cell ? (cell.v !== null && cell.v !== undefined ? cell.v : '') : ''));
+}
+
+async function loadAll() {
+  if (!SHEET_ID) return;
+  setSyncStatus('loading', 'Загрузка…');
+  clearErrors();
+  try {
+    const [accounts, credits, obligations, personal, business, goals] = await Promise.all([
+      fetchSheet(SHEET_NAMES.accounts).catch(() => []),
+      fetchSheet(SHEET_NAMES.credits).catch(() => []),
+      fetchSheet(SHEET_NAMES.obligations).catch(() => []),
+      fetchSheet(SHEET_NAMES.personal).catch(() => []),
+      fetchSheet(SHEET_NAMES.business).catch(() => []),
+      fetchSheet(SHEET_NAMES.goals).catch(() => []),
+    ]);
+    DATA = { accounts, credits, obligations, personal, business, goals };
+    renderAll();
+    setSyncStatus('ok', 'Обновлено ' + new Date().toLocaleTimeString('ru'));
+    document.getElementById('lastSync').textContent = 'Обновлено ' + new Date().toLocaleTimeString('ru');
+  } catch(e) {
+    setSyncStatus('err', 'Ошибка');
+    showError('main-error', 'Не удалось загрузить данные. Проверь ID таблицы и доступ (Общий → Просмотр). ' + e.message);
+  }
+}
+
+function setSyncStatus(state, text) {
+  document.getElementById('syncDot').className = 'sync-dot' + (state === 'loading' ? ' loading' : state === 'err' ? ' err' : '');
+  document.getElementById('syncText').textContent = text;
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = `<div class="err-box">⚠️ ${msg}</div>`;
+}
+
+function clearErrors() {
+  ['main-error','personal-error','biz-error','goals-error'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+}
+
+// ==================== FORMAT ====================
+function fmt(n) {
+  if (!n && n !== 0) return '—';
+  const num = parseFloat(n) || 0;
+  return num.toLocaleString('ru-RU') + ' с';
+}
+
+function num(v) { return parseFloat(String(v).replace(/[^\d.-]/g,'')) || 0; }
+
+function getMonth(row) {
+  if (!row[0]) return '';
+  const v = String(row[0]);
+  // DD.MM.YYYY or Date object
+  if (v.includes('.')) { const p = v.split('.'); return p[2] + '-' + p[1]; }
+  const d = new Date(v);
+  if (!isNaN(d)) return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  return '';
+}
+
+// ==================== RENDER ALL ====================
+function renderAll() {
+  renderMain();
+  renderPersonal();
+  renderBusiness();
+  renderGoals();
+}
+
+// ==================== MAIN TAB ====================
+function renderMain() {
+  const personal = DATA.accounts.filter(r => String(r[1]).toLowerCase().includes('лич') || String(r[1]).toLowerCase().includes('person'));
+  const business = DATA.accounts.filter(r => String(r[1]).toLowerCase().includes('биз') || String(r[1]).toLowerCase().includes('busi'));
+  const allAccs = DATA.accounts;
+
+  const icons = { 'наличка': {i:'💵', c:'#34d399'}, 'mbank': {i:'M', c:'#7c6af7'}, 'optima': {i:'O', c:'#60a5fa'}, 'kicb': {i:'K', c:'#fbbf24'}, 'revolut': {i:'R', c:'#f87171'}, 'бизнес': {i:'B', c:'#2dd4bf'} };
+
+  function getIcon(name) {
+    const key = Object.keys(icons).find(k => name.toLowerCase().includes(k));
+    return key ? icons[key] : {i: name[0].toUpperCase(), c: '#7b7a8e'};
+  }
+
+  function renderAccRows(rows) {
+    if (!rows.length) return '<div class="empty">нет данных</div>';
+    return rows.map(r => {
+      const ic = getIcon(String(r[0]));
+      return `<div class="acct-row">
+        <div class="acct-icon" style="background:${ic.c}22; color:${ic.c};">${ic.i}</div>
+        <div><div class="acct-name">${r[0]}</div><div class="acct-tag">${r[1]||''}</div></div>
+        <div class="acct-amount" style="color:var(--green)">${fmt(r[2])}</div>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('personalAccounts').innerHTML = renderAccRows(personal);
+  document.getElementById('businessAccounts').innerHTML = renderAccRows(business);
+
+  const pTotal = personal.reduce((s,r) => s + num(r[2]), 0);
+  const bTotal = business.reduce((s,r) => s + num(r[2]), 0);
+  const total = allAccs.reduce((s,r) => s + num(r[2]), 0);
+
+  document.getElementById('personalTotal').textContent = fmt(pTotal);
+  document.getElementById('businessTotal').textContent = fmt(bTotal);
+  document.getElementById('totalBalance').textContent = fmt(total);
+
+  // Quick stats
+  const creditDebt = DATA.credits.reduce((s,r) => s + num(r[4]), 0);
+  document.getElementById('creditDebt').textContent = fmt(creditDebt);
+
+  const thisMonth = new Date().toISOString().slice(0,7).replace('-','-');
+  const mStr = new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0');
+
+  const pExpense = DATA.personal.filter(r => getMonth(r) === mStr).reduce((s,r) => s + num(r[4]), 0);
+  document.getElementById('monthExpense').textContent = fmt(pExpense);
+
+  const bizInc = DATA.business.reduce((s,r) => s + num(r[3]), 0);
+  const bizExp = DATA.business.reduce((s,r) => s + num(r[4]), 0);
+  document.getElementById('bizIncome').textContent = fmt(bizInc);
+  document.getElementById('bizProfit').textContent = fmt(bizInc - bizExp);
+
+  // Obligations preview
+  const obs = DATA.obligations;
+  if (obs.length) {
+    document.getElementById('obligationsPreview').innerHTML = obs.slice(0,4).map(r =>
+      `<div class="oblig-row">
+        <div class="oblig-info">
+          <div class="oblig-name">${r[0]}</div>
+          <div class="oblig-from"><span class="from-tag">${r[2]||'—'}</span> до ${r[3]||'?'} числа</div>
+        </div>
+        <div class="oblig-amount">${fmt(r[1])}</div>
+      </div>`
+    ).join('');
+  }
+}
+
+// ==================== PERSONAL TAB ====================
+function renderPersonal() {
+  // Credits
+  const credits = DATA.credits;
+  if (credits.length) {
+    document.getElementById('creditsGrid').innerHTML = credits.map(r => {
+      const total = num(r[2]), paid = num(r[3]), remain = num(r[4]), monthly = num(r[5]);
+      const pct = total > 0 ? Math.round((paid/total)*100) : 0;
+      return `<div class="credit-card">
+        <div class="credit-header">
+          <div><div class="credit-name">${r[0]}</div><div class="credit-bank">${r[1]||''}</div></div>
+          <div class="credit-nums">
+            <div class="credit-paid">✓ Выплачено ${fmt(paid)}</div>
+            <div class="credit-remain">${fmt(remain)}</div>
+          </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div class="credit-footer">
+          <span>${pct}% погашено</span>
+          <span>Платёж: ${fmt(monthly)}/мес</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Obligations
+  const obs = DATA.obligations;
+  if (obs.length) {
+    document.getElementById('obligationsList').innerHTML = obs.map(r =>
+      `<div class="oblig-row">
+        <div class="oblig-info">
+          <div class="oblig-name">${r[0]}</div>
+          <div class="oblig-from">Списание со счёта: <span class="from-tag">${r[2]||'—'}</span></div>
+        </div>
+        <div>
+          <div class="oblig-amount">${fmt(r[1])}</div>
+          <div style="font-size:11px;color:var(--muted);text-align:right">до ${r[3]||'?'} числа</div>
+        </div>
+      </div>`
+    ).join('');
+  }
+
+  // Month selector
+  const months = [...new Set(DATA.personal.map(r => getMonth(r)).filter(Boolean))].sort().reverse();
+  const sel = document.getElementById('personalMonthSel');
+  sel.innerHTML = '<option value="all">Все</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
+  renderPersonalTx();
+}
+
+function renderPersonalTx() {
+  const month = document.getElementById('personalMonthSel').value;
+  const rows = month === 'all' ? DATA.personal : DATA.personal.filter(r => getMonth(r) === month);
+  if (!rows.length) { document.getElementById('personalTxList').innerHTML = '<div class="empty">нет транзакций</div>'; return; }
+  document.getElementById('personalTxList').innerHTML = rows.slice(-50).reverse().map(r => {
+    const isIncome = num(r[3]) > 0;
+    return `<div class="tx-row">
+      <div class="tx-dot" style="background:${isIncome?'var(--green)':'var(--red)'}"></div>
+      <div class="tx-info">
+        <div class="tx-name">${r[1]||'—'}</div>
+        <div class="tx-cat">${r[2]||''} · ${r[5]||''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="tx-amount" style="color:${isIncome?'var(--green)':'var(--red)'}">${isIncome?'+':'−'}${fmt(isIncome?r[3]:r[4])}</div>
+        <div class="tx-date">${r[0]||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ==================== BUSINESS TAB ====================
+function renderBusiness() {
+  const months = [...new Set(DATA.business.map(r => getMonth(r)).filter(Boolean))].sort().reverse();
+  const sel = document.getElementById('bizMonthSel');
+  sel.innerHTML = '<option value="all">Все месяцы</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
+  renderBizMonth();
+}
+
+function renderBizMonth() {
+  const month = document.getElementById('bizMonthSel').value;
+  const rows = month === 'all' ? DATA.business : DATA.business.filter(r => getMonth(r) === month);
+
+  const income = rows.filter(r => num(r[3]) > 0);
+  const expenses = rows.filter(r => num(r[4]) > 0);
+
+  const totalInc = income.reduce((s,r)=>s+num(r[3]),0);
+  const totalExp = expenses.reduce((s,r)=>s+num(r[4]),0);
+  document.getElementById('bizIncomeDetail').textContent = fmt(totalInc);
+  document.getElementById('bizExpenseDetail').textContent = fmt(totalExp);
+  document.getElementById('bizProfitDetail').textContent = fmt(totalInc - totalExp);
+  document.getElementById('bizIncome').textContent = fmt(totalInc);
+  document.getElementById('bizProfit').textContent = fmt(totalInc - totalExp);
+
+  function txRows(list) {
+    if (!list.length) return '<div class="empty">нет данных</div>';
+    return list.map(r => {
+      const isInc = num(r[3]) > 0;
+      return `<div class="biz-row">
+        <div><div class="biz-name">${r[1]||'—'}</div><div style="font-size:11px;color:var(--muted)">${r[0]||''}</div></div>
+        <div class="biz-amount" style="color:${isInc?'var(--green)':'var(--red)'}">${isInc?'+':'−'}${fmt(isInc?r[3]:r[4])}</div>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('bizIncomeList').innerHTML = txRows(income);
+
+  const catFilter = (cat) => expenses.filter(r => String(r[2]).toLowerCase().includes(cat));
+  document.getElementById('bizSalary').innerHTML = txRows(catFilter('зп') || catFilter('зарп') || catFilter('salari') || expenses.filter(r => String(r[2]).toLowerCase().includes('зп') || String(r[2]).toLowerCase().includes('зарп')));
+  document.getElementById('bizTax').innerHTML = txRows(expenses.filter(r => String(r[2]).toLowerCase().includes('налог') || String(r[2]).toLowerCase().includes('tax')));
+  document.getElementById('bizAds').innerHTML = txRows(expenses.filter(r => String(r[2]).toLowerCase().includes('реклам') || String(r[2]).toLowerCase().includes('марке') || String(r[2]).toLowerCase().includes('ads')));
+  document.getElementById('bizOther').innerHTML = txRows(expenses.filter(r => {
+    const c = String(r[2]).toLowerCase();
+    return !c.includes('зп') && !c.includes('зарп') && !c.includes('налог') && !c.includes('tax') && !c.includes('реклам') && !c.includes('марке') && !c.includes('ads') && !c.includes('salari');
+  }));
+}
+
+// ==================== GOALS ====================
+function renderGoals() {
+  const goals = DATA.goals;
+  if (!goals.length) return;
+  const periods = { 'месяц': '#7c6af7', '3 месяца': '#60a5fa', 'квартал': '#60a5fa', 'год': '#34d399', '3 года': '#2dd4bf', '5 лет': '#fbbf24' };
+  document.getElementById('goalsGrid').innerHTML = goals.map(r => {
+    const title = r[0]||'Цель', period = r[1]||'—', target = num(r[2]), current = num(r[3]), deadline = r[4]||'', color = r[5] || '#7c6af7';
+    const pct = target > 0 ? Math.min(Math.round((current/target)*100), 100) : 0;
+    return `<div class="goal-card">
+      <div class="goal-header">
+        <div><div class="goal-title">${title}</div><div class="goal-period">${period}${deadline?' · до '+deadline:''}</div></div>
+        <div class="goal-pct" style="color:${color}">${pct}%</div>
+      </div>
+      <div class="goal-progress"><div class="goal-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="goal-footer">${fmt(current)} из ${fmt(target)}</div>
+    </div>`;
+  }).join('');
+// ==================== THEME ====================
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    document.getElementById('themeBtn').textContent = '🌙';
+    localStorage.setItem('theme', 'light');
+    document.querySelector('.card[style*="linear-gradient"]').style.background = 'linear-gradient(135deg, #ede9fd 0%, #f0eeff 100%)';
+    document.querySelector('.card[style*="linear-gradient"]').style.borderColor = 'rgba(108,92,231,0.15)';
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('themeBtn').textContent = '☀️';
+    localStorage.setItem('theme', 'dark');
+    document.querySelector('.card[style*="linear-gradient"]').style.background = 'linear-gradient(135deg, #1a1730 0%, #161622 100%)';
+    document.querySelector('.card[style*="linear-gradient"]').style.borderColor = 'rgba(124,106,247,0.2)';
+  }
+}
+
+// Init theme on load
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('themeBtn');
+      if (btn) btn.textContent = '☀️';
+      const heroCard = document.querySelector('.card[style*="linear-gradient"]');
+      if (heroCard) {
+        heroCard.style.background = 'linear-gradient(135deg, #1a1730 0%, #161622 100%)';
+        heroCard.style.borderColor = 'rgba(124,106,247,0.2)';
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>
