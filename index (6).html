@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Финансы</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0f0f0;
+  --surface: #ffffff;
+  --surface2: #f7f7f7;
+  --border: #e8e8e8;
+  --text: #111111;
+  --muted: #888888;
+  --accent: #1a1a1a;
+  --green: #16a34a;
+  --green-bg: #dcfce7;
+  --red: #dc2626;
+  --red-bg: #fee2e2;
+  --amber: #d97706;
+  --amber-bg: #fef3c7;
+  --blue: #2563eb;
+  --blue-bg: #dbeafe;
+  --radius: 20px;
+  --radius-sm: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; max-width: 430px; margin: 0 auto; position: relative; }
+
+/* TOP BAR */
+.topbar { padding: 16px 20px 8px; display: flex; align-items: center; justify-content: space-between; }
+.topbar-title { font-size: 13px; font-weight: 500; color: var(--muted); }
+.topbar-name { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.topbar-right { display: flex; gap: 8px; }
+.icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; transition: all 0.2s; }
+.icon-btn:hover { background: var(--accent); color: #fff; }
+
+/* BOTTOM NAV */
+.bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--surface); border-top: 1px solid var(--border); display: flex; z-index: 50; padding: 8px 0 20px; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px; cursor: pointer; transition: all 0.2s; }
+.nav-item .nav-icon { font-size: 20px; }
+.nav-item .nav-label { font-size: 10px; font-weight: 500; color: var(--muted); }
+.nav-item.active .nav-label { color: var(--accent); font-weight: 700; }
+.nav-item.active .nav-icon { transform: scale(1.15); }
+.nav-center { position: relative; }
+.nav-center .nav-add { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 26px; display: flex; align-items: center; justify-content: center; margin-top: -20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); cursor: pointer; border: none; font-family: inherit; transition: transform 0.2s; }
+.nav-center .nav-add:hover { transform: scale(1.05); }
+
+/* PAGES */
+.page { display: none; padding: 0 20px 100px; }
+.page.active { display: block; }
+
+/* BALANCE CARD */
+.balance-card { background: var(--accent); color: #fff; border-radius: var(--radius); padding: 24px; margin-bottom: 16px; position: relative; overflow: hidden; }
+.balance-card::before { content: ''; position: absolute; right: -30px; top: -30px; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,0.05); }
+.balance-card::after { content: ''; position: absolute; right: 40px; bottom: -40px; width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.04); }
+.balance-label { font-size: 12px; font-weight: 500; opacity: 0.6; margin-bottom: 6px; }
+.balance-amount { font-family: 'DM Mono', monospace; font-size: 36px; font-weight: 500; letter-spacing: -1px; line-height: 1; margin-bottom: 4px; }
+.balance-sub { font-size: 12px; opacity: 0.5; margin-bottom: 20px; }
+.balance-row { display: flex; gap: 16px; }
+.balance-stat { flex: 1; background: rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; }
+.balance-stat-label { font-size: 10px; opacity: 0.6; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+.balance-stat-val { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; }
+
+/* SECTION TITLE */
+.section-hdr { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 12px; }
+.section-hdr h2 { font-size: 16px; font-weight: 700; }
+.section-hdr a { font-size: 12px; color: var(--muted); cursor: pointer; }
+
+/* ACCOUNT PILLS */
+.accounts-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 4px; scrollbar-width: none; }
+.accounts-scroll::-webkit-scrollbar { display: none; }
+.account-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 18px; min-width: 140px; flex-shrink: 0; }
+.account-pill-icon { font-size: 20px; margin-bottom: 8px; }
+.account-pill-name { font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+.account-pill-amt { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500; }
+.account-pill-cur { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* QUICK STATS */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+.stat-card { background: var(--surface); border-radius: var(--radius-sm); padding: 16px; }
+.stat-card-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+.stat-card-val { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; }
+
+/* TRANSACTIONS */
+.tx-list { background: var(--surface); border-radius: var(--radius); overflow: hidden; }
+.tx-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; }
+.tx-item:last-child { border-bottom: none; }
+.tx-item:active { background: var(--surface2); }
+.tx-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.tx-info { flex: 1; min-width: 0; }
+.tx-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.tx-amt { text-align: right; flex-shrink: 0; }
+.tx-amt-val { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 600; }
+.tx-amt-date { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* CREDITS */
+.credit-card { background: var(--surface); border-radius: var(--radius); padding: 18px; margin-bottom: 10px; }
+.credit-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.credit-name { font-size: 15px; font-weight: 700; }
+.credit-bank { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.credit-remain { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; color: var(--red); }
+.credit-paid-label { font-size: 11px; color: var(--green); text-align: right; }
+.progress { background: var(--border); border-radius: 99px; height: 6px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #1a1a1a, #555); }
+.credit-footer { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--muted); }
+
+/* OBLIGATIONS */
+.oblig-item { background: var(--surface); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+.oblig-left { display: flex; align-items: center; gap: 12px; }
+.oblig-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+.oblig-name { font-size: 14px; font-weight: 600; }
+.oblig-account { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.oblig-right { text-align: right; }
+.oblig-amt { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 600; color: var(--amber); }
+.oblig-day { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* GOALS */
+.goal-card { background: var(--surface); border-radius: var(--radius); padding: 18px; margin-bottom: 10px; }
+.goal-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.goal-name { font-size: 15px; font-weight: 700; }
+.goal-period { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.goal-pct { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; }
+.goal-progress { background: var(--border); border-radius: 99px; height: 8px; overflow: hidden; margin-bottom: 8px; }
+.goal-progress-fill { height: 100%; border-radius: 99px; }
+.goal-footer { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+
+/* BIZ */
+.biz-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.biz-stat { background: var(--surface); border-radius: var(--radius-sm); padding: 14px 12px; text-align: center; }
+.biz-stat-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+.biz-stat-val { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; }
+
+/* FILTER TABS */
+.filter-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px; scrollbar-width: none; }
+.filter-tabs::-webkit-scrollbar { display: none; }
+.filter-tab { padding: 7px 16px; border-radius: 99px; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--muted); transition: all 0.2s; }
+.filter-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* MODAL */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; backdrop-filter: blur(4px); }
+.overlay.open { display: flex; align-items: flex-end; justify-content: center; }
+.sheet { background: var(--surface); border-radius: 24px 24px 0 0; width: 100%; max-width: 430px; padding: 24px 20px 40px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32,0.72,0,1); }
+.overlay.open .sheet { transform: translateY(0); }
+.sheet-handle { width: 40px; height: 4px; background: var(--border); border-radius: 99px; margin: 0 auto 20px; }
+.sheet-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+
+/* TYPE TOGGLE */
+.type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; background: var(--bg); border-radius: 14px; padding: 4px; }
+.type-btn { padding: 10px; border-radius: 10px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; background: transparent; color: var(--muted); transition: all 0.2s; }
+.type-btn.inc { }
+.type-btn.exp { }
+.type-btn.active-inc { background: var(--surface); color: var(--green); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.type-btn.active-exp { background: var(--surface); color: var(--red); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+/* FORM */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: block; }
+.form-input { width: 100%; background: var(--bg); border: none; border-radius: 12px; padding: 12px 14px; color: var(--text); font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none; transition: box-shadow 0.2s; }
+.form-input:focus { box-shadow: 0 0 0 2px var(--accent); }
+.form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.big-amount { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; }
+.btn-primary { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 8px; transition: opacity 0.2s; }
+.btn-primary:hover { opacity: 0.85; }
+.save-status { text-align: center; font-size: 13px; color: var(--muted); padding: 8px 0; min-height: 36px; }
+
+/* BADGES */
+.tag { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+.tag-green { background: var(--green-bg); color: var(--green); }
+.tag-red { background: var(--red-bg); color: var(--red); }
+.tag-blue { background: var(--blue-bg); color: var(--blue); }
+.tag-amber { background: var(--amber-bg); color: var(--amber); }
+
+.empty { text-align: center; padding: 32px; color: var(--muted); font-size: 13px; }
+.err-box { background: var(--red-bg); border-radius: 10px; padding: 12px; font-size: 12px; color: var(--red); margin-bottom: 12px; }
+
+select.form-input { appearance: none; }
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.page.active > * { animation: fadeIn 0.25s ease forwards; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Доброго дня 👋</div>
+    <div class="topbar-name">Финансы</div>
+  </div>
+  <div class="topbar-right">
+    <div class="icon-btn" onclick="loadAll()" title="Обновить">↻</div>
+    <div class="icon-btn" id="syncDot" title="Статус">●</div>
+  </div>
+</div>
+
+<!-- HOME PAGE -->
+<div class="page active" id="page-home">
+  <div id="home-error"></div>
+
+  <!-- Balance Card -->
+  <div class="balance-card">
+    <div class="balance-label">Общий баланс</div>
+    <div class="balance-amount" id="totalBalance">—</div>
+    <div class="balance-sub" id="totalBalanceSub">Все счета</div>
+    <div class="balance-row">
+      <div class="balance-stat">
+        <div class="balance-stat-label">↑ Доход (бизнес)</div>
+        <div class="balance-stat-val" id="quickInc">—</div>
+      </div>
+      <div class="balance-stat">
+        <div class="balance-stat-label">↓ Расход (бизнес)</div>
+        <div class="balance-stat-val" id="quickExp">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accounts -->
+  <div class="section-hdr"><h2>Счета</h2></div>
+  <div class="accounts-scroll" id="accountsScroll"></div>
+
+  <!-- Quick Stats -->
+  <div class="section-hdr"><h2>Обзор</h2></div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-card-label">💳 Долг по кредитам</div>
+      <div class="stat-card-val" style="color:var(--red)" id="qCredit">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">🔁 Платежи/месяц</div>
+      <div class="stat-card-val" style="color:var(--amber)" id="qOblig">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">📈 Прибыль бизнеса</div>
+      <div class="stat-card-val" style="color:var(--green)" id="qProfit">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">🎯 Активных целей</div>
+      <div class="stat-card-val" id="qGoals">—</div>
+    </div>
+  </div>
+
+  <!-- Upcoming Payments -->
+  <div class="section-hdr"><h2>Ближайшие платежи</h2></div>
+  <div id="obligPreview"></div>
+</div>
+
+<!-- ЛИЧНОЕ PAGE -->
+<div class="page" id="page-personal">
+  <div class="section-hdr" style="margin-top:8px;"><h2>Кредиты</h2></div>
+  <div id="creditsSection"></div>
+
+  <div class="section-hdr"><h2>Обязательства</h2></div>
+  <div id="obligSection"></div>
+
+  <div class="section-hdr">
+    <h2>Транзакции</h2>
+    <select class="filter-tab active" style="border:1px solid var(--border);border-radius:99px;padding:6px 12px;font-size:12px;background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;" id="pMonthSel" onchange="renderPTx()">
+      <option value="all">Все</option>
+    </select>
+  </div>
+  <div class="tx-list" id="pTxList"><div class="empty">нет данных</div></div>
+</div>
+
+<!-- БИЗНЕС PAGE -->
+<div class="page" id="page-biz">
+  <div style="margin-top:8px;">
+    <div class="section-hdr">
+      <h2>Бизнес</h2>
+      <select class="filter-tab active" style="border:1px solid var(--border);border-radius:99px;padding:6px 12px;font-size:12px;background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;" id="bMonthSel" onchange="renderBizMonth()">
+        <option value="all">Все месяцы</option>
+      </select>
+    </div>
+    <div class="biz-summary">
+      <div class="biz-stat"><div class="biz-stat-label">Доход</div><div class="biz-stat-val" style="color:var(--green)" id="bInc">—</div></div>
+      <div class="biz-stat"><div class="biz-stat-label">Расход</div><div class="biz-stat-val" style="color:var(--red)" id="bExp">—</div></div>
+      <div class="biz-stat"><div class="biz-stat-label">Прибыль</div><div class="biz-stat-val" style="color:var(--accent)" id="bProf">—</div></div>
+    </div>
+    <div class="biz-summary" style="margin-top:-4px;">
+      <div class="biz-stat"><div class="biz-stat-label">Доход $</div><div class="biz-stat-val" style="color:var(--green)" id="bIncU">—</div></div>
+      <div class="biz-stat"><div class="biz-stat-label">Расход $</div><div class="biz-stat-val" style="color:var(--red)" id="bExpU">—</div></div>
+      <div class="biz-stat"><div class="biz-stat-label">Прибыль $</div><div class="biz-stat-val" style="color:var(--accent)" id="bProfU">—</div></div>
+    </div>
+    <div class="section-hdr"><h2>Все операции</h2></div>
+    <div class="tx-list" id="bTxList"><div class="empty">нет данных</div></div>
+  </div>
+</div>
+
+<!-- ЦЕЛИ PAGE -->
+<div class="page" id="page-goals">
+  <div style="margin-top:8px;" id="goalsSection"><div class="empty">нет данных</div></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchPage('home',this)">
+    <div class="nav-icon">🏠</div>
+    <div class="nav-label">Главная</div>
+  </div>
+  <div class="nav-item" onclick="switchPage('personal',this)">
+    <div class="nav-icon">👤</div>
+    <div class="nav-label">Личное</div>
+  </div>
+  <div class="nav-center">
+    <button class="nav-add" onclick="openSheet()">+</button>
+  </div>
+  <div class="nav-item" onclick="switchPage('biz',this)">
+    <div class="nav-icon">💼</div>
+    <div class="nav-label">Бизнес</div>
+  </div>
+  <div class="nav-item" onclick="switchPage('goals',this)">
+    <div class="nav-icon">🎯</div>
+    <div class="nav-label">Цели</div>
+  </div>
+</div>
+
+<!-- ADD TRANSACTION SHEET -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Новая операция</div>
+
+    <div class="type-toggle">
+      <button class="type-btn inc active-inc" id="btnInc" onclick="setType('income')">↑ Доход</button>
+      <button class="type-btn exp" id="btnExp" onclick="setType('expense')">↓ Расход</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Раздел</label>
+      <select class="form-input" id="fSection">
+        <option value="Личные">Личные</option>
+        <option value="Бизнес">Бизнес</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Описание</label>
+      <input class="form-input" id="fDesc" placeholder="Например: Продукты, ЗП...">
+    </div>
+
+    <div class="form-row2">
+      <div class="form-group">
+        <label class="form-label">Сумма KGS</label>
+        <input class="form-input" id="fKGS" type="number" placeholder="0" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Сумма USD</label>
+        <input class="form-input" id="fUSD" type="number" placeholder="0" inputmode="decimal">
+      </div>
+    </div>
+
+    <div class="form-row2">
+      <div class="form-group">
+        <label class="form-label">Категория</label>
+        <select class="form-input" id="fCat">
+          <option value="еда">🛒 Еда</option>
+          <option value="транспорт">🚗 Транспорт</option>
+          <option value="аренда">🏠 Аренда</option>
+          <option value="ипотека">🏦 Ипотека</option>
+          <option value="одежда">👗 Одежда</option>
+          <option value="здоровье">❤️ Здоровье</option>
+          <option value="кафе/рест.">☕ Кафе</option>
+          <option value="зарплата">💰 Зарплата</option>
+          <option value="зп">👷 ЗП сотрудника</option>
+          <option value="налог">📋 Налог</option>
+          <option value="реклама">📣 Реклама</option>
+          <option value="доход">💵 Доход от клиента</option>
+          <option value="офис">🖥 Офис</option>
+          <option value="прочее">📦 Прочее</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Счёт</label>
+        <select class="form-input" id="fAccount">
+          <option>Наличка</option>
+          <option>Mbank</option>
+          <option>Optima</option>
+          <option>KICB</option>
+          <option>Revolut жены</option>
+          <option>Бизнес счёт</option>
+          <option>Бизнес USD</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="save-status" id="saveStatus"></div>
+    <button class="btn-primary" onclick="saveTx()">Сохранить</button>
+  </div>
+</div>
+
+<script>
+const SHEET_ID = '1Pa_HJDPLVv6i39lHwGVsz35B8J8XDngc3E_zwpYe8rc';
+const WRITER_URL = 'https://script.google.com/macros/s/AKfycbw7GehCuzAG5qA5Ti-6Y2eSEIuLgCjpLpKA-9otVwtIzhL5Zafnhkx2atjvzKXtfV007Q/exec';
+const SH = {accounts:'Счета',credits:'Кредиты',obligations:'Обязательства',personal:'Личные',business:'Бизнес',goals:'Цели'};
+let D = {accounts:[],credits:[],obligations:[],personal:[],business:[],goals:[]};
+let txType = 'income';
+
+// ── NAV ──────────────────────────────────────────────
+function switchPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+// ── FETCH ─────────────────────────────────────────────
+async function fetchSheet(name) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(name)}`;
+  const res = await fetch(url);
+  const text = await res.text();
+  const m = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/);
+  if (!m) return [];
+  const json = JSON.parse(m[1]);
+  if (!json.table || !json.table.rows) return [];
+  return json.table.rows.slice(2)
+    .map(row => row.c.map(cell => (cell && cell.v !== null && cell.v !== undefined) ? cell.v : ''))
+    .filter(row => row.some(v => v !== ''));
+}
+
+async function loadAll() {
+  setSS('loading');
+  try {
+    const [accounts,credits,obligations,personal,business,goals] = await Promise.all([
+      fetchSheet(SH.accounts).catch(()=>[]),
+      fetchSheet(SH.credits).catch(()=>[]),
+      fetchSheet(SH.obligations).catch(()=>[]),
+      fetchSheet(SH.personal).catch(()=>[]),
+      fetchSheet(SH.business).catch(()=>[]),
+      fetchSheet(SH.goals).catch(()=>[]),
+    ]);
+    D = {accounts,credits,obligations,personal,business,goals};
+    renderAll();
+    setSS('ok');
+  } catch(e) {
+    setSS('err');
+    document.getElementById('home-error').innerHTML = `<div class="err-box">Ошибка загрузки: ${e.message}</div>`;
+  }
+}
+
+function setSS(s) {
+  const dot = document.getElementById('syncDot');
+  dot.style.color = s==='ok'?'#16a34a':s==='err'?'#dc2626':'#d97706';
+  dot.title = s==='ok'?'Данные загружены':s==='err'?'Ошибка':'Загрузка...';
+}
+
+// ── FORMAT ────────────────────────────────────────────
+function fK(n) { return (parseFloat(n)||0).toLocaleString('ru-RU',{maximumFractionDigits:0})+' с'; }
+function fU(n) { return '$'+(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+function nv(v) { return parseFloat(String(v).replace(/[^\d.-]/g,''))||0; }
+function getM(row) {
+  const v = String(row[0]||'');
+  if (v.includes('.')) { const p=v.split('.'); if(p.length>=3) return p[2].slice(0,4)+'-'+p[1]; }
+  const d=new Date(v); if(!isNaN(d)) return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  return '';
+}
+function mLabel(m) {
+  const mo=['','Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+  const [y,n]=m.split('-'); return (mo[parseInt(n)]||n)+' '+y;
+}
+
+const ACCT_ICONS = {наличка:'💵',mbank:'📱',optima:'🏦',kicb:'🏛',revolut:'💳',бизнес:'💼',usd:'💲'};
+function acctIcon(name) { const k=Object.keys(ACCT_ICONS).find(k=>name.toLowerCase().includes(k)); return k?ACCT_ICONS[k]:'💰'; }
+
+const CAT_COLORS = {еда:'#f97316',транспорт:'#3b82f6',аренда:'#8b5cf6',ипотека:'#6366f1',одежда:'#ec4899',здоровье:'#ef4444','кафе/рест.':'#f59e0b',зарплата:'#10b981',зп:'#10b981',налог:'#64748b',реклама:'#f97316',доход:'#16a34a',офис:'#0891b2',прочее:'#9ca3af'};
+function catColor(cat) { return CAT_COLORS[String(cat).toLowerCase()]||'#9ca3af'; }
+
+// ── RENDER ALL ────────────────────────────────────────
+function renderAll() { renderHome(); renderPersonal(); renderBiz(); renderGoals(); }
+
+// ── HOME ──────────────────────────────────────────────
+function renderHome() {
+  const pa = D.accounts.filter(r=>String(r[1]).includes('лич'));
+  const ba = D.accounts.filter(r=>String(r[1]).includes('биз'));
+
+  function toKGS(rows) { return rows.reduce((s,r)=>{ const cur=String(r[2]||'').toUpperCase(),amt=nv(r[3]); return s+(cur==='USD'?amt*88:amt); },0); }
+  const total = D.accounts.reduce((s,r)=>{ const cur=String(r[2]||'').toUpperCase(),amt=nv(r[3]); return s+(cur==='USD'?amt*88:amt); },0);
+
+  document.getElementById('totalBalance').textContent = fK(total);
+  document.getElementById('totalBalanceSub').textContent = `Личные: ${fK(toKGS(pa))} · Бизнес: ${fK(toKGS(ba))}`;
+
+  const bizInc = D.business.reduce((s,r)=>s+nv(r[3]),0);
+  const bizExp = D.business.reduce((s,r)=>s+nv(r[4]),0);
+  document.getElementById('quickInc').textContent = fK(bizInc);
+  document.getElementById('quickExp').textContent = fK(bizExp);
+
+  // Accounts scroll
+  document.getElementById('accountsScroll').innerHTML = D.accounts.map(r => `
+    <div class="account-pill">
+      <div class="account-pill-icon">${acctIcon(String(r[0]))}</div>
+      <div class="account-pill-name">${r[0]}</div>
+      <div class="account-pill-amt">${nv(r[3]).toLocaleString('ru-RU',{maximumFractionDigits:2})}</div>
+      <div class="account-pill-cur">${r[2]||'KGS'}</div>
+    </div>
+  `).join('') || '<div class="empty">нет счетов</div>';
+
+  // Stats
+  const creditDebt = D.credits.reduce((s,r)=>s+nv(r[4]),0);
+  const monthOblig = D.obligations.reduce((s,r)=>s+nv(r[1]),0);
+  document.getElementById('qCredit').textContent = fK(creditDebt);
+  document.getElementById('qOblig').textContent = fK(monthOblig);
+  document.getElementById('qProfit').textContent = fK(bizInc-bizExp);
+  document.getElementById('qGoals').textContent = D.goals.length + ' шт.';
+
+  // Obligations preview
+  document.getElementById('obligPreview').innerHTML = D.obligations.slice(0,4).map(r=>`
+    <div class="oblig-item">
+      <div class="oblig-left">
+        <div class="oblig-dot"></div>
+        <div>
+          <div class="oblig-name">${r[0]}</div>
+          <div class="oblig-account">${r[3]||r[2]||'—'}</div>
+        </div>
+      </div>
+      <div class="oblig-right">
+        <div class="oblig-amt">${fK(nv(r[1]))}</div>
+        <div class="oblig-day">до ${r[4]||'?'} числа</div>
+      </div>
+    </div>
+  `).join('') || '<div class="empty">нет платежей</div>';
+}
+
+// ── PERSONAL ──────────────────────────────────────────
+function renderPersonal() {
+  // Credits
+  document.getElementById('creditsSection').innerHTML = D.credits.map(r=>{
+    const total=nv(r[2]),paid=nv(r[3]),remain=nv(r[4]),monthly=nv(r[5]);
+    const pct = total>0 ? Math.min(Math.round((paid/total)*100),100) : 0;
+    return `<div class="credit-card">
+      <div class="credit-top">
+        <div><div class="credit-name">${r[0]}</div><div class="credit-bank">${r[1]||''}</div></div>
+        <div><div class="credit-remain">${fK(remain)}</div><div class="credit-paid-label">✓ ${fK(paid)}</div></div>
+      </div>
+      <div class="progress"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="credit-footer"><span>${pct}% погашено</span><span>${fK(monthly)}/мес</span></div>
+    </div>`;
+  }).join('') || '<div class="empty">нет кредитов</div>';
+
+  // Obligations
+  document.getElementById('obligSection').innerHTML = D.obligations.map(r=>`
+    <div class="oblig-item">
+      <div class="oblig-left">
+        <div class="oblig-dot"></div>
+        <div><div class="oblig-name">${r[0]}</div><div class="oblig-account">Со счёта: ${r[3]||'—'}</div></div>
+      </div>
+      <div class="oblig-right">
+        <div class="oblig-amt">${fK(nv(r[1]))}</div>
+        <div class="oblig-day">до ${r[4]||'?'} числа</div>
+      </div>
+    </div>
+  `).join('') || '<div class="empty">нет обязательств</div>';
+
+  // Month filter
+  const months = [...new Set(D.personal.map(r=>getM(r)).filter(Boolean))].sort().reverse();
+  const sel = document.getElementById('pMonthSel');
+  sel.innerHTML = '<option value="all">Все</option>' + months.map(m=>`<option value="${m}">${mLabel(m)}</option>`).join('');
+  renderPTx();
+}
+
+function renderPTx() {
+  const month = document.getElementById('pMonthSel').value;
+  const rows = month==='all' ? D.personal : D.personal.filter(r=>getM(r)===month);
+  document.getElementById('pTxList').innerHTML = rows.length ? [...rows].reverse().slice(0,60).map(r=>{
+    const inc=nv(r[3])>0||nv(r[5])>0;
+    const kgs=inc?nv(r[3]):nv(r[4]); const usd=inc?nv(r[5]):nv(r[6]);
+    const col=catColor(r[2]);
+    return `<div class="tx-item">
+      <div class="tx-icon" style="background:${col}22;">${getCatIcon(String(r[2]))}</div>
+      <div class="tx-info"><div class="tx-name">${r[1]||'—'}</div><div class="tx-meta">${r[2]||''} · ${r[7]||''}</div></div>
+      <div class="tx-amt">
+        <div class="tx-amt-val" style="color:${inc?'var(--green)':'var(--red)'}">${inc?'+':'−'}${kgs>0?fK(kgs):fU(usd)}</div>
+        <div class="tx-amt-date">${r[0]||''}</div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">нет транзакций</div>';
+}
+
+// ── BUSINESS ──────────────────────────────────────────
+function renderBiz() {
+  const months = [...new Set(D.business.map(r=>getM(r)).filter(Boolean))].sort().reverse();
+  const sel = document.getElementById('bMonthSel');
+  sel.innerHTML = '<option value="all">Все месяцы</option>' + months.map(m=>`<option value="${m}">${mLabel(m)}</option>`).join('');
+  renderBizMonth();
+}
+
+function renderBizMonth() {
+  const month = document.getElementById('bMonthSel').value;
+  const rows = month==='all' ? D.business : D.business.filter(r=>getM(r)===month);
+  const incK=rows.reduce((s,r)=>s+nv(r[3]),0), expK=rows.reduce((s,r)=>s+nv(r[4]),0);
+  const incU=rows.reduce((s,r)=>s+nv(r[5]),0), expU=rows.reduce((s,r)=>s+nv(r[6]),0);
+  document.getElementById('bInc').textContent=fK(incK);
+  document.getElementById('bExp').textContent=fK(expK);
+  document.getElementById('bProf').textContent=fK(incK-expK);
+  document.getElementById('bIncU').textContent=fU(incU);
+  document.getElementById('bExpU').textContent=fU(expU);
+  document.getElementById('bProfU').textContent=fU(incU-expU);
+  document.getElementById('bTxList').innerHTML = rows.length ? [...rows].reverse().slice(0,80).map(r=>{
+    const inc=nv(r[3])>0||nv(r[5])>0;
+    const kgs=inc?nv(r[3]):nv(r[4]); const usd=inc?nv(r[5]):nv(r[6]);
+    return `<div class="tx-item">
+      <div class="tx-icon" style="background:${catColor(r[2])}22;">${getCatIcon(String(r[2]))}</div>
+      <div class="tx-info"><div class="tx-name">${r[1]||'—'}</div><div class="tx-meta">${r[2]||''} · ${r[7]||''}</div></div>
+      <div class="tx-amt">
+        <div class="tx-amt-val" style="color:${inc?'var(--green)':'var(--red)'}">${inc?'+':'−'}${kgs>0?fK(kgs):fU(usd)}</div>
+        <div class="tx-amt-date">${r[0]||''}</div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">нет данных</div>';
+}
+
+// ── GOALS ─────────────────────────────────────────────
+function renderGoals() {
+  const colors = ['#1a1a1a','#16a34a','#2563eb','#d97706','#dc2626','#8b5cf6'];
+  document.getElementById('goalsSection').innerHTML = D.goals.length ? D.goals.map((r,i)=>{
+    const target=nv(r[2]),current=nv(r[3]),pct=target>0?Math.min(Math.round((current/target)*100),100):0;
+    const col=r[6]||colors[i%colors.length];
+    return `<div class="goal-card">
+      <div class="goal-top">
+        <div><div class="goal-name">${r[0]}</div><div class="goal-period">${r[1]||''}${r[5]?' · до '+r[5]:''}</div></div>
+        <div class="goal-pct" style="color:${col}">${pct}%</div>
+      </div>
+      <div class="goal-progress"><div class="goal-progress-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="goal-footer"><span>${fK(current)}</span><span>из ${fK(target)}</span></div>
+    </div>`;
+  }).join('') : '<div class="empty">нет целей</div>';
+}
+
+// ── CAT ICONS ─────────────────────────────────────────
+function getCatIcon(cat) {
+  const m={'еда':'🛒','транспорт':'🚗','аренда':'🏠','ипотека':'🏦','одежда':'👗','здоровье':'❤️','кафе/рест.':'☕','зарплата':'💰','зп':'👷','налог':'📋','реклама':'📣','доход':'💵','офис':'🖥','прочее':'📦'};
+  return m[cat.toLowerCase()]||'📦';
+}
+
+// ── MODAL ─────────────────────────────────────────────
+function openSheet() {
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('fDesc').focus(), 400);
+}
+
+function closeSheet() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('fDesc').value='';
+  document.getElementById('fKGS').value='';
+  document.getElementById('fUSD').value='';
+  document.getElementById('saveStatus').innerHTML='';
+}
+
+function handleOverlayClick(e) { if(e.target===document.getElementById('overlay')) closeSheet(); }
+
+function setType(type) {
+  txType=type;
+  document.getElementById('btnInc').className='type-btn inc'+(type==='income'?' active-inc':'');
+  document.getElementById('btnExp').className='type-btn exp'+(type==='expense'?' active-exp':'');
+}
+
+async function saveTx() {
+  const desc=document.getElementById('fDesc').value.trim();
+  const kgs=parseFloat(document.getElementById('fKGS').value)||0;
+  const usd=parseFloat(document.getElementById('fUSD').value)||0;
+  const cat=document.getElementById('fCat').value;
+  const account=document.getElementById('fAccount').value;
+  const section=document.getElementById('fSection').value;
+  if(!desc){alert('Введи описание');return;}
+  if(kgs===0&&usd===0){alert('Введи сумму');return;}
+  const d=new Date();
+  const date=String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
+  const row=txType==='income'?[date,desc,cat,kgs,0,usd,0,account]:[date,desc,cat,0,kgs,0,usd,account];
+  const st=document.getElementById('saveStatus');
+  st.innerHTML='<span style="color:var(--muted)">Сохраняю...</span>';
+  try {
+    const res=await fetch(WRITER_URL,{method:'POST',body:JSON.stringify({sheet:section,row})});
+    const data=await res.json();
+    if(data.ok){
+      st.innerHTML='<span style="color:var(--green)">✓ Сохранено!</span>';
+      setTimeout(()=>{closeSheet();loadAll();},800);
+    } else {
+      st.innerHTML=`<span style="color:var(--red)">Ошибка: ${data.error||'неизвестно'}</span>`;
+    }
+  } catch(e){
+    st.innerHTML=`<span style="color:var(--red)">Ошибка соединения</span>`;
+  }
+}
+
+// Init
+loadAll();
+</script>
+</body>
+</html>
