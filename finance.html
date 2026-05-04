@@ -367,8 +367,7 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
 </div>
 
 <script>
-const API = 'https://script.google.com/macros/s/AKfycbwnYfLLHVQySfiaLnhe83s1lmDmrJZuqIRJUtX93qbxRiEwzYjVhj7VcmmJUM5t1Hz7Zw/exec';
-const WEB = API;
+const GS = 'https://script.google.com/macros/s/AKfycbyeiMnEFaCfI4M5K1V_1_1ReqJbNOltZUaBa8wV5s-38c4umnYx6ewMpI4Mhq4Z3ezruA/exec';
 let D = {accounts:[],credits:[],obligations:[],personal:[],business:[],goals:[]};
 let txType = 'income';
 let bizCat = 'all';
@@ -405,21 +404,25 @@ document.getElementById('fSec').addEventListener('change', function(){
 });
 
 // Fetch
+async function gsGet(sheet){
+  const r = await fetch(GS + '?sheet=' + encodeURIComponent(sheet) + '&t=' + Date.now());
+  const data = await r.json();
+  return data.slice(1).filter(row => row.some(v => v !== '' && v !== null && v !== undefined));
+}
+
 async function loadAll(){
   const btn = document.getElementById('syncBtn');
   btn.textContent = '⟳';
   try{
-    const res = await fetch(API + '?t=' + Date.now());
-    const json = await res.json();
-    function clean(rows){ return (rows||[]).filter(r=>r.some(v=>v!==''&&v!==null&&v!==undefined)); }
-    D = {
-      accounts:  clean(json['Счета']||[]),
-      credits:   clean(json['Кредиты']||[]),
-      obligations: clean(json['Обязательства']||[]),
-      personal:  clean(json['Личные']||[]),
-      business:  clean(json['Бизнес']||[]),
-      goals:     clean(json['Цели']||[]),
-    };
+    const [a,cr,ob,pe,bi,go] = await Promise.all([
+      gsGet('Счета').catch(()=>[]),
+      gsGet('Кредиты').catch(()=>[]),
+      gsGet('Обязательства').catch(()=>[]),
+      gsGet('Личные').catch(()=>[]),
+      gsGet('Бизнес').catch(()=>[]),
+      gsGet('Цели').catch(()=>[]),
+    ]);
+    D = {accounts:a, credits:cr, obligations:ob, personal:pe, business:bi, goals:go};
     renderAll();
     document.getElementById('home-err').innerHTML='';
   }catch(e){
@@ -618,7 +621,7 @@ async function saveTx(){
   const msg=document.getElementById('saveMsg');
   msg.innerHTML='<span style="color:var(--sub)">Сохраняю...</span>';
   try{
-    const res=await fetch(WEB,{method:'POST',body:JSON.stringify({sheet:sec,row})});
+    const res=await fetch(GS,{method:'POST',body:JSON.stringify({sheet:sec,row})});
     const data=await res.json();
     if(data.ok){
       msg.innerHTML='<span style="color:var(--green)">✅ Сохранено!</span>';
