@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+[data-theme="light"] {
+  --bg: #F4F4F8;
+  --card: #FFFFFF;
+  --card2: #F9F9FC;
+  --border: #EAEAEF;
+  --text: #0D0D14;
+  --sub: #6B6B80;
+  --accent: #1A1A2E;
+  --accent2: #16213E;
+  --green: #05A660;
+  --green-s: #E6F7F0;
+  --red: #E53E3E;
+  --red-s: #FEF0F0;
+  --amber: #D97706;
+  --amber-s: #FEF3C7;
+  --blue: #2563EB;
+  --blue-s: #EFF6FF;
+  --shadow: 0 2px 16px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.10);
+}
+[data-theme="dark"] {
+  --bg: #0D0D14;
+  --card: #16161F;
+  --card2: #1E1E2A;
+  --border: #252535;
+  --text: #F0F0F8;
+  --sub: #6B6B80;
+  --accent: #FFFFFF;
+  --accent2: #E0E0F0;
+  --green: #05A660;
+  --green-s: #0A2B1E;
+  --red: #E53E3E;
+  --red-s: #2B1010;
+  --amber: #D97706;
+  --amber-s: #2B1F08;
+  --blue: #3B82F6;
+  --blue-s: #0F1E3D;
+  --shadow: 0 2px 16px rgba(0,0,0,.3);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.4);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { font-size: 16px; }
+body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); max-width: 430px; margin: 0 auto; min-height: 100vh; transition: background .3s, color .3s; }
+
+/* PAGES */
+.page { display: none; padding: 0 16px 100px; }
+.page.active { display: block; animation: fadeUp .25s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+/* TOPBAR */
+.topbar { padding: 56px 16px 20px; display: flex; align-items: flex-start; justify-content: space-between; }
+.topbar h1 { font-size: 26px; font-weight: 800; letter-spacing: -.5px; line-height: 1.1; }
+.topbar p { font-size: 13px; color: var(--sub); margin-top: 3px; }
+.topbar-btns { display: flex; gap: 8px; padding-top: 4px; }
+.tbtn { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); transition: all .2s; }
+.tbtn:active { transform: scale(.92); }
+
+/* HERO CARD */
+.hero { background: var(--accent); border-radius: 24px; padding: 28px 24px; margin-bottom: 16px; position: relative; overflow: hidden; }
+[data-theme="dark"] .hero { background: linear-gradient(135deg, #1A1A2E, #0F3460); }
+[data-theme="light"] .hero { background: linear-gradient(135deg, #1A1A2E, #16213E); }
+.hero::before { content:''; position:absolute; right:-50px; top:-50px; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,.04); }
+.hero::after { content:''; position:absolute; left:-30px; bottom:-50px; width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,.03); }
+.hero-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.45); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; }
+.hero-amount { font-family: 'JetBrains Mono', monospace; font-size: 44px; font-weight: 500; color: #fff; letter-spacing: -2px; line-height: 1; margin-bottom: 6px; }
+.hero-updated { font-size: 12px; color: rgba(255,255,255,.35); margin-bottom: 24px; }
+.hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; z-index: 1; }
+.hero-stat { background: rgba(255,255,255,.08); border-radius: 14px; padding: 14px; }
+.hero-stat-lbl { font-size: 10px; color: rgba(255,255,255,.45); margin-bottom: 5px; font-weight: 600; letter-spacing: .05em; }
+.hero-stat-val { font-family: 'JetBrains Mono', monospace; font-size: 17px; color: #fff; font-weight: 500; }
+
+/* SECTION */
+.sec { display: flex; align-items: center; justify-content: space-between; margin: 22px 0 12px; }
+.sec h2 { font-size: 17px; font-weight: 700; }
+.sec span { font-size: 12px; color: var(--sub); cursor: pointer; }
+
+/* ACCOUNTS SCROLL */
+.acct-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.acct-row::-webkit-scrollbar { display: none; }
+.acct-pill { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px; min-width: 138px; flex-shrink: 0; box-shadow: var(--shadow); }
+.acct-pill-ico { font-size: 22px; margin-bottom: 10px; }
+.acct-pill-name { font-size: 11px; color: var(--sub); font-weight: 600; margin-bottom: 3px; }
+.acct-pill-bal { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 500; }
+.acct-pill-cur { font-size: 10px; color: var(--sub); margin-top: 2px; }
+.badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 99px; margin-top: 7px; letter-spacing: .04em; }
+.badge-p { background: var(--blue-s); color: var(--blue); }
+.badge-b { background: var(--green-s); color: var(--green); }
+
+/* STAT GRID */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box { background: var(--card); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.stat-box-ico { font-size: 22px; margin-bottom: 8px; }
+.stat-box-lbl { font-size: 11px; color: var(--sub); font-weight: 500; margin-bottom: 4px; }
+.stat-box-val { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; }
+
+/* TX LIST */
+.tx-wrap { background: var(--card); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.tx-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.tx-row:last-child { border-bottom: none; }
+.tx-ico { width: 44px; height: 44px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+.tx-info { flex: 1; min-width: 0; }
+.tx-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-meta { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.tx-r { text-align: right; flex-shrink: 0; }
+.tx-amt { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; }
+.tx-dt { font-size: 10px; color: var(--sub); margin-top: 2px; }
+
+/* CREDIT */
+.credit-box { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 10px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.credit-hd { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+.credit-name { font-size: 15px; font-weight: 700; }
+.credit-bank { font-size: 11px; color: var(--sub); margin-top: 3px; }
+.credit-remain { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 600; color: var(--red); }
+.credit-paid { font-size: 11px; color: var(--green); margin-top: 3px; }
+.prog { background: var(--border); border-radius: 99px; height: 5px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #1A1A2E, #3B82F6); }
+.credit-ft { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--sub); }
+
+/* OBLIGATION */
+.ob-box { background: var(--card); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.ob-l { display: flex; align-items: center; gap: 12px; }
+.ob-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+.ob-name { font-size: 14px; font-weight: 600; }
+.ob-sub { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.ob-r { text-align: right; }
+.ob-amt { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; color: var(--amber); }
+.ob-day { font-size: 10px; color: var(--sub); margin-top: 2px; }
+
+/* GOAL */
+.goal-box { background: var(--card); border-radius: 20px; padding: 20px; margin-bottom: 10px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.goal-hd { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.goal-name { font-size: 15px; font-weight: 700; }
+.goal-per { font-size: 11px; color: var(--sub); margin-top: 3px; }
+.goal-pct { font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 600; }
+.goal-prog { background: var(--border); border-radius: 99px; height: 7px; overflow: hidden; margin-bottom: 8px; }
+.goal-fill { height: 100%; border-radius: 99px; }
+.goal-ft { display: flex; justify-content: space-between; font-size: 11px; color: var(--sub); }
+
+/* BIZ */
+.biz-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
+.biz-box { background: var(--card); border-radius: 14px; padding: 14px 10px; text-align: center; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.biz-lbl { font-size: 10px; color: var(--sub); font-weight: 600; margin-bottom: 5px; }
+.biz-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+
+/* FILTER */
+.filt-row { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px; scrollbar-width: none; }
+.filt-row::-webkit-scrollbar { display: none; }
+.filt { padding: 7px 16px; border-radius: 99px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--sub); font-family: 'Outfit', sans-serif; white-space: nowrap; transition: all .2s; }
+.filt.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+/* MONTH SEL */
+.msel { background: var(--card); border: 1px solid var(--border); border-radius: 99px; padding: 6px 14px; font-size: 12px; font-family: 'Outfit', sans-serif; color: var(--text); cursor: pointer; outline: none; }
+
+/* BOTTOM NAV */
+.bnav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--card); border-top: 1px solid var(--border); display: flex; align-items: center; z-index: 100; padding: 10px 8px 28px; box-shadow: 0 -4px 24px rgba(0,0,0,.08); }
+.nb { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px; }
+.nb-ico { font-size: 21px; transition: transform .2s; }
+.nb-lbl { font-size: 10px; font-weight: 600; color: var(--sub); transition: color .2s; }
+.nb.on .nb-lbl { color: var(--text); font-weight: 700; }
+.nb.on .nb-ico { transform: scale(1.12); }
+.nb-add { flex: 0 0 auto; padding: 0 10px; }
+.add-btn { width: 54px; height: 54px; border-radius: 16px; background: var(--text); color: var(--bg); font-size: 28px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: -18px; box-shadow: var(--shadow-lg); font-family: 'Outfit', sans-serif; transition: transform .15s; }
+.add-btn:active { transform: scale(.92); }
+
+/* BOTTOM SHEET */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 200; align-items: flex-end; justify-content: center; backdrop-filter: blur(6px); }
+.overlay.open { display: flex; }
+.sheet { background: var(--card); border-radius: 28px 28px 0 0; width: 100%; max-width: 430px; padding: 16px 20px 44px; transform: translateY(100%); transition: transform .35s cubic-bezier(.32,.72,0,1); border-top: 1px solid var(--border); }
+.overlay.open .sheet { transform: translateY(0); }
+.sh-handle { width: 36px; height: 4px; background: var(--border); border-radius: 99px; margin: 0 auto 20px; }
+.sh-title { font-size: 20px; font-weight: 800; margin-bottom: 20px; letter-spacing: -.3px; }
+
+/* TYPE TOGGLE */
+.type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+.type-btn { padding: 12px; border-radius: 14px; border: 2px solid var(--border); background: var(--card2); font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Outfit', sans-serif; color: var(--sub); transition: all .2s; }
+.type-btn.t-inc { border-color: var(--green); background: var(--green-s); color: var(--green); }
+.type-btn.t-exp { border-color: var(--red); background: var(--red-s); color: var(--red); }
+
+/* FORM */
+.fg { margin-bottom: 12px; }
+.fl { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 6px; display: block; }
+.fi { width: 100%; background: var(--bg); border: 2px solid transparent; border-radius: 12px; padding: 12px 14px; color: var(--text); font-size: 15px; font-family: 'Outfit', sans-serif; outline: none; transition: border-color .2s; -webkit-appearance: none; appearance: none; }
+.fi:focus { border-color: var(--text); background: var(--card); }
+.fi::placeholder { color: var(--sub); }
+.frow2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.save-btn { width: 100%; background: var(--text); color: var(--bg); border: none; border-radius: 14px; padding: 15px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Outfit', sans-serif; margin-top: 4px; transition: opacity .2s; }
+.save-btn:active { opacity: .8; }
+.save-msg { text-align: center; font-size: 13px; min-height: 30px; padding: 5px 0; color: var(--sub); }
+
+.empty { text-align: center; padding: 32px; color: var(--sub); font-size: 13px; }
+.err { background: var(--red-s); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--red); margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="page active" id="pg-home">
+  <div class="topbar">
+    <div>
+      <h1 id="greet">Финансы</h1>
+      <p id="dateStr"></p>
+    </div>
+    <div class="topbar-btns">
+      <button class="tbtn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      <button class="tbtn" onclick="loadAll()" id="syncBtn">↻</button>
+    </div>
+  </div>
+  <div id="home-err"></div>
+
+  <div class="hero">
+    <div class="hero-label">Общий баланс</div>
+    <div class="hero-amount" id="heroAmt">—</div>
+    <div class="hero-updated" id="heroUpd">—</div>
+    <div class="hero-row">
+      <div class="hero-stat">
+        <div class="hero-stat-lbl">Личные</div>
+        <div class="hero-stat-val" id="heroP">—</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-lbl">Бизнес</div>
+        <div class="hero-stat-val" id="heroB">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec"><h2>Счета</h2></div>
+  <div class="acct-row" id="acctRow"></div>
+
+  <div class="sec"><h2>Обзор</h2></div>
+  <div class="stat-grid">
+    <div class="stat-box"><div class="stat-box-ico">💳</div><div class="stat-box-lbl">Долг по кредитам</div><div class="stat-box-val" style="color:var(--red)" id="sCredit">—</div></div>
+    <div class="stat-box"><div class="stat-box-ico">🔁</div><div class="stat-box-lbl">Платежи/месяц</div><div class="stat-box-val" style="color:var(--amber)" id="sOblig">—</div></div>
+    <div class="stat-box"><div class="stat-box-ico">📈</div><div class="stat-box-lbl">Прибыль бизнеса</div><div class="stat-box-val" style="color:var(--green)" id="sProfit">—</div></div>
+    <div class="stat-box"><div class="stat-box-ico">🎯</div><div class="stat-box-lbl">Активных целей</div><div class="stat-box-val" id="sGoals">—</div></div>
+  </div>
+
+  <div class="sec"><h2>Ближайшие платежи</h2></div>
+  <div id="upcomingEl"></div>
+</div>
+
+<!-- ЛИЧНОЕ -->
+<div class="page" id="pg-personal">
+  <div class="topbar"><div><h1>Личное</h1></div></div>
+  <div class="sec"><h2>Кредиты</h2></div>
+  <div id="creditsEl"></div>
+  <div class="sec"><h2>Обязательства</h2></div>
+  <div id="obligEl"></div>
+  <div class="sec">
+    <h2>Транзакции</h2>
+    <select class="msel" id="pMon" onchange="renderPTx()"><option value="all">Все</option></select>
+  </div>
+  <div class="tx-wrap" id="pTxEl"></div>
+</div>
+
+<!-- БИЗНЕС -->
+<div class="page" id="pg-biz">
+  <div class="topbar">
+    <div><h1>Бизнес</h1></div>
+    <select class="msel" id="bMon" onchange="renderBizMon()"><option value="all">Все месяцы</option></select>
+  </div>
+  <div class="biz-grid">
+    <div class="biz-box"><div class="biz-lbl">ДОХОД KGS</div><div class="biz-val" style="color:var(--green)" id="bIK">—</div></div>
+    <div class="biz-box"><div class="biz-lbl">РАСХОД KGS</div><div class="biz-val" style="color:var(--red)" id="bEK">—</div></div>
+    <div class="biz-box"><div class="biz-lbl">ПРИБЫЛЬ</div><div class="biz-val" style="color:var(--blue)" id="bPK">—</div></div>
+    <div class="biz-box"><div class="biz-lbl">ДОХОД USD</div><div class="biz-val" style="color:var(--green)" id="bIU">—</div></div>
+    <div class="biz-box"><div class="biz-lbl">РАСХОД USD</div><div class="biz-val" style="color:var(--red)" id="bEU">—</div></div>
+    <div class="biz-box"><div class="biz-lbl">ПРИБЫЛЬ $</div><div class="biz-val" style="color:var(--blue)" id="bPU">—</div></div>
+  </div>
+  <div class="sec"><h2>Операции</h2></div>
+  <div class="filt-row" id="bizCatFilt">
+    <button class="filt on" onclick="setBizCat('all',this)">Все</button>
+    <button class="filt" onclick="setBizCat('доход',this)">💵 Доход</button>
+    <button class="filt" onclick="setBizCat('зп',this)">👷 ЗП</button>
+    <button class="filt" onclick="setBizCat('налог',this)">📋 Налог</button>
+    <button class="filt" onclick="setBizCat('реклама',this)">📣 Реклама</button>
+    <button class="filt" onclick="setBizCat('карго',this)">📦 Карго</button>
+    <button class="filt" onclick="setBizCat('офис',this)">🖥 Офис</button>
+  </div>
+  <div class="tx-wrap" id="bTxEl"></div>
+</div>
+
+<!-- ЦЕЛИ -->
+<div class="page" id="pg-goals">
+  <div class="topbar"><div><h1>Цели</h1></div></div>
+  <div id="goalsEl"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <div class="nb on" id="nb-home" onclick="go('home',this)"><div class="nb-ico">🏠</div><div class="nb-lbl">Главная</div></div>
+  <div class="nb" id="nb-personal" onclick="go('personal',this)"><div class="nb-ico">👤</div><div class="nb-lbl">Личное</div></div>
+  <div class="nb-add"><button class="add-btn" onclick="openSheet()">+</button></div>
+  <div class="nb" id="nb-biz" onclick="go('biz',this)"><div class="nb-ico">💼</div><div class="nb-lbl">Бизнес</div></div>
+  <div class="nb" id="nb-goals" onclick="go('goals',this)"><div class="nb-ico">🎯</div><div class="nb-lbl">Цели</div></div>
+</div>
+
+<!-- ADD SHEET -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title">Новая операция</div>
+    <div class="type-row">
+      <button class="type-btn t-inc" id="btnI" onclick="setType('income')">↑ Доход</button>
+      <button class="type-btn" id="btnE" onclick="setType('expense')">↓ Расход</button>
+    </div>
+    <div class="fg">
+      <label class="fl">Раздел</label>
+      <select class="fi" id="fSec"><option value="Личные">👤 Личные</option><option value="Бизнес">💼 Бизнес</option></select>
+    </div>
+    <div class="fg">
+      <label class="fl">Описание</label>
+      <input class="fi" id="fDesc" placeholder="Клиент, ЗП, продукты...">
+    </div>
+    <div class="frow2">
+      <div class="fg"><label class="fl">Сумма KGS</label><input class="fi" id="fKGS" type="number" placeholder="0" inputmode="decimal"></div>
+      <div class="fg"><label class="fl">Сумма USD</label><input class="fi" id="fUSD" type="number" placeholder="0" inputmode="decimal"></div>
+    </div>
+    <div class="frow2">
+      <div class="fg">
+        <label class="fl">Категория</label>
+        <select class="fi" id="fCat">
+          <option value="доход">💵 Доход от клиента</option>
+          <option value="карго">📦 Карго операция</option>
+          <option value="зарплата">💰 Зарплата</option>
+          <option value="зп">👷 ЗП сотрудника</option>
+          <option value="налог">📋 Налог</option>
+          <option value="реклама">📣 Реклама</option>
+          <option value="офис">🖥 Офис</option>
+          <option value="еда">🛒 Еда</option>
+          <option value="аренда">🏠 Аренда</option>
+          <option value="ипотека">🏦 Ипотека</option>
+          <option value="транспорт">🚗 Транспорт</option>
+          <option value="одежда">👗 Одежда</option>
+          <option value="здоровье">❤️ Здоровье</option>
+          <option value="прочее">📦 Прочее</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Счёт</label>
+        <select class="fi" id="fAcc">
+          <option>Наличка</option>
+          <option>Mbank</option>
+          <option>Optima</option>
+          <option>KICB</option>
+          <option>Revolut жены</option>
+          <option>Бизнес счёт</option>
+          <option>Бизнес USD</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg" id="noteWrap" style="display:none">
+      <label class="fl">Примечание (для бизнеса)</label>
+      <input class="fi" id="fNote" placeholder="Номер груза, клиент...">
+    </div>
+    <div class="save-msg" id="saveMsg"></div>
+    <button class="save-btn" onclick="saveTx()">Сохранить</button>
+  </div>
+</div>
+
+<script>
+const SID = '1Nw5Qisakh7FMNJ9GGcWF2LXGhiTYzDf7bJOZVA6A4UE';
+const WEB = 'https://script.google.com/macros/s/AKfycbw7GehCuzAG5qA5Ti-6Y2eSEIuLgCjpLpKA-9otVwtIzhL5Zafnhkx2atjvzKXtfV007Q/exec';
+const SH = {accounts:'Счета',credits:'Кредиты',obligations:'Обязательства',personal:'Личные',business:'Бизнес',goals:'Цели'};
+let D = {accounts:[],credits:[],obligations:[],personal:[],business:[],goals:[]};
+let txType = 'income';
+let bizCat = 'all';
+
+// Init
+const now = new Date();
+document.getElementById('dateStr').textContent = now.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+document.getElementById('greet').textContent = now.getHours()<12?'Доброе утро ☀️':now.getHours()<18?'Добрый день 👋':'Добрый вечер 🌙';
+
+// Theme
+const savedTheme = localStorage.getItem('theme')||'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('themeBtn').textContent = savedTheme==='dark'?'☀️':'🌙';
+
+function toggleTheme(){
+  const curr = document.documentElement.getAttribute('data-theme');
+  const next = curr==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  document.getElementById('themeBtn').textContent = next==='dark'?'☀️':'🌙';
+}
+
+// Nav
+function go(name, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-'+name).classList.add('active');
+  if(el) el.classList.add('on');
+}
+
+// Show note field for biz
+document.getElementById('fSec').addEventListener('change', function(){
+  document.getElementById('noteWrap').style.display = this.value==='Бизнес'?'block':'none';
+});
+
+// Fetch
+async function fetchSh(name){
+  const url = `https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(name)}`;
+  const r = await fetch(url);
+  const t = await r.text();
+  const m = t.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/);
+  if(!m) return [];
+  const j = JSON.parse(m[1]);
+  if(!j.table||!j.table.rows) return [];
+  return j.table.rows.slice(1)
+    .map(row=>row.c.map(c=>(c&&c.v!=null)?c.v:''))
+    .filter(row=>row.some(v=>v!==''));
+}
+
+async function loadAll(){
+  const btn = document.getElementById('syncBtn');
+  btn.textContent = '⟳';
+  try{
+    const [a,cr,ob,pe,bi,go] = await Promise.all([
+      fetchSh(SH.accounts).catch(()=>[]),
+      fetchSh(SH.credits).catch(()=>[]),
+      fetchSh(SH.obligations).catch(()=>[]),
+      fetchSh(SH.personal).catch(()=>[]),
+      fetchSh(SH.business).catch(()=>[]),
+      fetchSh(SH.goals).catch(()=>[]),
+    ]);
+    D={accounts:a,credits:cr,obligations:ob,personal:pe,business:bi,goals:go};
+    renderAll();
+    document.getElementById('home-err').innerHTML='';
+  }catch(e){
+    document.getElementById('home-err').innerHTML=`<div class="err">⚠️ ${e.message}</div>`;
+  }
+  btn.textContent='↻';
+}
+
+// Format
+function fK(n){ return (parseFloat(n)||0).toLocaleString('ru-RU',{maximumFractionDigits:0})+' с'; }
+function fU(n){ return '$'+(parseFloat(n)||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+function nv(v){ return parseFloat(String(v).replace(/[^\d.-]/g,''))||0; }
+function getM(r){
+  const v=String(r[0]||'');
+  if(v.includes('.')){const p=v.split('.');if(p.length>=3)return p[2].slice(0,4)+'-'+p[1];}
+  const d=new Date(v);if(!isNaN(d))return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  return '';
+}
+function mL(m){const mo=['','Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];const[y,n]=m.split('-');return(mo[+n]||n)+' '+y;}
+
+const AICO={наличка:'💵',mbank:'📱',optima:'🏦',kicb:'🏛',revolut:'💳',бизнес:'💼',usd:'💲'};
+function aico(n){const k=Object.keys(AICO).find(k=>n.toLowerCase().includes(k));return k?AICO[k]:'💰';}
+
+const CICO={еда:'🛒',транспорт:'🚗',аренда:'🏠',ипотека:'🏦',одежда:'👗',здоровье:'❤️','кафе/рест.':'☕',зарплата:'💰',зп:'👷',налог:'📋',реклама:'📣',доход:'💵',карго:'📦',офис:'🖥',прочее:'📦'};
+function cico(c){return CICO[String(c).toLowerCase()]||'📦';}
+
+const CCLR={еда:'#FF9F43',транспорт:'#3B82F6',аренда:'#8B5CF6',ипотека:'#6366F1',одежда:'#EC4899',здоровье:'#EF4444',зарплата:'#05A660',зп:'#05A660',налог:'#64748B',реклама:'#F97316',доход:'#05A660',карго:'#0891B2',офис:'#0891B2',прочее:'#9CA3AF'};
+function cclr(c){return CCLR[String(c).toLowerCase()]||'#9CA3AF';}
+
+// Render
+function renderAll(){renderHome();renderPersonal();renderBiz();renderGoals();}
+
+function renderHome(){
+  const pa=D.accounts.filter(r=>String(r[1]).toLowerCase().includes('лич'));
+  const ba=D.accounts.filter(r=>String(r[1]).toLowerCase().includes('биз'));
+  function toK(rows){return rows.reduce((s,r)=>{const c=String(r[2]||'').toUpperCase(),a=nv(r[3]);return s+(c==='USD'?a*88:a);},0);}
+  const pK=toK(pa),bK=toK(ba),tot=pK+bK;
+  document.getElementById('heroAmt').textContent=fK(tot);
+  document.getElementById('heroUpd').textContent='Обновлено '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('heroP').textContent=fK(pK);
+  document.getElementById('heroB').textContent=fK(bK);
+
+  // Accounts - только реальные счета (не итого)
+  const realAccounts = D.accounts.filter(r=>r[0]&&r[1]&&String(r[1]).toLowerCase().match(/лич|биз/));
+  document.getElementById('acctRow').innerHTML=realAccounts.map(r=>{
+    const isB=String(r[1]).toLowerCase().includes('биз');
+    return `<div class="acct-pill">
+      <div class="acct-pill-ico">${aico(String(r[0]))}</div>
+      <div class="acct-pill-name">${r[0]}</div>
+      <div class="acct-pill-bal">${nv(r[3]).toLocaleString('ru-RU',{maximumFractionDigits:2})}</div>
+      <div class="acct-pill-cur">${r[2]||'KGS'}</div>
+      <span class="badge ${isB?'badge-b':'badge-p'}">${isB?'Бизнес':'Личный'}</span>
+    </div>`;
+  }).join('')||'<div class="empty">Заполни баланс в таблице</div>';
+
+  const cDebt=D.credits.reduce((s,r)=>s+nv(r[4]),0);
+  const mObl=D.obligations.reduce((s,r)=>s+nv(r[1]),0);
+  const bI=D.business.reduce((s,r)=>s+nv(r[3]),0);
+  const bE=D.business.reduce((s,r)=>s+nv(r[4]),0);
+  document.getElementById('sCredit').textContent=fK(cDebt);
+  document.getElementById('sOblig').textContent=fK(mObl);
+  document.getElementById('sProfit').textContent=fK(bI-bE);
+  document.getElementById('sGoals').textContent=D.goals.length+' шт.';
+
+  document.getElementById('upcomingEl').innerHTML=D.obligations.slice(0,5).map(r=>`
+    <div class="ob-box">
+      <div class="ob-l"><div class="ob-dot"></div>
+        <div><div class="ob-name">${r[0]}</div><div class="ob-sub">Со счёта: ${r[3]||'—'}</div></div>
+      </div>
+      <div class="ob-r"><div class="ob-amt">${fK(nv(r[1]))}</div><div class="ob-day">до ${r[4]||'?'} числа</div></div>
+    </div>`
+  ).join('')||'<div class="empty">Нет платежей</div>';
+}
+
+function renderPersonal(){
+  document.getElementById('creditsEl').innerHTML=D.credits.map(r=>{
+    const tot=nv(r[2]),paid=nv(r[3]),rem=nv(r[4]),mon=nv(r[5]);
+    const pct=tot>0?Math.min(Math.round((paid/tot)*100),100):0;
+    return `<div class="credit-box">
+      <div class="credit-hd">
+        <div><div class="credit-name">${r[0]}</div><div class="credit-bank">${r[1]||''}</div></div>
+        <div><div class="credit-remain">${fK(rem)}</div><div class="credit-paid">✓ Выплачено ${fK(paid)}</div></div>
+      </div>
+      <div class="prog"><div class="prog-fill" style="width:${pct}%"></div></div>
+      <div class="credit-ft"><span>${pct}% погашено</span><span>${fK(mon)}/мес</span></div>
+    </div>`;
+  }).join('')||'<div class="empty">Нет кредитов</div>';
+
+  document.getElementById('obligEl').innerHTML=D.obligations.map(r=>`
+    <div class="ob-box">
+      <div class="ob-l"><div class="ob-dot"></div>
+        <div><div class="ob-name">${r[0]}</div><div class="ob-sub">Со счёта: ${r[3]||'—'}</div></div>
+      </div>
+      <div class="ob-r"><div class="ob-amt">${fK(nv(r[1]))}</div><div class="ob-day">до ${r[4]||'?'} числа</div></div>
+    </div>`
+  ).join('')||'<div class="empty">Нет обязательств</div>';
+
+  const months=[...new Set(D.personal.map(r=>getM(r)).filter(Boolean))].sort().reverse();
+  const sel=document.getElementById('pMon');
+  sel.innerHTML='<option value="all">Все</option>'+months.map(m=>`<option value="${m}">${mL(m)}</option>`).join('');
+  renderPTx();
+}
+
+function renderPTx(){
+  const mon=document.getElementById('pMon').value;
+  const rows=mon==='all'?D.personal:D.personal.filter(r=>getM(r)===mon);
+  document.getElementById('pTxEl').innerHTML=rows.length?[...rows].reverse().slice(0,60).map(txHTML).join(''):'<div class="empty">Нет транзакций</div>';
+}
+
+function renderBiz(){
+  const months=[...new Set(D.business.map(r=>getM(r)).filter(Boolean))].sort().reverse();
+  const sel=document.getElementById('bMon');
+  sel.innerHTML='<option value="all">Все месяцы</option>'+months.map(m=>`<option value="${m}">${mL(m)}</option>`).join('');
+  renderBizMon();
+}
+
+function setBizCat(cat,el){
+  bizCat=cat;
+  document.querySelectorAll('#bizCatFilt .filt').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  renderBizMon();
+}
+
+function renderBizMon(){
+  const mon=document.getElementById('bMon').value;
+  let rows=mon==='all'?D.business:D.business.filter(r=>getM(r)===mon);
+  if(bizCat!=='all') rows=rows.filter(r=>String(r[2]).toLowerCase().includes(bizCat));
+  const iK=rows.reduce((s,r)=>s+nv(r[3]),0),eK=rows.reduce((s,r)=>s+nv(r[4]),0);
+  const iU=rows.reduce((s,r)=>s+nv(r[5]),0),eU=rows.reduce((s,r)=>s+nv(r[6]),0);
+  document.getElementById('bIK').textContent=fK(iK);
+  document.getElementById('bEK').textContent=fK(eK);
+  document.getElementById('bPK').textContent=fK(iK-eK);
+  document.getElementById('bIU').textContent=fU(iU);
+  document.getElementById('bEU').textContent=fU(eU);
+  document.getElementById('bPU').textContent=fU(iU-eU);
+  document.getElementById('bTxEl').innerHTML=rows.length?[...rows].reverse().slice(0,80).map(r=>txHTML(r,true)).join(''):'<div class="empty">Нет данных</div>';
+}
+
+function renderGoals(){
+  const clrs=['#1A1A2E','#05A660','#D97706','#E53E3E','#2563EB','#8B5CF6'];
+  document.getElementById('goalsEl').innerHTML=D.goals.length?D.goals.map((r,i)=>{
+    const tgt=nv(r[2]),cur=nv(r[3]),pct=tgt>0?Math.min(Math.round((cur/tgt)*100),100):0;
+    const col=r[6]||clrs[i%clrs.length];
+    return `<div class="goal-box">
+      <div class="goal-hd">
+        <div><div class="goal-name">${r[0]}</div><div class="goal-per">${r[1]||''}${r[5]?' · до '+r[5]:''}</div></div>
+        <div class="goal-pct" style="color:${col}">${pct}%</div>
+      </div>
+      <div class="goal-prog"><div class="goal-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="goal-ft"><span>${fK(cur)}</span><span>из ${fK(tgt)}</span></div>
+    </div>`;
+  }).join(''):'<div class="empty">Добавь цели в таблицу</div>';
+}
+
+function txHTML(r, isBiz=false){
+  const inc=nv(r[3])>0||nv(r[5])>0;
+  const kgs=inc?nv(r[3]):nv(r[4]),usd=inc?nv(r[5]):nv(r[6]);
+  const col=cclr(r[2]);
+  const note=isBiz&&r[8]?`<span style="color:var(--sub)"> · ${r[8]}</span>`:'';
+  return `<div class="tx-row">
+    <div class="tx-ico" style="background:${col}18">${cico(r[2])}</div>
+    <div class="tx-info">
+      <div class="tx-name">${r[1]||'—'}</div>
+      <div class="tx-meta">${r[2]||''}${note} · ${r[7]||''}</div>
+    </div>
+    <div class="tx-r">
+      <div class="tx-amt" style="color:${inc?'var(--green)':'var(--red)'}">${inc?'+':'−'}${kgs>0?fK(kgs):fU(usd)}</div>
+      <div class="tx-dt">${r[0]||''}</div>
+    </div>
+  </div>`;
+}
+
+// Sheet
+function openSheet(){ document.getElementById('overlay').classList.add('open'); setTimeout(()=>document.getElementById('fDesc').focus(),350); }
+function closeSheet(){ document.getElementById('overlay').classList.remove('open'); document.getElementById('saveMsg').innerHTML=''; }
+function setType(t){
+  txType=t;
+  document.getElementById('btnI').className='type-btn'+(t==='income'?' t-inc':'');
+  document.getElementById('btnE').className='type-btn'+(t==='expense'?' t-exp':'');
+}
+
+async function saveTx(){
+  const desc=document.getElementById('fDesc').value.trim();
+  const kgs=parseFloat(document.getElementById('fKGS').value)||0;
+  const usd=parseFloat(document.getElementById('fUSD').value)||0;
+  if(!desc){alert('Введи описание');return;}
+  if(!kgs&&!usd){alert('Введи сумму');return;}
+  const cat=document.getElementById('fCat').value;
+  const acc=document.getElementById('fAcc').value;
+  const sec=document.getElementById('fSec').value;
+  const note=document.getElementById('fNote').value.trim();
+  const d=new Date();
+  const date=String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
+  const baseRow=txType==='income'?[date,desc,cat,kgs,0,usd,0,acc]:[date,desc,cat,0,kgs,0,usd,acc];
+  const row=sec==='Бизнес'?[...baseRow,note]:baseRow;
+  const msg=document.getElementById('saveMsg');
+  msg.innerHTML='<span style="color:var(--sub)">Сохраняю...</span>';
+  try{
+    const res=await fetch(WEB,{method:'POST',body:JSON.stringify({sheet:sec,row})});
+    const data=await res.json();
+    if(data.ok){
+      msg.innerHTML='<span style="color:var(--green)">✅ Сохранено!</span>';
+      ['fDesc','fKGS','fUSD','fNote'].forEach(id=>document.getElementById(id).value='');
+      setTimeout(()=>{closeSheet();loadAll();},700);
+    }else{msg.innerHTML=`<span style="color:var(--red)">❌ ${data.error||'Ошибка'}</span>`;}
+  }catch(e){msg.innerHTML='<span style="color:var(--red)">❌ Нет соединения</span>';}
+}
+
+loadAll();
+</script>
+</body>
+</html>
