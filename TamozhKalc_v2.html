@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ТаможКалк — Брокерский инструмент КР / ЕАЭС</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090f;
+  --s1:#0d1220;
+  --s2:#111827;
+  --s3:#162036;
+  --border:#1e2d45;
+  --border2:#2a3f5f;
+  --accent:#3B82F6;
+  --accent-l:#60A5FA;
+  --accent-dim:#0c1f3d;
+  --green:#10B981;
+  --green-l:#34D399;
+  --green-dim:#061a12;
+  --green-mid:#0a3d28;
+  --amber:#F59E0B;
+  --amber-dim:#1a1100;
+  --red:#EF4444;
+  --red-dim:#1a0808;
+  --purple:#8B5CF6;
+  --purple-dim:#1a0f30;
+  --text:#E2E8F0;
+  --t2:#94A3B8;
+  --t3:#4B5563;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Inter',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── HEADER ── */
+header{
+  position:sticky;top:0;z-index:200;
+  background:rgba(7,9,15,0.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:52px;
+}
+.logo{font-weight:700;font-size:16px;letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
+.logo-icon{width:28px;height:28px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
+nav{display:flex;gap:2px}
+nav a{padding:6px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--t2);text-decoration:none;cursor:pointer;transition:all .15s;border:1px solid transparent}
+nav a:hover{color:var(--text);background:var(--s2)}
+nav a.active{color:var(--text);background:var(--s2);border-color:var(--border2)}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t2)}
+.live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+/* ── PAGES ── */
+.page{display:none}.page.active{display:block}
+
+/* ── MAIN LAYOUT: 3-column broker view ── */
+.broker-layout{
+  display:grid;
+  grid-template-columns:340px 1fr;
+  grid-template-rows:auto;
+  gap:0;
+  min-height:calc(100vh - 52px);
+}
+.panel-left{
+  border-right:1px solid var(--border);
+  background:var(--s1);
+  overflow-y:auto;
+  max-height:calc(100vh - 52px);
+  position:sticky;top:52px;
+}
+.panel-right{
+  background:var(--bg);
+  overflow-y:auto;
+  padding:20px;
+}
+
+/* ── INPUT PANEL ── */
+.input-section{padding:20px;border-bottom:1px solid var(--border)}
+.section-label{font-size:10px;font-weight:600;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+
+/* ── CODE INPUT ── */
+.code-field{
+  width:100%;
+  background:var(--s2);
+  border:2px solid var(--accent);
+  border-radius:10px;
+  padding:12px 14px;
+  font-family:var(--mono);
+  font-size:22px;font-weight:600;
+  color:var(--text);letter-spacing:3px;
+  outline:none;transition:all .2s;
+}
+.code-field:focus{border-color:var(--accent-l);box-shadow:0 0 0 4px rgba(59,130,246,.15)}
+.code-field::placeholder{color:var(--t3);font-size:14px;letter-spacing:1px;font-weight:400}
+.code-parsed{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:11px;color:var(--t3);font-family:var(--mono)}
+.code-parsed.ok{color:var(--green)}
+.code-parsed.partial{color:var(--amber)}
+
+/* ── COUNTRY SELECTOR (группа) ── */
+.group-selector{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:12px}
+.group-btn{
+  padding:7px 4px;border-radius:8px;font-size:11px;font-weight:600;
+  border:1px solid var(--border);background:var(--s2);
+  color:var(--t2);cursor:pointer;text-align:center;transition:all .15s;
+}
+.group-btn:hover{border-color:var(--border2);color:var(--text)}
+.group-btn.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent-l)}
+.group-desc{font-size:10px;color:var(--t3);margin-top:4px;line-height:1.4;padding:6px 8px;background:var(--s2);border-radius:6px;border-left:2px solid var(--accent-dim)}
+
+/* ── INPUTS ── */
+.field-label{font-size:11px;color:var(--t2);margin-bottom:5px;display:flex;justify-content:space-between}
+.field-label span{color:var(--t3)}
+.field-input{
+  width:100%;padding:9px 12px;
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-size:13px;
+  font-family:var(--sans);outline:none;transition:border-color .2s;
+}
+.field-input:focus{border-color:var(--accent)}
+.field-input::placeholder{color:var(--t3)}
+.field-input[type=number]::-webkit-inner-spin-button{opacity:.3}
+
+/* ── NDS TOGGLE ── */
+.nds-row{display:flex;gap:6px}
+.nds-btn{
+  flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:600;
+  cursor:pointer;border:1px solid var(--border);background:var(--s2);color:var(--t2);
+  transition:all .15s;text-align:center;
+}
+.nds-btn.yes{background:var(--green-dim);border-color:var(--green-mid);color:var(--green-l)}
+.nds-btn.no{background:var(--red-dim);border-color:#7f1d1d;color:var(--red)}
+
+/* ── RIGHT PANEL: CARDS ── */
+.result-grid{display:flex;flex-direction:column;gap:12px}
+
+/* ── SIR CARD ── */
+.sir-card{
+  background:var(--s2);border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;
+}
+.sir-card-header{
+  background:var(--s3);border-bottom:1px solid var(--border);
+  padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+}
+.sir-card-title{font-size:11px;font-weight:600;color:var(--t2);letter-spacing:.08em;text-transform:uppercase}
+.sir-card-code{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent-l)}
+.sir-card-body{padding:16px}
+
+/* SIR GROUP TABS */
+.sir-groups{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.sir-group{
+  border:1px solid var(--border);border-radius:10px;padding:10px 12px;
+  background:var(--s1);cursor:pointer;transition:all .15s;position:relative;
+}
+.sir-group:hover{border-color:var(--border2)}
+.sir-group.active{border-color:var(--accent);background:var(--accent-dim)}
+.sir-group.active-main{border-color:var(--green);background:var(--green-dim)}
+.sir-group-label{font-size:10px;color:var(--t3);margin-bottom:4px;font-weight:500}
+.sir-group-val{font-size:20px;font-weight:700;font-family:var(--mono)}
+.sir-group.active .sir-group-val{color:var(--accent-l)}
+.sir-group.active-main .sir-group-val{color:var(--green-l)}
+.sir-group-sub{font-size:10px;color:var(--t3);margin-top:2px}
+.recommended{
+  position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+  background:var(--green);color:#fff;font-size:9px;font-weight:700;
+  padding:1px 7px;border-radius:999px;letter-spacing:.05em;white-space:nowrap;
+}
+
+/* MIN INVOICE BLOCK */
+.min-invoice{
+  background:linear-gradient(135deg,var(--accent-dim),var(--s1));
+  border:1px solid var(--border2);border-radius:10px;padding:14px 16px;
+  margin-bottom:14px;
+}
+.min-invoice-label{font-size:10px;color:var(--accent-l);font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.min-invoice-val{font-size:28px;font-weight:700;font-family:var(--mono);color:#fff}
+.min-invoice-formula{font-size:11px;color:var(--t2);margin-top:4px;font-family:var(--mono)}
+.min-invoice-warn{font-size:11px;color:var(--amber);margin-top:6px;display:flex;align-items:center;gap:4px}
+
+/* ETT + ВП row */
+.ett-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ett-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:6px;font-size:12px;font-weight:600;
+  background:var(--s1);border:1px solid var(--border2);
+  font-family:var(--mono);
+}
+.ett-chip .pct{color:var(--text);font-size:15px}
+.ett-hint{font-size:11px;color:var(--t3)}
+
+/* ── КASSA CARD ── */
+.kassa-card{
+  background:linear-gradient(135deg,#062218,#083526,#0a4535);
+  border:1px solid var(--green-mid);border-radius:14px;overflow:hidden;
+}
+.kassa-header{
+  padding:12px 16px;border-bottom:1px solid var(--green-mid);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.kassa-title{font-size:11px;font-weight:600;color:var(--green-l);letter-spacing:.1em;text-transform:uppercase}
+.kassa-body{padding:16px}
+.kassa-breakdown{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.kassa-item{background:rgba(0,0,0,.3);border-radius:8px;padding:10px 12px}
+.kassa-item-label{font-size:10px;color:rgba(52,211,153,.6);margin-bottom:3px}
+.kassa-item-val{font-size:15px;font-weight:600;font-family:var(--mono);color:var(--green-l)}
+.kassa-total{
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(16,185,129,.12);border:1px solid var(--green-mid);
+  border-radius:10px;padding:14px 18px;
+}
+.kassa-total-label{font-size:13px;font-weight:700;color:var(--green-l);text-transform:uppercase;letter-spacing:.05em}
+.kassa-total-val{font-size:32px;font-weight:800;font-family:var(--mono);color:#fff;letter-spacing:-1px}
+.kassa-load{margin-top:10px;display:flex;justify-content:space-between;align-items:center}
+.load-pct{font-size:12px;color:var(--green-l);font-weight:600;font-family:var(--mono)}
+.load-bar-bg{flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin:0 12px}
+.load-bar-fill{height:3px;background:var(--green);border-radius:2px;transition:width .4s}
+.load-hint{font-size:11px;color:var(--t3)}
+
+/* ── NOT FOUND ── */
+.notfound-card{background:var(--amber-dim);border:1px solid #92400e;border-radius:14px;padding:16px 20px}
+.notfound-title{color:var(--amber);font-weight:700;font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.similar-list{margin-top:10px}
+.similar-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 10px;border-radius:8px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  margin-bottom:5px;cursor:pointer;transition:all .15s;
+}
+.similar-item:hover{background:rgba(59,130,246,.12);border-color:var(--accent)}
+.sim-code{font-family:var(--mono);font-size:12px;color:var(--accent-l);font-weight:600;min-width:110px}
+.sim-desc{font-size:11px;color:var(--t2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sim-price{font-family:var(--mono);font-size:12px;color:var(--green);font-weight:600;white-space:nowrap}
+
+/* ── SIR TABLE PAGE ── */
+.db-layout{max-width:1200px;margin:0 auto;padding:24px}
+.db-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.db-title{font-size:22px;font-weight:700}
+.db-count{font-size:12px;color:var(--t2);margin-top:2px}
+.search-box{
+  width:100%;padding:10px 16px;
+  background:var(--s2);border:1px solid var(--border2);
+  border-radius:10px;color:var(--text);font-size:14px;
+  outline:none;margin-bottom:14px;font-family:var(--sans);
+}
+.search-box:focus{border-color:var(--accent)}
+.search-box::placeholder{color:var(--t3)}
+.db-table{width:100%;border-collapse:collapse;font-size:12px}
+.db-table thead th{
+  padding:9px 14px;text-align:left;
+  background:var(--s2);border-bottom:1px solid var(--border);
+  font-size:10px;font-weight:600;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;
+  white-space:nowrap;position:sticky;top:0;
+}
+.db-table tbody tr{border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .1s}
+.db-table tbody tr:hover{background:var(--s2)}
+.db-table td{padding:8px 14px;color:var(--t2)}
+.td-code{font-family:var(--mono);color:var(--accent-l);font-weight:600}
+.td-g2{font-family:var(--mono);color:var(--green);font-weight:600}
+.td-g1{font-family:var(--mono);color:var(--t2)}
+.badge-ea{background:#0c1f3d;color:#93c5fd;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.05em}
+.badge-kr{background:#1a1100;color:#fbbf24;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.05em}
+
+/* ── HELP ── */
+.help-layout{max-width:800px;margin:0 auto;padding:24px}
+.help-card{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:10px}
+.help-h{font-size:14px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.help-body{font-size:13px;color:var(--t2);line-height:1.7}
+.formula-row{display:flex;align-items:baseline;gap:12px;padding:7px 0;border-bottom:1px solid var(--border)}
+.formula-row:last-child{border:none}
+.formula-name{font-size:12px;color:var(--t2);width:160px;flex-shrink:0}
+.formula-expr{font-family:var(--mono);font-size:13px;color:var(--accent-l)}
+.formula-row.highlight .formula-expr{color:var(--green-l);font-weight:700}
+.load-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.load-item{background:var(--s1);border-radius:8px;padding:10px 12px;text-align:center}
+.load-item .p{font-size:11px;color:var(--t3);margin-bottom:3px}
+.load-item .v{font-size:17px;font-weight:700;font-family:var(--mono);color:var(--accent-l)}
+
+/* ── HISTORY ── */
+.hist-layout{max-width:1200px;margin:0 auto;padding:24px}
+.hist-empty{text-align:center;padding:48px;color:var(--t3);font-size:14px}
+.btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--s2);color:var(--t2);transition:all .15s}
+.btn:hover{background:var(--s3);color:var(--text)}
+.btn-green{background:var(--green-dim);border-color:var(--green-mid);color:var(--green-l)}
+.btn-green:hover{background:var(--green-mid);color:#fff}
+
+/* ── EMPTY STATE ── */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:calc(100vh - 180px);text-align:center;color:var(--t3);
+}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.4}
+.empty-title{font-size:18px;font-weight:600;color:var(--t2);margin-bottom:8px}
+.empty-sub{font-size:13px;line-height:1.6}
+
+@media(max-width:768px){
+  .broker-layout{grid-template-columns:1fr}
+  .panel-left{position:static;max-height:none;border-right:none;border-bottom:1px solid var(--border)}
+  .sir-groups{grid-template-columns:1fr 1fr 1fr}
+  .kassa-breakdown{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">Т</div>
+    ТаможКалк
+  </div>
+  <nav>
+    <a id="nav-calc" class="active" onclick="showPage('calc')">Калькулятор</a>
+    <a id="nav-sir" onclick="showPage('sir')">База СИР</a>
+    <a id="nav-hist" onclick="showPage('hist')">История</a>
+    <a id="nav-help" onclick="showPage('help')">Справка</a>
+  </nav>
+  <div class="live-badge"><span class="live-dot"></span>ЕАЭС 2025</div>
+</header>
+
+<!-- ═══════ CALC PAGE ═══════ -->
+<div class="page active" id="page-calc">
+<div class="broker-layout">
+
+  <!-- LEFT: INPUTS -->
+  <div class="panel-left">
+
+    <!-- CODE -->
+    <div class="input-section">
+      <div class="section-label">Код ТН ВЭД</div>
+      <input class="code-field" id="codeInput" type="text" placeholder="введите код..." maxlength="20" oninput="onCode(this.value)" autocomplete="off" spellcheck="false">
+      <div class="code-parsed" id="codeParsed">Любой формат — пробелы и символы убираются автоматически</div>
+    </div>
+
+    <!-- COUNTRY / GROUP -->
+    <div class="input-section">
+      <div class="section-label">Страна происхождения</div>
+      <div class="group-selector">
+        <div class="group-btn" id="gBtn1" onclick="setGroup(1)">
+          <div style="font-size:13px;margin-bottom:1px">🇨🇳</div>
+          Китай
+        </div>
+        <div class="group-btn active" id="gBtn2" onclick="setGroup(2)">
+          <div style="font-size:13px;margin-bottom:1px">🌍</div>
+          Развивающ.
+        </div>
+        <div class="group-btn" id="gBtn3" onclick="setGroup(3)">
+          <div style="font-size:13px;margin-bottom:1px">🇪🇺</div>
+          Развитые
+        </div>
+      </div>
+      <div class="group-desc" id="groupDesc">Группа 2 — развивающиеся страны (основная для большинства импорта). СИР по Группе 2.</div>
+    </div>
+
+    <!-- WEIGHT -->
+    <div class="input-section">
+      <div class="section-label">Параметры груза</div>
+      <div style="margin-bottom:10px">
+        <div class="field-label">Вес / кол-во <span id="unitLabel">(кг)</span></div>
+        <input class="field-input" id="weight" type="number" value="1000" min="0" step="0.01" oninput="recalc()">
+      </div>
+      <div>
+        <div class="field-label">Инвойс $ <span>0 = автоматически по минимальному СИР</span></div>
+        <input class="field-input" id="invoice" type="number" value="0" min="0" oninput="recalc()">
+      </div>
+    </div>
+
+    <!-- VP OVERRIDE -->
+    <div class="input-section">
+      <div class="section-label">Ввозная пошлина ВП</div>
+      <div style="margin-bottom:10px">
+        <div class="field-label">% вручную <span id="vpAutoHint">(авто из ЕТТ)</span></div>
+        <input class="field-input" id="manualVP" type="number" min="0" max="100" step="0.5" placeholder="" oninput="recalc()">
+      </div>
+    </div>
+
+    <!-- NDS -->
+    <div class="input-section">
+      <div class="section-label">НДС</div>
+      <div class="nds-row">
+        <div class="nds-btn yes" id="ndsYes" onclick="setNDS(true)">✓ Включить 12%</div>
+        <div class="nds-btn" id="ndsNo" onclick="setNDS(false)">Без НДС</div>
+      </div>
+    </div>
+
+    <!-- SAVE -->
+    <div class="input-section" style="border-bottom:none">
+      <button class="btn btn-green" style="width:100%;padding:10px" onclick="saveHist()">+ Сохранить в историю</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: RESULTS -->
+  <div class="panel-right">
+    <div class="result-grid" id="resultGrid">
+      <div class="empty-state">
+        <div class="empty-icon">⌨️</div>
+        <div class="empty-title">Введите код ТН ВЭД</div>
+        <div class="empty-sub">Начните вводить код слева —<br>результаты появятся здесь сразу</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════ SIR TABLE ═══════ -->
+<div class="page" id="page-sir">
+  <div class="db-layout">
+    <div class="db-header">
+      <div><div class="db-title">База СИР</div><div class="db-count" id="dbCount"></div></div>
+      <div style="font-size:12px;color:var(--t3)">Нажмите строку → перейдёт в калькулятор</div>
+    </div>
+    <input class="search-box" id="dbSearch" placeholder="Поиск по коду ТН ВЭД или описанию..." oninput="renderDB()">
+    <div style="overflow:auto;border-radius:12px;border:1px solid var(--border)">
+      <table class="db-table">
+        <thead><tr>
+          <th>Код ТН ВЭД</th><th>Тип</th><th>Описание</th><th>Ед</th>
+          <th>Гр.2 $/ед</th><th>Гр.1 $/ед</th><th>Гр.3 $/ед</th>
+        </tr></thead>
+        <tbody id="dbBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ HISTORY ═══════ -->
+<div class="page" id="page-hist">
+  <div class="hist-layout">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div><div class="db-title">История расчётов</div><div class="db-count" id="histCount"></div></div>
+      <button class="btn" onclick="clearHist()">Очистить</button>
+    </div>
+    <div id="histBody"></div>
+  </div>
+</div>
+
+<!-- ═══════ HELP ═══════ -->
+<div class="page" id="page-help">
+  <div class="help-layout">
+    <div style="font-size:22px;font-weight:700;margin-bottom:20px">Справка</div>
+
+    <div class="help-card">
+      <div class="help-h">📋 Группы СИР — как выбрать</div>
+      <div class="help-body">
+        <p style="margin-bottom:8px"><strong style="color:var(--text)">Группа 2 (рекомендуется)</strong> — развивающиеся страны в рамках GSP. Применяется для большинства товаров из Китая, Турции, Индии, Египта, Азии. Это ОСНОВНАЯ группа для карго-импорта через КР.</p>
+        <p style="margin-bottom:8px"><strong style="color:var(--text)">Группа 1</strong> — без преференций / развитые страны (ЕС, США, Япония, Южная Корея). Самая высокая ставка СИР.</p>
+        <p><strong style="color:var(--text)">Группа 3</strong> — наименее развитые страны (Афганистан, некоторые страны Африки). Самая низкая ставка.</p>
+      </div>
+    </div>
+
+    <div class="help-card">
+      <div class="help-h">🧮 Формулы расчёта</div>
+      <div class="formula-row"><div class="formula-name">Минимальный инвойс</div><div class="formula-expr">= Вес × СИР (выбранная группа)</div></div>
+      <div class="formula-row"><div class="formula-name">Таможенная база</div><div class="formula-expr">= MAX(Инвойс, Вес × СИР)</div></div>
+      <div class="formula-row"><div class="formula-name">Пошлина (ВП)</div><div class="formula-expr">= База × ВП%</div></div>
+      <div class="formula-row"><div class="formula-name">НДС</div><div class="formula-expr">= (База + Пошлина) × 12%</div></div>
+      <div class="formula-row"><div class="formula-name">Таможенный сбор</div><div class="formula-expr">= База × 0.4%</div></div>
+      <div class="formula-row highlight"><div class="formula-name">КАССА</div><div class="formula-expr">= Пошлина + НДС + Сбор</div></div>
+    </div>
+
+    <div class="help-card">
+      <div class="help-h">📊 Нагрузка по ставкам ВП</div>
+      <div class="load-grid">
+        <div class="load-item"><div class="p">ВП = 0%</div><div class="v">12.4%</div></div>
+        <div class="load-item"><div class="p">ВП = 5%</div><div class="v">18.0%</div></div>
+        <div class="load-item"><div class="p">ВП = 10%</div><div class="v">23.6%</div></div>
+        <div class="load-item"><div class="p">ВП = 15%</div><div class="v">29.2%</div></div>
+      </div>
+    </div>
+
+    <div class="help-card">
+      <div class="help-h">ℹ️ Источники данных</div>
+      <div class="help-body">
+        СИР — Приложение №2 к приказу ГТС КР (1800+ позиций). iPhone — Приложение №3. Автомобили — Приложение №4. ЕТТ — Единый таможенный тариф ЕАЭС (286 кодовых групп). Данные актуальны на 2025 год.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SIR = {"0202305008":["orpyGa, лопатка и шейно-ло","кг",null,null,null,"ЕА"],"0202309004":["прочобваленное мясо г 1,70 1,60 20","кг",1.7,1.6,null,"ЕА"],"0202309008":["отруба, лопатка и welino-n0","кг",2.3,2.3,2.3,"ЕА"],"0206210000":["изыки крупного рогатого ск кг 3,40 3.40 2,30","кг",3.4,3.4,2.3,"ЕА"],"0206220009":["прочие печень крупного por","кг",1.1,1.1,null,"ЕА"],"0206299900":["прочие пищевые субпродук","кг",1.5,1.5,1.5,"ЕА"],"0207141001":["","кг",0.8,0.8,0.8,"ЕА"],"0207142001":["","кг",1.0,1.0,1.0,"ЕА"],"0207142009":["прочие =","кг",0.8,null,null,"ЕА"],"0207146001":["","кг",0.8,null,null,"ЕА"],"0207146009":["","кг",0.8,null,null,"ЕА"],"0209101100":["","кг",null,null,null,"КР"],"0302112000":["рыба свежем охлажл.за иск","кг",5.5,null,null,"ЕА"],"0303130000":["nococe атлантический (Salm","кг",4.0,3.4,3.4,"ЕА"],"0303142000":["","кг",4.5,null,null,"КР"],"0303510000":["рыба moporennan,sa исклр","кг",0.8,0.6,0.6,"ЕА"],"0303539000":["","кг",0.49,null,null,"ЕА"],"0303541000":["","кг",1.5,1.2,1.2,"ЕА"],"0303399001":["","кг",0.9,0.9,0.9,"ЕА"],"0303599009":["прочая рыба мороженая, ni","кг",0.9,0.9,0.9,"ЕА"],"0303661900":["","кг",1.53,1.5,1.5,"ЕА"],"0303899003":["рыба видя kathetostoma gig","кг",1.0,1.0,1.0,"ЕА"],"0303899007":["","кг",1.0,1.0,1.0,"ЕА"],"0303990002":["","кг",1.2,1.2,1.2,"ЕА"],"0304620000":["филе сома (pangasius spp. 5","кг",1.7,1.7,1.7,"ЕА"],"0304741500":["","кг",1.9,1.9,null,"ЕА"],"0308750000":["филе минтая (theragra chale","кг",1.43,null,null,"ЕА"],"0306179200":["","кг",6.0,5.0,3.0,"ЕА"],"0307439000":["","кг",2.0,1.5,1.5,"ЕА"],"0402101900":["без лобавления сахаранли4 кг","кг",null,null,null,"КР"],"0403209001":["ме содержащий молочного","кг",1.5,1.5,null,"ЕА"],"0403209009":["","кг",1.05,null,null,"ЕА"],"0405101100":["натуральное сливочное мас","кг",5.0,3.0,null,"ЕА"],"0405101900":["прочее натуральное сливоч","кг",4.5,null,null,"КР"],"0406105002":["","кг",4.0,null,null,"КР"],"0406908600":["прочие сыры с содержание","кг",4.5,4.5,4.5,"ЕА"],"0508000000":["","кг",null,null,null,"ЕА"],"0601103000":["луковицы, клубни, корнсвы{ кг’ 2,00 2,00 2,00","кг",2.0,2.0,2.0,"ЕА"],"0601109000":["","кг",3.35,null,null,"ЕА"],"0602904500":["черенки укорененные и Moa","кг",1.8,1.8,1.2,"ЕА"],"0602904600":["прочие живые растения (ox кг о","кг",1.0,null,null,"ЕА"],"0602904700":["","кг",1.5,1.5,1.2,"ЕА"],"0602904800":["кг","кг",1.45,1.5,0.7,"ЕА"],"0602909100":["","кг",3.0,3.5,2.0,"ЕА"],"0603110000":["резаные цвсты и бутоны,","кг",8.4,null,null,"КР"],"0603120000":["срезанные цвсты и бутоны,","кг",6.6,6.4,5.25,"ЕА"],"0603140000":["резаные цветы и бутоны.","кг",6.0,6.0,6.0,"ЕА"],"0603192000":["","кг",6.0,6.0,6.0,"ЕА"],"0603197000":["","кг",6.0,6.0,6.0,"ЕА"],"0604209000":["","кг",5.0,null,null,"КР"],"0701100000":["","кг",0.6,0.6,0.25,"ЕА"],"0701905000":["картофель свежий или охла","кг",0.6,null,null,"ЕА"],"0701909000":["прочий картофель, свежий","кг",0.4,null,null,"ЕА"],"0702000001":["","кг",1.5,null,null,"ЕА"],"0702000002":["","кг",1.25,null,null,"ЕА"],"0702000004":["","кг",1.07,0.9,0.83,"ЕА"],"0702000005":["","кг",1.0,1.0,0.63,"ЕА"],"0702000006":["","кг",1.25,0.95,null,"ЕА"],"0702000007":["","кг",1.5,1.0,null,"ЕА"],"0702000009":["","кг",1.5,1.0,null,"ЕА"],"0703101100":["","кг",0.7,0.45,null,"ЕА"],"0703101900":["","кг",0.45,0.3,null,"ЕА"],"0703109000":["","кг",0.9,0.9,0.9,"ЕА"],"0703200000":["","кг",1.6,1.2,null,"ЕА"],"0703900000":["","кг",1.5,0.65,0.5,"ЕА"],"0704901001":["","кг",0.33,0.2,null,"ЕА"],"0704908000":["прочие съедобные овощи ie","кг",0.63,0.46,null,"ЕА"],"0705110000":["","кг",0.86,0.84,null,"ЕА"],"0706100001":["","кг",0.35,0.2,null,"ЕА"],"0706909009":["кг 05 0.54 032","кг",0.54,null,null,"КР"],"0707000501":["","кг",1.61,1.1,null,"ЕА"],"0707000502":["","кг",7.2,1.0,1.0,"ЕА"],"0707000509":["","кг",1.52,0.8,0.8,"ЕА"],"0709200000":["","кг",1.0,null,null,"ЕА"],"0709300000":["баклажаны (egg-plants), cee","кг",1.6,1.0,null,"ЕА"],"0709510000":["","кг",1.4,1.4,1.4,"ЕА"],"0709601001":["","кг",0.9,0.9,0.6,"ЕА"],"0709601002":["перец стручковый сладкий,","кг",1.2,1.05,0.8,"ЕА"],"0709609900":["ПРОЧИЕ ПЛОДЫ. СВЕЖИ кг","кг",0.7,null,null,"ЕА"],"0709931000":["","кг",null,null,null,"ЕА"],"0709999000":["","кг",1.0,1.0,0.78,"ЕА"],"0710220000":["","кг",0.5,0.5,0.5,"ЕА"],"0710300000":["","кг",0.6,0.5,0.5,"ЕА"],"0710805100":["прочий перец стручковый <","кг",0.68,0.68,null,"ЕА"],"0710806100":["","кг",0.75,0.7,null,"ЕА"],"0801320000":["","кг",4.5,4.5,4.5,"ЕА"],"0802121000":["","кг",0.73,null,null,"КР"],"0802320000":["","кг",3.5,2.5,2.5,"ЕА"],"0802510000":["","кг",3.0,5.0,5.0,"ЕА"],"0802610000":["0%","кг",null,null,null,"КР"],"0802620000":["","кг",null,null,null,"КР"],"0802991000":["ПЕКАН, СВЕЖИЕ MIM CY к","кг",null,null,null,"ЕА"],"0803901000":["бананы, свежие кг 05","кг",0.75,null,null,"ЕА"],"0804100000":["финики свежие или сушены №","кг",3.0,1.5,1.5,"ЕА"],"0804209000":["","кг",3.5,1.0,1.0,"ЕА"],"0804300001":["ананасы свежис кг 10","кг",null,null,null,"КР"],"0804400000":["авокадо свежие или сушены","кг",1.5,1.5,null,"ЕА"],"0804500001":["уайява.манго и мангостан{ кг Tt 2,00 15","кг",2.0,null,null,"КР"],"0804500009":["05 039","кг",null,null,null,"ЕА"],"0805102000":["впельсины сладкие, свежие","кг",null,null,null,"КР"],"0805210000":["мандарины (включая танж","кг",0.45,null,null,"КР"],"0805220000":["клементины «","кг",0.85,0.85,null,"ЕА"],"0805290000":["","кг",0.7,0.7,null,"ЕА"],"0805400000":["","кг",0.9,0.5,0.5,"ЕА"],"0805301000":["лимоны (citrus limon, citrus","кг",0.88,null,null,"КР"],"0806101000":["","кг",1.5,1.0,null,"ЕА"],"0806109000":["прочий к","кг",null,null,null,"ЕА"],"0806203000":["Виноград сушеный суланй кг","кг",null,null,null,"ЕА"],"0806209000":["кг 11$","кг",null,null,null,"ЕА"],"0807110000":["","кг",0.25,null,null,"ЕА"],"0807190000":["","кг",0.2,null,null,"ЕА"],"0808108001":["","кг",0.4,null,null,"ЕА"],"0808108002":["яблоки свежие, прочие, с 1","кг",null,null,null,"ЕА"],"0808108003":["s6noxn свежие, npowe,¢1{ _ KF о","кг",null,null,null,"ЕА"],"0808108005":["","кг",0.4,null,null,"ЕА"],"0808108006":["","кг",null,null,null,"ЕА"],"0808108007":["яблоки прочие с 1 декабря {","кг",null,null,null,"ЕА"],"0808108008":["яблоки прочие с","кг",null,null,null,"ЕА"],"0808309000":["","кг",0.6,null,null,"ЕА"],"0809100000":["","кг",0.65,null,null,"ЕА"],"0809210000":["","кг",null,null,null,"ЕА"],"0809290000":["","кг",null,null,null,"ЕА"],"0809301000":["","кг",0.7,0.5,null,"ЕА"],"0809309000":["","кг",0.7,0.6,null,"ЕА"],"0809300500":["","кг",null,null,null,"ЕА"],"0810100000":["","кг",1.38,1.3,null,"ЕА"],"0810405000":["","кг",6.5,6.0,3.0,"ЕА"],"0810500000":["","кг",1.25,1.2,1.0,"ЕА"],"0810700000":["","кг",1.5,0.7,0.6,"ЕА"],"0810907500":["","кг",0.7,0.8,null,"ЕА"],"0811109000":["","кг",2.0,0.8,0.8,"ЕА"],"0811203100":["","кг",2.85,2.0,1.5,"ЕА"],"0811907500":["","кг",1.0,1.0,1.0,"ЕА"],"0811908000":["","кг",1.0,1.0,1.0,"ЕА"],"0811909500":["","кг",0.8,0.6,null,"ЕА"],"0813100000":["","кг",4.05,3.05,1.5,"ЕА"],"0813200000":["чернослив сушеный кг 2.00 1,90, 1.30","кг",2.0,1.9,1.3,"ЕА"],"0813409500":["","кг",null,null,null,"ЕА"],"0813501500":["","кг",1.8,null,null,"ЕА"],"0813509100":["смеси прочие: ne солержащ","кг",1.8,null,null,"ЕА"],"0901110002":["кофе нежареный с кофенно","кг",2.0,null,null,"ЕА"],"0901210001":["","кг",7.2,7.2,7.2,"ЕА"],"0901210009":["кофе жареный с кофеином","кг",7.0,7.0,null,"ЕА"],"0902200000":["","кг",2.32,null,null,"КР"],"0902300001":["чай черный(ферментирован","кг",4.5,null,null,"ЕА"],"0902300009":["прочий чай черный (ферме","кг",null,null,null,"ЕА"],"0902400000":["","кг",null,null,null,"ЕА"],"0910110000":["","кг",null,null,null,"ЕА"],"1005101300":["","кг",null,null,null,"ЕА"],"1006306701":["","кг",null,null,null,"ЕА"],"1006306709":["","кг",null,null,null,"ЕА"],"1006309809":["","кг",0.4,0.4,null,"ЕА"],"1202420000":["","кг",1.45,1.25,null,"ЕА"],"1205101000":["","кг",9.5,8.0,7.0,"ЕА"],"1206001000":["семека полсолнечника для","кг",6.0,null,null,"ЕА"],"1209918000":["прочие семена овощных ку","кг",null,null,null,"ЕА"],"1302201000":["сухие пектины, пехтинаты","кг",null,null,null,"ЕА"],"1302329000":["клей и загустители ws семя","кг",5.0,1.8,null,"ЕА"],"1302390000":["","кг",7.0,3.0,null,"ЕА"],"1507101000":["масло соевое сырое, нраф{ к","кг",1.0,1.0,null,"ЕА"],"1509200000":["масло оливковое первого с","кг",5.0,3.0,null,"ЕА"],"1509300000":["масло оливковое nepsoro o7","кг",3.5,null,null,"КР"],"1511109002":["ПРОЧЕЕ МАСЛО ПАЛЬМ{ =","кг",null,null,null,"КР"],"1511901902":["ПРОЧИЕ ТВЕРДЫЕ ФРАК к","кг",1.2,null,null,"КР"],"1511909902":["ПРОЧИЕ ФРАКЦИИ ПАЛ! xr","кг",null,null,null,"КР"],"1512119109":["прочее масло полсолнечное","кг",1.3,null,null,"ЕА"],"1512199002":["подсолнечное масло или erd кг 140","кг",1.0,null,null,"ЕА"],"1512199009":["","кг",1.55,null,null,"ЕА"],"1516209801":["заменители какзо-масла","кг",1.5,1.4,null,"ЕА"],"1516209808":["прочие жиры и масла расти","кг",2.5,2.0,0.9,"ЕА"],"1517109000":["прочий маргарин, за исклю","кг",1.2,0.9,null,"ЕА"],"1517909900":["прочие пригодные для ynor","кг",1.6,1.6,1.3,"ЕА"],"1602491900":["прочие излелня и консервы","кг",4.62,4.08,4.08,"ЕА"],"1604139000":["","кг",1.2,null,null,"КР"],"1604170000":["угорь шеликом или в кускал","кг",14.0,null,null,"КР"],"1604207000":["готовая или консервирован","кг",2.6,null,null,"КР"],"1605539000":["прочие моллюски готовые {","кг",2.9,2.0,2.0,"ЕА"],"1605540000":["","кг",4.0,4.0,4.0,"ЕА"],"1704906200":["","кг",6.0,2.0,0.8,"ЕА"],"1704906500":["","кг",3.5,1.5,1.5,"ЕА"],"1704907100":["aeacnuosas карамель. с was","кг",3.0,2.2,null,"ЕА"],"1704909800":["","кг",2.5,1.7,1.1,"ЕА"],"1803000000":["какао-порошок без добавок","кг",3.2,3.0,3.0,"ЕА"],"1806310000":["изделия прочие, содержащий кг","кг",4.0,null,null,"ЕА"],"1806321000":["прочис готовые пишевые nf","кг",4.85,null,null,"ЕА"],"1806329000":["прочие готовые пишевые п","кг",5.0,4.0,3.0,"ЕА"],"1806901900":["прочие шоколадные конфет","кг",3.95,3.0,null,"ЕА"],"1806906000":["пасты, содержащие какао","кг",3.0,2.7,null,"ЕА"],"1901100000":["готовые пишевые npoayeria","кг",6.0,6.0,null,"ЕА"],"1901200000":["","кг",2.05,2.0,1.5,"ЕА"],"1901909200":["","кг",1.5,1.5,1.5,"ЕА"],"1901909800":["","кг",1.55,1.05,null,"ЕА"],"1902191000":["","кг",0.8,0.8,0.8,"ЕА"],"1902301000":["","кг",1.0,1.0,1.0,"ЕА"],"1902309000":["","кг",null,null,null,"КР"],"1905311100":["сладкое сухое печенье, non кг 120 115 Lis","кг",null,null,null,"ЕА"],"1905311900":["сладкое сухое печенье, г 2.00 10","кг",2.0,null,null,"ЕА"],"1905319900":["прочее сладкое сухое печен{ кг.","кг",3.0,1.5,1.0,"ЕА"],"1905329900":["","кг",2.0,1.2,1.0,"ЕА"],"1905905500":["прочие экструдированные {","кг",2.0,1.2,1.0,"ЕА"],"1905906000":["прочие хлебобулочные и ко","кг",2.25,1.9,1.75,"ЕА"],"1905909000":["","кг",2.2,2.2,2.0,"ЕА"],"2001100000":["","кг",0.65,0.5,0.5,"ЕА"],"2001909709":["прочие овощи, фрукты, ор кг","кг",1.0,null,null,"ЕА"],"2002901100":["ПРОЧИЕ ТОМАТЫ, С СО","кг",null,null,null,"ЕА"],"2002901900":["с солержанием сухого ве xr","кг",1.0,null,null,"ЕА"],"2002903100":["прочие томаты, с содержан{ кг","кг",0.7,0.7,0.4,"ЕА"],"2002903900":["ПРОЧИЕ ТОМАТЫ, С СО","кг",1.0,null,null,"ЕА"],"2002909100":["прочие томать:с солержанн","кг",null,null,null,"ЕА"],"2004101000":["","кг",0.75,null,null,"КР"],"2004109900":["прочий картофель, при кг. 085 0,70 0,70","кг",0.7,0.7,null,"ЕА"],"2005400000":["","кг",0.75,0.6,null,"ЕА"],"2005700000":["","кг",1.1,null,null,"КР"],"2005800000":["сахарная кукуруза (zea may кг 0,75 0,55 05","кг",0.75,0.55,null,"ЕА"],"2007995007":["прочие пюре, с солержани{ кг 0,75 0,75 0,75","кг",0.75,0.75,0.75,"ЕА"],"2008191300":["OBKAPEHHBIE ME! =","кг",0.68,null,null,"КР"],"2008207900":["прочие ананасы, не содерж","кг",0.6,0.6,null,"ЕА"],"2008975900":["прочие смеси, we солержащ","кг",null,null,null,"ЕА"],"2009119901":["прочий апельсиновый cox cl кг 2,80 1.80","кг",2.8,1.8,null,"ЕА"],"2009509008":["","кг",0.5,0.5,null,"ЕА"],"2009695101":["прочий виноградный сока","кг",0.95,null,null,"ЕА"],"2009791902":["","кг",1.1,1.1,null,"ЕА"],"2101110015":["кофе растворимый сублимн","кг",7.0,7.0,null,"ЕА"],"2101110016":["","кг",8.0,8.0,null,"ЕА"],"2101129201":["","кг",1.8,null,null,"КР"],"2101202000":["","кг",10.0,8.0,8.0,"ЕА"],"2102103100":["","кг",4.0,null,null,"КР"],"2103100000":["","кг",0.8,0.6,0.6,"ЕА"],"2103909009":["прочие продукты для приго","кг",3.0,1.3,1.3,"ЕА"],"2106108000":["прочие белковые концентра","кг",1.0,0.8,null,"ЕА"],"2106909300":["","кг",3.0,2.1,2.1,"ЕА"],"2106909808":["сыры плавленые прочие кг 5.00 2.50 2,50 250","кг",5.0,2.5,2.5,"ЕА"],"2201101100":["","кг",0.6,0.53,null,"ЕА"],"2201101900":["","кг",0.8,0.7,0.4,"ЕА"],"2202100000":["воды, включая минеральны","кг",0.73,0.4,0.35,"ЕА"],"2202991100":["","кг",1.05,1.05,0.25,"ЕА"],"2202991300":["","кг",1.05,1.05,0.25,"ЕА"],"2202991800":["","кг",1.2,0.4,0.3,"ЕА"],"2202999100":["напитки прочие, содержащ!","кг",3.0,0.85,null,"ЕА"],"2203000100":["","кг",0.8,null,null,"ЕА"],"2203000900":["","кг",0.9,0.65,null,"ЕА"],"2203001000":["пиво сололовое, в сосудах e","кг",1.1,0.6,null,"ЕА"],"2204101100":["шампанское с фактической","кг",1.5,1.5,1.5,"ЕА"],"2204109100":["","кг",1.5,1.5,1.5,"ЕА"],"2204109301":["прочие вина игристые. cai","кг",1.5,1.5,1.5,"ЕА"],"2204109601":["","кг",1.5,1.5,1.5,"ЕА"],"2204109801":["","кг",1.5,1.5,null,"ЕА"],"2208210700":["","кг",1.5,1.5,null,"ЕА"],"2208211900":["вино пфальц белое виногра","кг",1.5,1.5,null,"ЕА"],"2204212200":["","кг",1.5,1.5,null,"ЕА"],"2204212800":["","кг",1.5,1.5,null,"ЕА"],"2208213200":["вино вины веде белое кг 1,50 1,50","кг",1.5,1.5,null,"ЕА"],"2204213800":["","кг",1.5,1.5,null,"ЕА"],"2204214200":["","кг",1.5,1.5,null,"ЕА"],"2204216600":["","кг",1.5,null,null,"КР"],"2204217600":["","кг",1.5,1.5,null,"ЕА"],"2204217800":["","кг",1.5,1.5,null,"ЕА"],"2204217900":["","кг",1.5,1.5,null,"ЕА"],"2204218000":["","кг",1.5,1.5,null,"ЕА"],"2204218100":["","кг",1.5,1.5,null,"ЕА"],"2204218200":["прочие сортовые вина, с фа","кг",1.5,1.5,null,"ЕА"],"2204218300":["","кг",1.5,1.5,null,"ЕА"],"2204218400":["прочие anna виноградные","кг",1.5,1.5,null,"ЕА"],"2204219300":["белые вина с защищенным","кг",1.5,1.5,null,"ЕА"],"2204219400":["вина прочие виногралные н","кг",null,null,null,"КР"],"2204219500":["вина белые прочие сортовы","кг",1.5,1.5,null,"ЕА"],"2204219600":["","кг",1.5,null,null,"КР"],"2204219800":["прочие вина виноградные x","кг",1.5,1.5,null,"ЕА"],"2205101000":["вермуты и виноградные на","кг",1.4,null,null,"ЕА"],"2208201200":["коньяк, спиртовые настой","кг",8.0,2.0,null,"ЕА"],"2208202900":["прочие спиртовые настойк","кг",3.0,2.5,2.0,"ЕА"],"2208208900":["прочис спиртные настойки.","кг",3.5,2.5,2.0,"ЕА"],"2208301100":["виски бурбон, в сосудах e","кг",3.5,3.5,3.5,"ЕА"],"2208307100":["виски купажированное про","кг",3.5,3.5,3.5,"ЕА"],"2208307900":["","кг",3.5,3.5,3.5,"ЕА"],"2208308200":["прочие виски в сосудах ем","кг",3.5,3.5,3.5,"ЕА"],"2208403100":["","кг",3.5,2.5,2.5,"ЕА"],"2208601100":["","кг",2.7,2.7,1.5,"ЕА"],"2208701000":["","кг",2.5,null,null,"КР"],"2208905400":["","кг",3.5,3.5,3.5,"ЕА"],"2208906909":["прочие спиртные напитки,","кг",2.0,2.0,0.9,"ЕА"],"2309101100":["","кг",1.7,1.7,1.7,"ЕА"],"2309103100":["корм для собак или кошек,","кг",1.7,1.7,1.7,"ЕА"],"2309105100":["","кг",1.7,1.7,null,"ЕА"],"2309109000":["прочий корм для собак wan","кг",1.7,1.7,null,"ЕА"],"2309901000":["","кг",null,null,null,"ЕА"],"2309902000":["","кг",null,null,null,"ЕА"],"2309903100":["","кг",1.7,null,null,"ЕА"],"2309909609":["прочие продукты, использу кг 1.70) 1,70 170","кг",1.7,1.7,null,"ЕА"],"2401106000":["","кг",3.3,null,null,"ЕА"],"2401203500":["светлый табак с частично н","кг",2.0,null,null,"ЕА"],"2401208501":["табак типа вирджиния сч","кг",null,null,null,"ЕА"],"2401300000":["табачные отходы. г 0,60","кг",0.6,null,null,"ЕА"],"2402209000":["прочис сигареты, солержащ — кг 9","кг",null,null,null,"ЕА"],"2403199000":["прочий курительный raGax,","кг",2.0,null,null,"ЕА"],"2403910000":["","кг",2.8,null,null,"ЕА"],"2403999008":["прочий промышленно к","кг",8.0,null,null,"ЕА"],"2404120000":["прочая продукция, предназ","кг",0.2,null,null,"ЕА"],"2404190009":["прочая продукция, предназ","кг",0.2,null,null,"ЕА"],"2404910002":["не солержащяя молочных я к","кг",3.81,3.81,null,"ЕА"],"2404910009":["","кг",0.95,null,null,"КР"],"2404990000":["","кг",1.0,0.3,null,"ЕА"],"2501009900":["прочая соль для химически","кг",0.12,0.04,null,"ЕА"],"2508100000":["","кг",null,null,null,"ЕА"],"2516110000":["","кг",0.08,null,null,"ЕА"],"2520200000":["гипсовые вяжущие a 0.60","кг",0.6,null,null,"КР"],"2523290000":["ПОРТЛАНДЦЕМЕНТ ПРО","кг",0.1,null,null,"ЕА"],"2523300000":["ЦЕМЕНТ ГЛИНОЗЕМИСТ кг","кг",null,null,null,"ЕА"],"2614000000":["руды и кониентраты титано","кг",0.7,0.5,null,"ЕА"],"2710198200":["","кг",1.8,null,null,"КР"],"2710198400":["жилкости для гидравлическ","кг",0.7,null,null,"ЕА"],"2710198800":["масло лля wecrepen и маса кг тю","кг",0.7,null,null,"ЕА"],"2710199400":["","кг",1.8,1.6,0.7,"ЕА"],"2710199800":["","кг",1.8,1.6,0.7,"ЕА"],"2818200000":["оксид алюминия, отличный","кг",0.5,0.5,0.5,"ЕА"],"2821100000":["оксиды и гидроксиды mene","кг",null,null,null,"КР"],"2825300000":["","кг",17.0,13.0,13.0,"ЕА"],"2830100000":["","кг",0.7,0.6,0.6,"ЕА"],"2830908500":["","кг",null,null,null,"ЕА"],"2834298000":["прочие нитриты и нитраты","кг",0.5,0.3,null,"ЕА"],"2836500000":["КАРБОНАТ КАЛЬЦИЯ","кг",null,null,null,"КР"],"2837110000":["цнанилы м оксид цианиды {","кг",null,null,null,"ЕА"],"2847000000":["пероксид водорода, xr 0,85 0,80 0,50","кг",0.85,0.8,0.5,"ЕА"],"2901290000":["углеводороды ациклически{ кг 3,00 2,50 2,50","кг",3.0,2.5,2.5,"ЕА"],"2905450009":["","кг",0.5,0.45,0.45,"ЕА"],"2917330000":["","кг",1.45,1.45,1.45,"ЕА"],"2917340000":["","кг",2.0,1.85,null,"ЕА"],"2918140000":["","кг",1.5,null,null,"КР"],"2921420001":["","кг",2.8,2.8,2.8,"ЕА"],"2922197000":["","кг",9.0,null,null,"КР"],"2922410000":["","кг",1.4,1.0,1.0,"ЕА"],"2922498500":["вминокислоты, кроме кг 1,80 180","кг",1.8,null,null,"ЕА"],"2929100001":["метилфенилендиизоцианат","кг",2.0,2.0,null,"ЕА"],"2930100000":["","кг",null,null,null,"КР"],"2930409000":["","кг",2.7,2.7,2.7,"ЕА"],"2930909508":["прочие соединения сероорг","кг",4.5,null,null,"КР"],"2931490001":["","кг",4.0,null,null,"КР"],"2935909009":["nporme сульфонамилы a 30,00","кг",30.0,null,null,"ЕА"],"3002120004":["прочие факторы свертывас","кг",800.0,800.0,null,"ЕА"],"3002120009":["","кг",4.8,4.8,null,"ЕА"],"3002150000":["","кг",400.0,null,null,"КР"],"3002410000":["вакцины для людей кг 10000","кг",100.0,null,null,"ЕА"],"3002420000":["какцины встеринарные. кг 70,00 30,00 30,00","кг",70.0,null,null,"КР"],"3002490001":["культуры микроорганизмов кг 300","кг",10.0,null,null,"ЕА"],"3002490009":["","кг",50.0,35.0,35.0,"ЕА"],"3002908000":["","кг",200.0,null,null,"ЕА"],"3004100008":["прочие лекарств ср-ва.соле","кг",20.0,null,null,"ЕА"],"3008200002":["","кг",2.0,null,null,"ЕА"],"3004320008":["","кг",40.0,null,null,"ЕА"],"3004390001":["","кг",50.0,null,null,"ЕА"],"3004490008":["","кг",4.9,null,null,"ЕА"],"3004500002":["","кг",10.0,null,null,"ЕА"],"3004900002":["","кг",null,null,null,"ЕА"],"3004900008":["","кг",1.0,null,null,"ЕА"],"3006400000":["","кг",80.0,null,null,"ЕА"],"3006600001":["10000","кг",100.0,null,null,"КР"],"3204170000":["","кг",3.0,2.0,2.0,"ЕА"],"3206110000":["","кг",1.75,1.7,1.3,"ЕА"],"3206190000":["mpowne кг 1.75 1.75 1.75 -","кг",1.75,1.75,1.75,"ЕА"],"3206497000":["","кг",1.0,0.5,0.6,"ЕА"],"3208109000":["","кг",2.2,1.5,null,"ЕА"],"3208201000":["","кг",null,null,null,"КР"],"3208209009":["","кг",1.76,null,null,"ЕА"],"3208901909":["","кг",4.5,3.0,3.0,"ЕА"],"3208909109":["","кг",null,null,null,"ЕА"],"3208909900":["","кг",2.69,1.76,null,"ЕА"],"3209100009":["","кг",1.24,null,null,"ЕА"],"3209900000":["прочие краски и лаки = кг","кг",3.0,1.0,7.0,"ЕА"],"3214101001":["пена монтажная noanyperay Kr 2.35 1.80) 2.00","кг",2.35,1.8,2.0,"ЕА"],"3214101009":["замазки стекольная и canoe","кг",2.05,1.39,1.24,"ЕА"],"3214900009":["","кг",0.6,null,null,"КР"],"3215190000":["прочие краски tunorpadexn","кг",7.5,null,null,"КР"],"3302104000":["","кг",7.0,null,null,"КР"],"3302909000":["npowwne препараты, исполь","кг",10.0,10.0,10.0,"ЕА"],"3303001000":["","кг",20.0,null,null,"КР"],"3303009000":["туалетная вода кг 10,00 3,00 3,00","кг",10.0,3.0,3.0,"ЕА"],"3304100000":["средства для макняжа губ","кг",3.0,3.0,3.0,"ЕА"],"3304200000":["средства для макияжа глаз","кг",3.0,null,null,"ЕА"],"3304300000":["","кг",3.0,3.0,3.0,"ЕА"],"3304910000":["","кг",3.0,3.0,3.0,"ЕА"],"3304990000":["","кг",3.0,2.7,2.7,"ЕА"],"3305100000":["","кг",2.5,2.0,1.5,"ЕА"],"3305900009":["средства для волос: прочие","кг",1.6,null,null,"ЕА"],"3306100000":["средства для чистки зубов","кг",3.0,2.2,1.5,"ЕА"],"3306900000":["прочие средства для rurnen","кг",1.5,1.5,1.5,"ЕА"],"3307100000":["кг","кг",2.0,2.0,null,"ЕА"],"3307200000":["дезолоранты н антиперсиир","кг",7.0,4.5,4.5,"ЕА"],"3307490000":["прочие средства для аромат кг 5,00 3,00 30","кг",5.0,3.0,null,"ЕА"],"3307900008":["","кг",2.0,1.5,1.1,"ЕА"],"3401110001":["мыло туалетное (включая м","кг",1.6,1.5,1.5,"ЕА"],"3401110009":["МЫЛО HTIOBEPXHOCTH","кг",0.5,null,null,"КР"],"3401190000":["","кг",1.55,1.3,1.3,"ЕА"],"3401209000":["EE МЫЛО В ПРОЧИХ Ol xr","кг",0.7,null,null,"КР"],"3401300000":["поверхностно-активные орт","кг",null,null,null,"ЕА"],"3402310000":["линейные алкилбеизолсуль","кг",1.2,1.2,null,"ЕА"],"3402390000":["","кг",1.2,0.9,null,"ЕА"],"3402420000":["","кг",2.0,null,null,"ЕА"],"3402490000":["","кг",1.0,null,null,"ЕА"],"3402500000":["","кг",0.65,0.3,null,"ЕА"],"3402901008":["прочие поверхностно-актив","кг",2.0,2.0,null,"ЕА"],"3402909000":["прочие моющиесредства и","кг",1.3,1.0,null,"ЕА"],"3403191000":["","кг",3.0,2.4,null,"ЕА"],"3403199000":["","кг",1.8,1.8,null,"ЕА"],"3403990000":["материалы смазочные: про","кг",2.0,1.9,null,"ЕА"],"3404900009":["кг","кг",3.0,1.5,null,"ЕА"],"3501901000":["ПРОЧИЕ КЛЕИ KA3EHHO","кг",null,null,null,"КР"],"3503001001":["","кг",null,null,null,"ЕА"],"3504009000":["пептоны и их производные:","кг",2.0,1.6,1.0,"ЕА"],"3505105000":["прочие молифицированные","кг",1.5,0.99,null,"ЕА"],"3506100000":["","кг",1.95,1.4,null,"ЕА"],"3506910000":["прочие адгезивы на основе","кг",1.6,null,null,"КР"],"3507909000":["прочие ферментные npenapl кг 6,00 3.00 4.00","кг",6.0,3.0,4.0,"ЕА"],"3604100000":["","кг",2.0,null,null,"КР"],"3701300000":["пластинки м пленки прочие","кг",4.85,null,null,"КР"],"3707909000":["","кг",3.5,4.0,4.0,"ЕА"],"3802100000":["","кг",4.0,1.8,2.0,"ЕА"],"3808590005":["гербицилы, conepxamme ал","кг",7.0,7.0,null,"ЕА"],"3808918000":["прочие иноектицилы: =","кг",3.5,1.5,null,"ЕА"],"3808925000":["фунгицилы на основе дназо","кг",4.5,3.0,null,"ЕА"],"3808928000":["","кг",7.0,3.0,null,"ЕА"],"3808932900":["","кг",12.0,5.0,null,"ЕА"],"3808948000":["","кг",1.8,1.8,null,"ЕА"],"3811210000":["","кг",4.5,3.0,null,"ЕА"],"3811900000":["","кг",4.5,2.0,null,"ЕА"],"3812390000":["","кг",null,null,null,"ЕА"],"3814009000":["","кг",2.2,2.2,null,"ЕА"],"3815110000":["600 6.00","кг",6.0,null,null,"ЕА"],"3815120000":["","кг",50.0,50.0,null,"ЕА"],"3815199000":["","кг",3.0,null,null,"ЕА"],"3815909000":["","кг",3.5,1.25,null,"ЕА"],"3816000000":["","кг",1.0,0.5,null,"ЕА"],"3821000000":["300","кг",40.0,null,null,"ЕА"],"3822190009":["","кг",6.0,5.0,5.0,"ЕА"],"3822900000":["","кг",10.0,2.0,2.0,"ЕА"],"3824400000":["08 0.48","кг",0.48,null,null,"КР"],"3824920000":["полигликолсвые сложные >{ кг","кг",0.5,0.2,null,"ЕА"],"3824996400":["прочие продукты и составы","кг",1.5,1.5,null,"ЕА"],"3824999208":["прочие химические продук","кг",0.5,0.2,null,"ЕА"],"3824999608":["","кг",0.4,0.2,null,"ЕА"],"3901101000":["","кг",1.2,1.1,null,"ЕА"],"3901109000":["прочий полиэтилен, с удель","кг",1.45,null,null,"ЕА"],"3901209009":["прочий полиотилен с удель","кг",1.35,null,null,"ЕА"],"3901300000":["","кг",1.1,null,null,"КР"],"3901400001":["","кг",1.2,1.2,null,"ЕА"],"3901400009":["прочие сополимеры этилен","кг",1.2,null,null,"КР"],"3901908000":["прочие полимеры этилена a","кг",1.2,1.2,null,"ЕА"],"3902100000":["","кг",1.1,1.3,null,"ЕА"],"3902200000":["полнизобутилен кг 1,60 1.60","кг",1.6,1.6,null,"ЕА"],"3902300000":["сополимеры пропилена кг","кг",1.4,1.3,null,"ЕА"],"3902909000":["кг","кг",2.0,2.0,2.0,"ЕА"],"3903110000":["ПОЛИСТИРОЛ ВСПЕНИВ","кг",1.8,null,null,"КР"],"3903190009":["","кг",1.0,1.0,1.0,"ЕА"],"3903300000":["","кг",1.75,null,null,"ЕА"],"3903909000":["","кг",1.3,1.3,1.3,"ЕА"],"3904100001":["","кг",0.9,0.9,null,"ЕА"],"3908100009":["","кг",0.8,0.8,0.8,"ЕА"],"3904210000":["","кг",null,null,null,"ЕА"],"3904220009":["","кг",null,null,null,"ЕА"],"3905290000":["","кг",1.5,1.5,null,"ЕА"],"3906100000":["","кг",2.2,2.2,null,"ЕА"],"3906909007":["прочие акриловые полимер{ кг 145","кг",null,null,null,"ЕА"],"3907299001":["кг 145 1,30","кг",1.3,null,null,"ЕА"],"3907299009":["прочие полиэфиры простые","кг",1.5,null,null,"КР"],"3907300001":["","кг",1.7,null,null,"ЕА"],"3907300009":["смолы эпоксидные: прочие","кг",1.7,1.7,null,"ЕА"],"3907610000":["","кг",1.05,null,null,"ЕА"],"3907690000":["ПОЛИЭТИЛЕНТЕРЕФТАЛ кг","кг",0.65,null,null,"КР"],"3907999000":["полнацетали, полиэфиры ny кг","кг",2.5,1.7,2.0,"ЕА"],"3909400000":["","кг",1.0,null,null,"ЕА"],"3909509001":["смолы эпоксидные:трочие:","кг",1.5,1.5,1.5,"ЕА"],"3909509002":["","кг",1.5,1.5,1.5,"ЕА"],"3909509008":["прочие смолы эпоксидные: кг 1,50 1,50 150","кг",1.5,1.5,null,"ЕА"],"3910000008":["","кг",2.1,2.1,2.1,"ЕА"],"3911909800":["прочие смолы нефтяные, 4 кг","кг",2.0,null,null,"КР"],"3912310000":["","кг",1.0,null,null,"ЕА"],"3912598500":["эфиры шеллюлозы простые","кг",4.0,2.5,2.5,"ЕА"],"3913900000":["прочие полимеры природны","кг",3.0,3.0,3.0,"ЕА"],"3914000000":["","кг",3.0,2.0,2.0,"ЕА"],"3916200000":["","кг",2.0,1.3,1.0,"ЕА"],"3916909000":["","кг",null,null,null,"ЕА"],"3917101000":["","кг",3.0,null,null,"ЕА"],"3917221000":["rpy6u, трубки и шланги, ж кг","кг",2.1,2.1,1.3,"ЕА"],"3917229009":["","кг",2.5,1.5,null,"ЕА"],"3917231009":["прочие трубы, трубки и шл","кг",2.0,1.6,1.6,"ЕА"],"3917239009":["","кг",1.83,null,null,"ЕА"],"3917290009":["трубы, трубки, шлангииих","кг",2.0,1.5,1.0,"ЕА"],"3917320001":["","кг",3.0,1.5,0.55,"ЕА"],"3917320009":["трубы, трубки, шланги них","кг",5.0,3.5,3.5,"ЕА"],"3917390008":["трубы, трубки, шланги wie","кг",1.7,1.5,1.3,"ЕА"],"3917400009":["","кг",2.8,2.3,null,"ЕА"],"3918101000":["покрытия для пола изполиф кг","кг",1.7,1.2,1.2,"ЕА"],"3918109000":["","кг",1.5,1.1,1.1,"ЕА"],"3919101200":["","кг",2.5,2.0,null,"ЕА"],"3919101500":["","кг",2.5,null,null,"КР"],"3919101900":["","кг",1.6,null,null,"ЕА"],"3919108000":["","кг",1.5,null,null,"ЕА"],"3919900000":["","кг",3.2,null,null,"КР"],"3920102400":["","кг",2.05,null,null,"КР"],"3920102500":["плиты листы,пленка и г 2.00 1,00 —","кг",2.0,null,null,"КР"],"3920102800":["","кг",2.0,1.8,null,"ЕА"],"3920104001":["","кг",2.05,1.8,null,"ЕА"],"3920104009":["плиты, листы, пленка и пол","кг",2.05,1.8,null,"ЕА"],"3920108900":["","кг",2.0,null,null,"ЕА"],"3920108909":["","кг",2.8,null,null,"КР"],"3920202109":["ners листы, пленка, dons","кг",2.0,2.0,2.0,"ЕА"],"3920202900":["толщиной не более 0,10 м","кг",0.1,1.66,null,"ЕА"],"3920208000":["","кг",2.0,2.0,2.0,"ЕА"],"3920300009":["","кг",2.0,null,null,"ЕА"],"3920431009":["","кг",2.0,1.3,1.5,"ЕА"],"3920439000":["","кг",1.6,null,null,"КР"],"3920491009":["","кг",1.95,1.95,null,"ЕА"],"3920499000":["","кг",2.2,1.9,1.9,"ЕА"],"3920310000":["","кг",2.2,2.1,2.0,"ЕА"],"3920399000":["","кг",2.0,null,null,"ЕА"],"3920621904":["","кг",2.0,2.0,2.0,"ЕА"],"3920621905":["","кг",2.0,2.0,2.0,"ЕА"],"3920630000":["","кг",2.0,null,null,"ЕА"],"3920993900":["","кг",2.0,1.8,1.8,"ЕА"],"3920999000":["","кг",null,null,null,"ЕА"],"3921110000":["","кг",2.3,2.3,1.9,"ЕА"],"3921120000":["","кг",2.0,1.8,1.8,"ЕА"],"3921131000":["","кг",3.0,2.95,2.3,"ЕА"],"3921139000":["","кг",2.5,2.5,null,"ЕА"],"3921190000":["","кг",2.0,1.9,null,"ЕА"],"3921904100":["","кг",3.0,1.0,null,"ЕА"],"3921903500":["","кг",3.0,null,null,"ЕА"],"3921906000":["","кг",1.85,null,null,"ЕА"],"3921909000":["","кг",null,null,null,"ЕА"],"3922100000":["","кг",2.4,null,null,"ЕА"],"3922900000":["npowne ванны, души, раков","кг",3.5,null,null,"ЕА"],"3923100000":["коробки, ящики, корзины н","кг",null,null,null,"ЕА"],"3923210000":["мешки и сумки (Bx. кон кг 2,80 050","кг",2.8,null,null,"ЕА"],"3923291000":["re прочих naacrwace: из по","кг",1.5,null,null,"ЕА"],"3923299000":["кг 2,60 2,30 2,30","кг",2.6,2.3,2.3,"ЕА"],"3923301090":["прочие бутыли, бутылки, $","кг",4.5,4.5,4.0,"ЕА"],"3923501000":["пробки и колпачки для заку","кг",3.5,3.5,2.5,"ЕА"],"3923509000":["","кг",3.5,3.5,3.0,"ЕА"],"3923900000":["","кг",2.2,null,null,"КР"],"3924100000":["посуда столовая и кухонная","кг",3.0,2.1,2.1,"ЕА"],"3924900001":["","кг",3.0,2.5,null,"ЕА"],"3924900009":["прочие: посуда столовая и кг 5.00 2,50 1.40 2","кг",5.0,2.5,1.4,"ЕА"],"3925100000":["","кг",2.0,null,null,"ЕА"],"3925200000":["","кг",2.06,null,null,"ЕА"],"3925300000":["","кг",2.2,null,null,"ЕА"],"3925901000":["","кг",null,null,null,"ЕА"],"3925908001":["прочие детали строительны","кг",3.0,2.2,null,"ЕА"],"3925908009":["прочие летали строительны","кг",4.0,null,null,"ЕА"],"3926100000":["","кг",3.0,2.0,null,"ЕА"],"3926200000":["","кг",5.0,2.5,null,"ЕА"],"3926300000":["","кг",10.0,3.0,null,"ЕА"],"3926400000":["","кг",3.0,2.55,null,"ЕА"],"3926909200":["","кг",3.0,2.8,null,"ЕА"],"3926909707":["","кг",7.0,3.0,null,"ЕА"],"3926909709":["","кг",7.0,3.0,null,"ЕА"],"4001220000":["","кг",2.6,1.75,null,"ЕА"],"4002910000":["","кг",1.85,1.85,null,"ЕА"],"4009210000":["","кг",2.7,2.7,2.7,"ЕА"],"4009220009":["","кг",3.65,2.7,2.7,"ЕА"],"4009310000":["трубы, трубки м шланги es","кг",1.6,2.05,null,"ЕА"],"4009320000":["rpyGu.rpy6xn и шланги арм","кг",8.0,3.0,null,"ЕА"],"4010120000":["ленты конвейерные или бел","кг",3.0,1.7,1.7,"ЕА"],"4010310000":["приводные ремни или бель","кг",13.0,3.0,null,"ЕА"],"4010350000":["","кг",15.0,null,null,"ЕА"],"4010390000":["прочие ремни или бсльтинг","кг",13.0,3.0,3.0,"ЕА"],"4011100003":["шины пневматические pew","кг",2.5,2.5,null,"ЕА"],"4011100009":["","кг",4.0,null,null,"КР"],"4011201000":["","кг",3.0,2.5,2.5,"ЕА"],"4011209000":["","кг",2.3,null,null,"КР"],"4011700000":["шины и покрышки пневмат","кг",3.0,3.0,null,"ЕА"],"4011800000":["шины и покрышки пневмат","кг",3.0,null,null,"КР"],"4012200009":["кг","кг",1.25,1.15,null,"ЕА"],"4014900000":["Изделия гигиенические или","кг",1.0,null,null,"ЕА"],"4015120009":["прочие перчатки, рукавицы","кг",null,null,null,"ЕА"],"4015190000":["перчатки, рукавицы и MHTC","кг",4.6,null,null,"ЕА"],"4016910000":["","кг",1.0,1.4,1.4,"ЕА"],"4016930005":["","кг",3.0,null,null,"КР"],"4016995209":["прочие части из металлона","кг",4.0,null,null,"КР"],"4016995709":["","кг",8.0,3.0,3.0,"ЕА"],"4016999708":["","кг",14.0,7.5,7.5,"ЕА"],"4202121900":["","кг",5.0,3.0,3.0,"ЕА"],"4202125009":["","кг",6.0,2.5,1.3,"ЕА"],"4202129100":["кейсы для деловых бумаг.","кг",8.0,6.5,6.5,"ЕА"],"4202129900":["прочие сундуки дорожные,","кг",5.0,2.5,1.3,"ЕА"],"4202199000":["","кг",5.0,null,null,"ЕА"],"4202210000":["сумки дамские м мужские <","кг",29.0,12.0,12.0,"ЕА"],"4202221000":["сумки дамские и мужские <","кг",15.0,8.5,7.0,"ЕА"],"4202229000":["сумки дамские и мужские <","кг",20.0,null,null,"КР"],"4202290000":["сумки дамские и мужские <","кг",5.0,null,null,"ЕА"],"4202310000":["излелия, обычно носимые в","кг",20.0,7.5,7.5,"ЕА"],"4202321000":["мзделия, обычно носимые в","кг",13.0,10.0,null,"ЕА"],"4202918000":["с лниевой поверхностью из","кг",5.0,null,null,"ЕА"],"4202921100":["","кг",10.0,5.5,6.0,"ЕА"],"4202921900":["прочие портфели, футляры","кг",10.0,7.0,3.8,"ЕА"],"4202929100":["","кг",10.0,7.0,3.8,"ЕА"],"4202929800":["npowne футляры для очков.","кг",10.0,7.0,5.8,"ЕА"],"4202990000":["прочие чемоданы, портфел","кг",4.5,4.0,null,"ЕА"],"4203100001":["","кг",10.0,null,null,"ЕА"],"4203291000":["","кг",4.5,null,null,"ЕА"],"4303109010":["прочие предметы одежды и","кг",500.0,null,null,"ЕА"],"4410113000":["","кг",null,null,null,"ЕА"],"4410115000":["плиты древесно-стружечны","кг",0.5,null,null,"ЕА"],"4410119000":["плиты древссно-стружечнь","кг",null,null,null,"ЕА"],"4410121000":["плиты с ориентированной <","кг",0.25,null,null,"ЕА"],"4410129000":["плиты с ориентированной с","кг",0.3,null,null,"ЕА"],"4411121000":["","кг",0.55,null,null,"ЕА"],"4411129000":["","кг",null,null,null,"ЕА"],"4411131000":["плиты древссно-волоки, =","кг",0.55,null,null,"ЕА"],"4411139000":["плиты древесно-волокнисть","кг",null,null,null,"ЕА"],"4411141000":["плиты древесно-волокнисть","кг",0.5,null,null,"ЕА"],"4411149000":["плиты древссно-волокиисть","кг",0.4,null,null,"ЕА"],"4411921000":["","кг",0.55,null,null,"ЕА"],"4411929000":["плиты древесно-волокиисть","кг",0.5,null,null,"ЕА"],"4411941000":["","кг",0.6,null,null,"ЕА"],"4412330000":["","кг",0.7,null,null,"ЕА"],"4412340000":["фанера клееная прочая, coc","кг",0.7,null,null,"ЕА"],"4418750000":["","кг",1.6,null,null,"КР"],"4418890000":["","кг",1.6,null,null,"ЕА"],"4418920000":["чеистые деревянные пансл","кг",1.6,null,null,"ЕА"],"4418997000":["прочие изделия деревянныс","кг",1.6,null,null,"ЕА"],"4802562000":["бумага 1 м2 40 г. или более","кг",null,null,null,"ЕА"],"4803003109":["","кг",1.2,null,null,"ЕА"],"4804395100":["","кг",1.3,null,null,"ЕА"],"4805191000":["прочая бумага “зейепяюй","кг",0.4,null,null,"ЕА"],"4805199000":["прочая бумага немслованны","кг",0.45,null,null,"ЕА"],"4805240000":["","кг",0.45,null,null,"ЕА"],"4805910000":["","кг",1.0,null,null,"ЕА"],"4810130009":["","кг",1.0,null,null,"ЕА"],"4810190009":["","кг",1.0,null,null,"ЕА"],"4810220001":["","кг",0.75,0.75,null,"ЕА"],"4810293000":["","кг",0.9,0.9,null,"ЕА"],"4810921000":["","кг",1.0,0.9,0.9,"ЕА"],"4810923000":["","кг",0.7,0.7,0.7,"ЕА"],"4810929009":["","кг",0.7,0.7,0.7,"ЕА"],"4810998000":["","кг",1.2,null,null,"ЕА"],"4811419000":["прочая бумага и картон гум","кг",2.0,1.6,1.6,"ЕА"],"4811510009":["","кг",1.9,2.0,null,"ЕА"],"4811590009":["","кг",1.8,1.7,null,"ЕА"],"4811900000":["","кг",1.5,null,null,"КР"],"4813200000":["","кг",1.8,null,null,"ЕА"],"4813901000":["","кг",2.3,2.3,null,"ЕА"],"4814200000":["","кг",null,null,null,"ЕА"],"4818101000":["","кг",1.75,null,null,"ЕА"],"4818109000":["","кг",1.6,1.6,0.65,"ЕА"],"4819100000":["","кг",1.3,0.65,null,"ЕА"],"4819200000":["","кг",1.2,null,null,"ЕА"],"4819300001":["мешки из бумаги, картона. { к","кг",1.5,1.5,null,"ЕА"],"4819400000":["мешки м пакеты прочие, вк","кг",1.55,1.55,null,"ЕА"],"4819500000":["прочие упаковки из бумаги","кг",4.5,2.0,2.0,"ЕА"],"4820103000":["","кг",2.1,2.1,2.1,"ЕА"],"4820200000":["","кг",1.2,null,null,"ЕА"],"4820300000":["ПЕРЕПЛЕТЫ СЪЕМНЫЕ.","кг",1.5,null,null,"ЕА"],"4820500000":["","кг",1.2,null,null,"ЕА"],"4822100000":["","кг",2.0,2.0,2.0,"ЕА"],"4822900000":["прочие бобины, катушки, x","кг",2.0,2.0,2.0,"ЕА"],"4823200009":["бумага и картон фильтрова","кг",4.0,2.5,2.5,"ЕА"],"5205120000":["","кг",4.0,4.0,1.9,"ЕА"],"5206110000":["","кг",2.0,1.0,1.0,"ЕА"],"5206120000":["","кг",2.0,1.0,2.0,"ЕА"],"5208119000":["","кг",null,null,null,"ЕА"],"5208121900":["","кг",3.0,3.0,null,"ЕА"],"5208520000":["","кг",6.0,2.5,3.5,"ЕА"],"5209590000":["","кг",1.5,null,null,"ЕА"],"5401101800":["","кг",null,null,null,"КР"],"5401109000":["НИТКИ ШВЕЙНЫЕ, ИЗС","кг",1.2,null,null,"КР"],"5407430000":["","кг",1.5,null,null,"ЕА"],"5407520000":["","кг",1.8,1.8,null,"ЕА"],"5407530000":["","кг",6.0,3.3,3.0,"ЕА"],"5407613000":["","кг",6.0,2.5,null,"ЕА"],"5407615000":["ткани прочие с сод_85 мас.","кг",6.0,1.7,null,"ЕА"],"5407619000":["ткани прочие напечатани! кг 4.65 2.00","кг",4.65,2.0,null,"ЕА"],"5407710000":["прочие ткани, содержащие","кг",4.0,3.0,1.8,"ЕА"],"5407720000":["","кг",3.0,2.0,null,"ЕА"],"5407730000":["","кг",5.0,null,null,"ЕА"],"5407820000":["ткани, содержащие по Maco","кг",1.5,1.5,null,"ЕА"],"5407920000":["прочис ткани из сиитетичес","кг",4.5,4.5,null,"ЕА"],"5407940000":["ткани прочис-мапечатанны","кг",1.5,null,null,"КР"],"5408229000":["","кг",2.5,null,null,"ЕА"],"5512191000":["","кг",2.5,null,null,"ЕА"],"5512199000":["","кг",null,null,null,"ЕА"],"5512991000":["ПРОЧИЕ ТКАНИ ИЗ Ci к","кг",null,null,null,"КР"],"5512999000":["ПРОЧИЕ ТКАНИ ИЗСИН{ кг","кг",null,null,null,"ЕА"],"5513210000":["","кг",3.5,3.0,null,"ЕА"],"5514191000":["ТКАНИ ПРОЧИЕ ИЗ к","кг",null,null,null,"ЕА"],"5514210000":["ткани содержашие по waco","кг",8.5,3.0,null,"ЕА"],"5514220000":["","кг",8.5,2.0,2.0,"ЕА"],"5514490000":["","кг",2.0,null,null,"КР"],"5515119001":["прочие ткани из полизфирн","кг",3.0,1.5,2.5,"ЕА"],"5515119009":["прочие ткани из полиэфирн","кг",10.0,7.0,6.0,"ЕА"],"5515998000":["ТКАНИ ИЗ CHHTETHYEC","кг",4.5,null,null,"ЕА"],"5516120000":["ткани, содержащие не мен","кг",3.5,3.5,null,"ЕА"],"5601219000":["вата из хлопка прочая кг 7,50 2,50 0.70","кг",7.5,2.5,0.7,"ЕА"],"5601221000":["","кг",3.0,3.0,3.0,"ЕА"],"3603139000":["< поверхностной плотность","кг",null,null,null,"ЕА"],"5603149000":["","кг",4.0,3.0,2.65,"ЕА"],"5503939000":["прочис истканые материал","кг",4.0,2.2,1.3,"ЕА"],"5604100000":["НИТИ РЕЗИНОВЫЕ И к","кг",2.08,null,null,"КР"],"5508191900":["из нейлона или прочихполи","кг",null,null,null,"ЕА"],"5702429000":["прочие ворсовыке, готовые","кг",5.0,3.0,3.0,"ЕА"],"5703310001":["ковры и прочис текстильны","кг",2.0,null,null,"КР"],"5703310009":["прочие =","кг",null,null,null,"ЕА"],"5703390001":["ковры и прочис текстильны","кг",2.7,2.1,null,"ЕА"],"5703390009":["","кг",3.0,2.0,2.0,"ЕА"],"5705003000":["прочие ковры и напольные","кг",3.0,2.0,1.5,"ЕА"],"5801320000":["вельвет-корд из XH xr 7,15 5,50 3,40","кг",7.15,5.5,3.4,"ЕА"],"5801360000":["","кг",3.5,3.5,null,"ЕА"],"5802100000":["ками махровые полоте: =","кг",null,null,null,"КР"],"5804109000":["","кг",2.2,null,null,"ЕА"],"5806200000":["MPOUHE ТКАНИ Y3KHE,{ к","кг",1.0,null,null,"КР"],"5806321000":["ткани прочие, кроме Trane","кг",6.0,1.9,null,"ЕА"],"5810929000":["MIPOUHE ВЫШИВКИ ИЗ =","кг",1.82,null,null,"КР"],"5902101000":["","кг",4.0,null,null,"ЕА"],"5903109001":["","кг",2.0,null,null,"ЕА"],"5903109009":["","кг",3.5,null,null,"ЕА"],"5903209000":["","кг",8.5,3.8,3.8,"ЕА"],"5904100000":["","кг",1.2,null,null,"ЕА"],"5904900009":["ЛИНОЛЕУМ. BBIKPOEHH","кг",0.6,null,null,"КР"],"5907000000":["текстильные материалы, wn","кг",13.5,4.0,null,"ЕА"],"5911909000":["кг 0","кг",null,null,null,"ЕА"],"6001920000":["полотно с петельным ворсо","кг",7.0,2.7,2.7,"ЕА"],"6004100000":["трикотажные полотна Maun Kr 7,00 чо","кг",7.0,null,null,"ЕА"],"6005379000":["полотна основовязаные (вк","кг",3.0,3.0,2.0,"ЕА"],"6006220000":["","кг",5.0,2.8,null,"ЕА"],"6006240000":["","кг",2.3,1.1,2.0,"ЕА"],"6006329000":["прочие трикотажные полот","кг",3.0,2.0,2.0,"ЕА"],"6101209000":["","кг",22.5,10.0,10.0,"ЕА"],"6101309000":["куртки (включая лыжнь),","кг",22.5,10.0,10.0,"ЕА"],"6102309000":["куртки (включая лыжные),","кг",22.5,10.0,10.0,"ЕА"],"6103420001":["брюжи, комбинезоны с warp","кг",15.0,3.0,null,"ЕА"],"6103420009":["","кг",15.0,8.0,2.5,"ЕА"],"6103430001":["брюжи, комбинезоны с нагр","кг",15.0,null,null,"КР"],"6104420000":["платья трикотажные. женск","кг",15.0,null,null,"КР"],"6104430000":["","кг",20.0,15.0,15.0,"ЕА"],"6108440000":["платья трикотажные, женск","кг",15.0,8.0,null,"ЕА"],"6104620000":["","кг",15.0,null,null,"КР"],"6104630000":["брюжи, комбинезоны с нагр","кг",20.0,null,null,"ЕА"],"6104690001":["","кг",15.0,10.0,2.5,"ЕА"],"6105100000":["","кг",15.0,8.0,4.0,"ЕА"],"6107110000":["трусы и кальсоны мужекис","кг",15.0,7.0,2.5,"ЕА"],"6108210000":["","кг",15.0,7.0,2.5,"ЕА"],"6108220000":["","кг",15.0,7.0,2.5,"ЕА"],"6108310000":["ночные сорочки и пижамы,","кг",15.0,7.0,2.5,"ЕА"],"6109100000":["","кг",15.0,8.0,null,"ЕА"],"6109902000":["","кг",15.0,8.0,2.5,"ЕА"],"6109909000":["прочис майки, фуфайки ср","кг",15.0,8.0,2.5,"ЕА"],"6110201000":["легкие тонкие лжемперы и { кг 150","кг",5.0,null,null,"ЕА"],"6110209100":["прочие свитера, пуловеры,","кг",15.0,null,null,"КР"],"6110209900":["","кг",15.0,10.0,5.0,"ЕА"],"6110309100":["","кг",20.0,15.0,10.0,"ЕА"],"6110309900":["","кг",15.0,10.0,5.0,"ЕА"],"6111209000":["прочая детская одежда м пр","кг",25.0,15.0,5.0,"ЕА"],"6112110000":["вветюмы спортивные ив кг Го","кг",4.0,null,null,"ЕА"],"6114200000":["предметы одежды прочие.","кг",15.0,8.0,null,"ЕА"],"6114300000":["предметы одежды mpowne,","кг",15.0,8.0,null,"ЕА"],"6113210000":["","кг",10.0,null,null,"КР"],"6115220000":["","кг",10.0,3.0,3.0,"ЕА"],"6115290000":["колготы прочие из прочих","кг",3.0,null,null,"КР"],"6115940000":["","кг",15.0,2.0,2.0,"ЕА"],"6115950000":["прочие чулочно-носочные","кг",10.0,null,null,"КР"],"6115969900":["","кг",10.0,5.0,3.0,"ЕА"],"6116102000":["перчатки, пропитанные wan","кг",3.5,null,null,"ЕА"],"6116108000":["прочие перчатки, рукавицы","кг",10.0,3.5,null,"ЕА"],"6116910000":["","кг",3.0,null,null,"ЕА"],"6116920000":["","кг",4.0,null,null,"ЕА"],"6116930000":["","кг",10.0,3.5,3.5,"ЕА"],"6116990000":["","кг",3.5,null,null,"КР"],"6117900000":["","кг",15.0,15.0,3.5,"ЕА"],"6201300000":["","кг",13.0,13.0,7.0,"ЕА"],"6201400000":["","кг",16.0,16.0,7.0,"ЕА"],"6201900000":["из прочих текстильных maT","кг",8.5,null,null,"ЕА"],"6202300000":["","кг",13.0,13.0,9.5,"ЕА"],"6202400001":["","кг",17.0,14.0,10.0,"ЕА"],"6202400009":["npowe пальто, noaynansro,","кг",16.0,null,null,"КР"],"6203221000":["","кг",10.0,10.0,3.0,"ЕА"],"6203238000":["","кг",19.0,null,null,"КР"],"6203423100":["","кг",13.0,12.0,7.0,"ЕА"],"6203423500":["прочие брюки и бриджи my","кг",13.0,null,null,"КР"],"6203429000":["прочие брюки, комбинезон","кг",13.0,12.0,7.0,"ЕА"],"6203431900":["прочие брюки и бриджи му","кг",null,null,null,"ЕА"],"6204339000":["прочие жакеты и блайзжеры","кг",null,null,null,"ЕА"],"6204420000":["","кг",null,null,null,"ЕА"],"6204430000":["платья женские или для ден","кг",null,null,null,"ЕА"],"6204440000":["платья женские или для дев","кг",null,null,null,"КР"],"6204520000":["","кг",null,null,null,"ЕА"],"6204530000":["юбки и юбки-брюки женск","кг",null,null,null,"ЕА"],"6204623100":["прочие брюки и бриджи же","кг",null,null,null,"ЕА"],"6204623900":["прочие брюки н бриджи we","кг",null,null,null,"ЕА"],"6204629000":["прочие брюки, комбинезон","кг",null,null,null,"ЕА"],"6204631800":["","кг",null,null,null,"ЕА"],"6204691800":["прочие брюки и бриджи же","кг",null,null,null,"ЕА"],"6205200000":["рубашки мужские или для","кг",null,null,null,"КР"],"6205300000":["","кг",null,null,null,"ЕА"],"6206300000":["","кг",null,null,null,"ЕА"],"6206400000":["","кг",null,null,null,"ЕА"],"6210200000":["предметы олежды прочие, {","кг",null,null,null,"ЕА"],"6210300000":["предметы одежды прочие,","кг",null,null,null,"ЕА"],"6210400000":["","кг",null,null,null,"ЕА"],"6210500000":["","кг",null,null,null,"ЕА"],"6211331000":["","кг",16.0,null,null,"ЕА"],"6212101000":["","кг",10.0,5.0,3.0,"ЕА"],"6212109000":["прочие бюстталтеры TpHKOT","кг",22.0,null,null,"ЕА"],"6214300000":["Шали, шарфы, кашне, ман","кг",7.0,null,null,"ЕА"],"6214900000":["","кг",10.0,null,null,"ЕА"],"6216000000":["","кг",10.0,3.5,3.5,"ЕА"],"6301409000":["леяла (кроме электрически","кг",5.0,null,null,"ЕА"],"6301909000":["","кг",5.0,null,null,"ЕА"],"6302210000":["","кг",11.0,5.0,null,"ЕА"],"6302310009":["","кг",9.0,3.5,1.0,"ЕА"],"6302600000":["","кг",10.0,5.0,3.0,"ЕА"],"6302910000":["","кг",5.0,null,null,"ЕА"],"6303910000":["","кг",8.0,3.0,3.0,"ЕА"],"6303929000":["","кг",10.0,6.0,6.0,"ЕА"],"6308199000":["","кг",3.5,null,null,"ЕА"],"6305321900":["","кг",2.5,null,null,"ЕА"],"6305331001":["","кг",2.0,null,null,"ЕА"],"6305331009":["мешки и пакеты упаковочи","кг",null,null,null,"ЕА"],"6305339000":["мешки и пакеты упаковочн","кг",2.8,1.3,null,"ЕА"],"6305900000":["","кг",2.0,null,null,"ЕА"],"6306120000":["брезеиты, навссы и тенты н","кг",4.0,1.55,null,"ЕА"],"6306190000":["","кг",2.6,null,null,"ЕА"],"6306220000":["палатки из синтетических н","кг",null,null,null,"ЕА"],"6307101000":["тряпки для мытья полов, по","кг",6.0,4.0,4.0,"ЕА"],"6307109000":["прочие тряпки для мытья nd кг 6,00 3.50 3,50 ","кг",6.0,3.5,3.5,"ЕА"],"6307909800":["готовые излелия прочис, вк","кг",10.0,4.8,4.0,"ЕА"],"6309000000":["олеждя и прочие изделия, 6","кг",2.0,1.5,1.0,"ЕА"],"6402190000":["","кг",3.3,null,null,"ЕА"],"6402919000":["обувь прочая, с позошвой н","ДЕИ",8.0,null,null,"КР"],"6402993100":["обувь прочая, с верхом из п","ДЕИ",2.6,null,null,"КР"],"6402993900":["прочая обувь, с верхом wan","кг",16.0,null,null,"КР"],"6402999100":["обувь прочая с верхом изп","кг",16.0,8.0,8.0,"ЕА"],"6402999600":["обувь прочая на подошве. <","кг",12.0,4.0,4.0,"ЕА"],"6402999800":["обувь прочая ка полошьс, ¢","ДЕИ",12.0,4.0,4.0,"ЕА"],"6403911100":["","кг",30.0,10.0,10.0,"ЕА"],"6403911600":["","кг",10.0,null,null,"ЕА"],"6403911800":["","кг",10.0,null,null,"ЕА"],"6403919800":["","кг",15.0,null,null,"ЕА"],"6403991100":["прочая обувь с союзной из","кг",10.0,null,null,"ЕА"],"6403993800":["прочая обувь, с союзкой из","ДЕИ",10.0,null,null,"ЕА"],"6403999100":["","ДЕИ",8.0,null,null,"ЕА"],"6403999600":["","ДЕИ",14.0,8.0,8.0,"ЕА"],"6403999800":["","кг",20.0,8.0,8.0,"ЕА"],"6404110000":["","кг",null,null,null,"ЕА"],"6404191000":["комнатные туфли м прочая","пара",1.9,null,null,"КР"],"6408199000":["прочая обувь ка полошьс ve","ДЕИ",5.0,3.0,2.0,"ЕА"],"6406109000":["заготовки верха обуви и их","кг",28.0,3.2,4.0,"ЕА"],"6406201000":["","кг",8.0,3.0,3.0,"ЕА"],"6406209000":["подошвы и каблуки из плас","кг",8.0,2.0,2.0,"ЕА"],"6406903000":["","кг",28.0,5.0,5.0,"ЕА"],"6406905000":["","кг",20.0,null,null,"КР"],"6503003000":["","кг",3.8,4.8,null,"ЕА"],"6505009000":["","кг",25.0,3.0,3.0,"ЕА"],"6506101000":["","кг",8.25,7.0,7.0,"ЕА"],"6601910000":["","кг",7.0,2.5,2.5,"ЕА"],"6702100000":["","кг",0.7,0.7,0.7,"ЕА"],"6702900000":["","кг",1.2,1.2,1.2,"ЕА"],"6801000000":["","кг",0.2,null,null,"ЕА"],"6802210000":["","кг",1.5,0.65,0.22,"ЕА"],"6802230000":["гранит тесаный или пилены","кг",0.5,0.2,0.2,"ЕА"],"6802290009":["камни ny к","кг",null,null,null,"ЕА"],"6802910000":["прочие мрамор. травертин","кг",1.5,0.55,null,"ЕА"],"6802920000":["","кг",0.6,0.5,0.18,"ЕА"],"6802931000":["","кг",0.5,0.4,null,"ЕА"],"6802939000":["","кг",0.5,0.45,0.4,"ЕА"],"6802991000":["прочие камни полированны","кг",0.45,0.25,null,"ЕА"],"6804210000":["","кг",10.0,null,null,"КР"],"6804221800":["армированные жернова, xa) кг 50","кг",2.0,null,null,"ЕА"],"6805100000":["","кг",10.0,2.0,1.5,"ЕА"],"6805300009":["природный или искусства","кг",1.5,null,null,"ЕА"],"6806900000":["","кг",2.0,0.8,0.8,"ЕА"],"6808000000":["","кг",1.0,0.4,0.4,"ЕА"],"6809110000":["плиты, листы, панели, плит","кг",0.15,null,null,"КР"],"6809190000":["","кг",0.4,0.4,null,"ЕА"],"6809900000":["","кг",1.0,1.0,1.0,"ЕА"],"6810190009":["","кг",0.9,0.5,0.04,"ЕА"],"6810990000":["","кг",0.5,0.5,0.5,"ЕА"],"6811820000":["","кг",1.5,0.8,0.8,"ЕА"],"6815110000":["углеродные волокна кг 0,70 0.70 065 _","кг",0.7,0.7,null,"ЕА"],"6815120000":["","кг",0.7,0.7,0.65,"ЕА"],"6815130000":["прочие изделия seen кг 0,70 0,70 065","кг",0.7,0.7,null,"ЕА"],"6815910002":["","кг",0.7,0.7,0.7,"ЕА"],"6815910009":["","кг",0.7,0.7,0.65,"ЕА"],"6815990002":["прочие изделия из огисупор","кг",0.7,0.7,0.7,"ЕА"],"6815990008":["","кг",0.7,null,null,"ЕА"],"6902100000":["","кг",1.8,1.5,1.2,"ЕА"],"6902209100":["","кг",1.8,0.55,0.5,"ЕА"],"6902209900":["","кг",2.0,1.3,1.5,"ЕА"],"6902900000":["","кг",1.8,1.5,1.2,"ЕА"],"6903209000":["прочие огнсупорные ксрамИ _ Kr 5.00 4,00 4,00","кг",5.0,4.0,4.0,"ЕА"],"6905100000":["","кг",0.3,0.2,null,"ЕА"],"6907211000":["","кг",0.5,0.2,0.18,"ЕА"],"6907219009":["","кг",0.5,0.24,0.22,"ЕА"],"6907221000":["плиты для мошения, плитк","кг",0.6,0.25,null,"ЕА"],"6907229003":["плиты для мошения, плитки","кг",0.7,0.5,null,"ЕА"],"6907229009":["плиты для мощения, плитю","кг",null,null,null,"КР"],"6907231000":["","кг",0.35,null,null,"ЕА"],"6907239003":["","кг",0.6,0.5,0.2,"ЕА"],"6907239009":["","кг",0.24,null,null,"КР"],"6907301000":["","кг",null,null,null,"ЕА"],"6907309009":["кубики керамические для wd кг 0","кг",0.3,null,null,"ЕА"],"6907401000":["керамические изделия отде","кг",0.4,null,null,"КР"],"6907409003":["керамические изделия отде","кг",2.0,0.55,null,"ЕА"],"6907409009":["керамические изделия отд кг 0,65 045","кг",0.65,0.4,null,"ЕА"],"6909120000":["изделия, имеющие экви xr_","кг",4.7,null,null,"ЕА"],"6910100000":["","кг",4.0,2.0,1.0,"ЕА"],"6910900000":["прочие раковины, умываль","кг",null,null,null,"КР"],"6911100000":["посуда столовая и кухонная","кг",1.6,1.6,1.6,"ЕА"],"6912002100":["посуда столовая и кухонная","кг",0.5,null,null,"КР"],"6912002300":["столовая посуда м кухонная","кг",1.8,1.65,0.7,"ЕА"],"6912002500":["кг 1,20 120","кг",1.2,null,null,"ЕА"],"6912002900":["","кг",0.7,null,null,"ЕА"],"6912008300":["посуда столовая, кухонная","кг",0.7,null,null,"ЕА"],"6912008500":["посуда столовая, кухонная","кг",null,null,null,"ЕА"],"6912008900":["","кг",1.0,null,null,"ЕА"],"6914900000":["","кг",0.5,null,null,"ЕА"],"7005100500":["стекло исармированное, им","кг",0.5,null,null,"ЕА"],"7005103000":["стекло нсармированное про","кг",null,null,null,"ЕА"],"7005108000":["стекло нсармированное про","кг",0.5,0.18,null,"ЕА"],"7005213000":["текло нсармированное mpo","кг",0.29,null,null,"ЕА"],"7005293500":["","кг",null,null,null,"ЕА"],"7006009000":["прочее стекло гнутое, гране","кг",0.55,null,null,"ЕА"],"7007198004":["","кг",1.2,null,null,"ЕА"],"7007198008":["прочее стекло упрочненное","кг",0.8,null,null,"ЕА"],"7007212009":["стекло многослойное Gevond","кг",2.5,null,null,"ЕА"],"7008008100":["многослойные изолирующи","кг",2.0,null,null,"КР"],"7009100009":["","кг",2.0,null,null,"КР"],"7009910000":["прочие зеркала стеклянные","кг",0.6,null,null,"КР"],"7009920000":["прочие зеркала стеклянные","кг",4.0,null,null,"КР"],"7010904300":["бутылки прочие для хранен","кг",0.4,null,null,"ЕА"],"7010904500":["","кг",0.4,null,null,"ЕА"],"7010903300":["бутылки прочие для xpanen","кг",0.4,null,null,"КР"],"7010909101":["оминальнойвместимостью","кг",null,null,null,"ЕА"],"7010909102":["оминальнойвместимостью","кг",null,null,null,"ЕА"],"7010909109":["бутылки для прочих продук","кг",1.0,1.0,1.0,"ЕА"],"7010909901":["","кг",null,null,null,"ЕА"],"7010909902":["номинальнойвместимостью","кг",0.5,null,null,"ЕА"],"7010909909":["","кг",null,null,null,"ЕА"],"7013289000":["прочие сосуды ка ножке дя","кг",1.5,1.0,1.0,"ЕА"],"7013371000":["","кг",null,null,null,"ЕА"],"7013379100":["","кг",1.15,null,null,"КР"],"7013379900":["","кг",1.0,0.7,null,"ЕА"],"7013420000":["","кг",1.2,1.0,null,"ЕА"],"7013491000":["","кг",1.7,1.7,null,"ЕА"],"7013499100":["","кг",null,null,null,"ЕА"],"7013499900":["","кг",1.8,1.7,null,"ЕА"],"7013990000":["","кг",null,null,null,"ЕА"],"7018101900":["СТЕКЛЯННЫЕ БУСИНЫ,","кг",1.0,null,null,"КР"],"7019120000":["изделия из стекловолокна:","кг",0.45,null,null,"ЕА"],"7020008000":["прочис изделия из стекла","кг",2.0,1.2,1.0,"ЕА"],"7117900000":["","кг",8.0,8.0,8.0,"ЕА"],"7202210000":["","кг",2.0,null,null,"ЕА"],"7202299000":["ферросилнинй прочий xr 1,60 145 0,80","кг",1.6,0.8,null,"ЕА"],"7202300000":["","кг",0.8,0.7,0.7,"ЕА"],"7209179009":["толщиной 0.5 мм или более","кг",null,null,null,"ЕА"],"7209908000":["ПРОКАТ ПЛОСКИЙ ИЗЖ","кг",0.4,null,null,"КР"],"7210122000":["","кг",2.0,0.9,0.9,"ЕА"],"7210300000":["","кг",null,null,null,"КР"],"7210490009":["ПРОЧИЙ ПРОКАТ ПЛОС! 031 031","кг",null,null,null,"КР"],"7210701000":["","кг",0.7,0.7,0.7,"ЕА"],"7210708000":["прокат плоский из железа н","кг",1.7,0.5,1.0,"ЕА"],"7210908000":["ПРОКАТ ПЛОСКИЙ ИЗЖ","кг",0.4,null,null,"КР"],"7211908000":["ПРОКАТ ПЛОСКИЙ ИЗЖ к","кг",null,null,null,"ЕА"],"7212300000":["прокат плоский va желе","кг",0.7,null,null,"ЕА"],"7213911000":["","кг",0.5,0.5,null,"ЕА"],"7213914900":["прутки горячекатаные в сво","кг",null,null,null,"ЕА"],"7214200000":["","кг",0.5,0.5,null,"ЕА"],"7214911000":["","кг",0.6,0.6,null,"ЕА"],"7214991000":["","кг",0.6,0.5,0.4,"ЕА"],"7215508000":["","кг",1.6,null,null,"КР"],"7216311000":["швеллеры высотой 80 мм н","кг",0.6,null,null,"КР"],"7216319000":["","кг",0.6,null,null,"ЕА"],"7216321100":["вутавры высотой or 80 до","кг",0.6,0.5,null,"ЕА"],"7216329100":["","кг",0.65,0.6,null,"ЕА"],"7216339000":["широкополочные двутавры","кг",0.65,0.6,0.6,"ЕА"],"7216501000":["","кг",0.75,null,null,"КР"],"7216611000":["угловые профили, шве: кг","кг",1.1,1.0,0.5,"ЕА"],"7216690000":["","кг",null,null,null,"ЕА"],"7216911000":["","кг",0.8,0.8,null,"ЕА"],"7216990000":["","кг",1.0,null,null,"ЕА"],"7217103900":["проволока из железа или we","кг",1.0,null,null,"КР"],"7217909000":["","кг",0.5,null,null,"ЕА"],"7219211009":["прокат плоский из коррозин","кг",2.5,null,null,"КР"],"7219221009":["","кг",3.2,null,null,"КР"],"7219321009":["","кг",2.5,2.0,2.0,"ЕА"],"7219331009":["","кг",3.1,2.0,2.0,"ЕА"],"7219339000":["","кг",2.0,1.3,1.3,"ЕА"],"7219341009":["","кг",2.2,2.2,null,"ЕА"],"7219349009":["прочий прокат плоский из","кг",1.65,1.65,1.65,"ЕА"],"7223001909":["","кг",6.0,3.5,3.5,"ЕА"],"7225404000":["","кг",1.4,0.9,null,"ЕА"],"7225406000":["","кг",1.4,1.1,null,"ЕА"],"7229200000":["проволока из кремнемарган","кг",1.2,1.0,1.0,"ЕА"],"7301100000":["конструкции шпунтовые из","кг",0.8,0.8,0.8,"ЕА"],"7303001000":["трубы и трубки типа, испол","кг",2.5,0.9,0.9,"ЕА"],"7304291009":["прочие трубы наружным дн","кг",1.3,null,null,"ЕА"],"7304318009":["прочис, круглого поперечно","кг",1.0,1.0,null,"ЕА"],"7304410008":["трубы прочие круглого cove","кг",null,null,null,"ЕА"],"7304499309":["трубы прочие, круглого non","кг",3.2,3.2,null,"ЕА"],"7304599209":["","кг",1.5,1.5,null,"ЕА"],"7306402009":["","кг",null,null,null,"ЕА"],"7307210009":["прочие фланцы из кг 4,00 4,00 i","кг",4.0,4.0,null,"ЕА"],"7307291008":["прочие фитинги для трубы","кг",3.5,3.0,null,"ЕА"],"7307298009":["","кг",3.5,null,null,"ЕА"],"7307910000":["прочие фланиы из черных a","кг",1.15,null,null,"ЕА"],"7307991000":["фитинги прочие из черных","кг",2.2,2.2,null,"ЕА"],"7307998009":["","кг",2.0,null,null,"ЕА"],"7308200000":["БАШНИ И РЕШЕТЧАТЫЕ","кг",1.75,null,null,"КР"],"7308300000":["","кг",3.0,1.8,1.8,"ЕА"],"7308400009":["","кг",1.45,1.25,0.8,"ЕА"],"7308905100":["","кг",2.0,1.65,1.65,"ЕА"],"7308905900":["","кг",2.2,1.8,1.8,"ЕА"],"7308909809":["","кг",1.3,1.5,null,"ЕА"],"7310291000":["","кг",3.3,2.6,null,"ЕА"],"7311009100":["","кг",1.0,1.0,1.0,"ЕА"],"7312108301":["БЕЗ ПОКРЫТИЯ к","кг",1.09,null,null,"КР"],"7314190000":["ПРОЧАЯ МЕТАЛЛИЧЕСК xr","кг",0.94,0.98,null,"ЕА"],"7314490000":["","кг",0.9,null,null,"ЕА"],"7315119000":["","кг",8.0,1.5,null,"ЕА"],"7315120000":["","кг",3.0,1.5,1.5,"ЕА"],"7315820000":["","кг",6.0,null,null,"КР"],"7313890000":["ЦЕПИ ИЗ ЧЕРНЫХ МЕТА","кг",1.23,null,null,"ЕА"],"7317007000":["прочие гвозди, кнопки холо","кг",5.0,1.0,1.0,"ЕА"],"7318121000":["ШУРУПЫ ПРОЧИЕ ДЛЯД к","кг",null,null,null,"ЕА"],"7318129000":["","кг",3.0,null,null,"ЕА"],"7318149100":["","кг",null,null,null,"ЕА"],"7318149900":["","кг",1.2,1.05,1.0,"ЕА"],"7318154100":["винты м болты без головок","кг",1.1,0.8,0.8,"ЕА"],"7318156900":["ВИНТЫ ПРОЧИЕ СВНУЦ xr","кг",0.95,0.55,null,"ЕА"],"7318157008":["","кг",3.5,null,null,"ЕА"],"7318158100":["болты прочие с пределом п кг 0","кг",0.9,null,null,"КР"],"7318158900":["болты прочие с пределом mi","кг",1.8,1.4,0.95,"ЕА"],"7318159008":["","кг",1.55,null,null,"ЕА"],"7318169109":["","кг",1.0,null,null,"КР"],"7318169900":["гайки прочие с внутренним","кг",1.0,1.0,null,"ЕА"],"7318190008":["","кг",1.5,1.2,1.2,"ЕА"],"7318220008":["прочие изделия, из черных","кг",1.2,1.0,1.0,"ЕА"],"7318290008":["","кг",1.6,1.6,1.6,"ЕА"],"7320101100":["","кг",3.0,1.6,1.6,"ЕА"],"7320202009":["","кг",5.0,1.5,1.5,"ЕА"],"7320208108":["прочис винтовые пружины","кг",1.5,null,null,"ЕА"],"7320208908":["MPOYHE ПРУЖИНЫ ВИН","кг",null,null,null,"ЕА"],"7321111000":["","кг",null,null,null,"ЕА"],"7321119000":["","кг",null,null,null,"ЕА"],"7321900000":["","кг",1.5,null,null,"ЕА"],"7322110000":["","кг",0.7,null,null,"ЕА"],"7322190000":["","кг",1.95,null,null,"ЕА"],"7322900009":["","кг",2.5,null,null,"ЕА"],"7323100000":["","кг",1.5,null,null,"ЕА"],"7323930000":["","кг",2.0,null,null,"ЕА"],"7323940000":["","кг",3.3,null,null,"ЕА"],"7323990000":["","кг",null,null,null,"ЕА"],"7324100009":["раковины и умывальники н","кг",4.0,3.0,3.0,"ЕА"],"7324900009":["оборудование санитарно-те","кг",3.0,1.5,1.5,"ЕА"],"7325100000":["изделия литые прочие из we","кг",3.0,1.6,null,"ЕА"],"7325910000":["ПРОЧИЕ ШАРЫ ПЕРЕМА","кг",null,null,null,"КР"],"7325999009":["прочие изделия литыс из ч","кг",7.0,1.6,1.3,"ЕА"],"7326110000":["","кг",1.3,0.9,0.7,"ЕА"],"7326191000":["прочие: кованые: кг 1,00","кг",1.0,null,null,"ЕА"],"7326199009":["излелия кованые или штам","кг",1.8,null,null,"ЕА"],"7326200009":["","кг",2.2,1.0,null,"ЕА"],"7326903000":["лестницы м стремянки xr","кг",null,null,null,"ЕА"],"7326906000":["","кг",null,null,null,"ЕА"],"7326909209":["прочие изделия прочие из","кг",3.0,2.55,null,"ЕА"],"7326909409":["","кг",1.5,null,null,"ЕА"],"7326909807":["","кг",2.0,null,null,"КР"],"7411109000":["","кг",7.5,null,null,"ЕА"],"7412200000":["","кг",9.0,9.0,null,"ЕА"],"7419800000":["npowe изелия ve wesw","кг",null,null,null,"ЕА"],"7506200009":["плиты, листы, полосы или { кг 230","кг",null,null,null,"ЕА"],"7604210000":["профили полые изалюмин{ кг 3,00 3,00","кг",3.0,3.0,null,"ЕА"],"7604299000":["","кг",null,null,null,"ЕА"],"7606129203":["","кг",2.95,null,null,"КР"],"7606129208":["","кг",2.95,null,null,"ЕА"],"7607111909":["","кг",3.5,3.5,null,"ЕА"],"7607199009":["","кг",3.5,3.9,null,"ЕА"],"7607201000":["","кг",4.5,3.6,4.5,"ЕА"],"7608208907":["","кг",6.5,6.5,null,"ЕА"],"7610100000":["","кг",4.5,4.0,null,"ЕА"],"7610909000":["","кг",3.1,3.1,null,"ЕА"],"7615101000":["","кг",6.0,2.6,2.6,"ЕА"],"7615103000":["","кг",6.0,4.45,4.45,"ЕА"],"7615108009":["","кг",6.0,null,null,"КР"],"7615200000":["","кг",4.3,2.0,null,"ЕА"],"7616100000":["","кг",2.0,2.0,2.0,"ЕА"],"7616991002":["","кг",4.0,1.2,null,"ЕА"],"7616991003":["","кг",5.0,2.0,2.0,"ЕА"],"7616999008":["","кг",4.0,2.5,2.5,"ЕА"],"8108909008":["","кг",10.0,null,null,"ЕА"],"8201100000":["","кг",1.6,null,null,"ЕА"],"8202200000":["","кг",7.5,6.0,5.0,"ЕА"],"8203200001":["","кг",8.0,3.0,8.0,"ЕА"],"8203200009":["клещи (включая кусачки),","кг",8.7,4.5,null,"ЕА"],"8204110000":["","кг",3.0,3.0,3.0,"ЕА"],"8205510090":["","кг",null,null,null,"ЕА"],"8209591000":["","кг",2.0,null,null,"ЕА"],"8205598099":["","кг",10.0,4.3,null,"ЕА"],"8206000000":["","кг",2.2,null,null,"ЕА"],"8207301000":["инструменты для прессован","кг",7.0,null,null,"ЕА"],"8207506000":["прочие инструменты для 06","кг",4.0,null,null,"ЕА"],"8207509000":["","кг",null,null,null,"ЕА"],"8207607000":["ииструменты дляпротягива","кг",null,null,null,"ЕА"],"8207909900":["","кг",2.5,2.0,null,"ЕА"],"8208400000":["","кг",2.5,null,null,"ЕА"],"8209002000":["поворачиваемые вставки из","кг",150.0,null,null,"ЕА"],"8209008000":["прочне пластины, бруски, Wl кг 25.00 20,00","кг",25.0,20.0,null,"ЕА"],"8211920000":["прочие ножи с фиксирован!","кг",3.5,3.0,null,"ЕА"],"8212101000":["","кг",4.0,4.0,null,"ЕА"],"8212109000":["","кг",4.0,4.0,null,"ЕА"],"8212200000":["","кг",12.0,10.0,null,"ЕА"],"8213000000":["ножницы, портновские нож","кг",2.5,2.5,null,"ЕА"],"8214200000":["HABOPbIMHHCTPYMEH","кг",null,null,null,"ЕА"],"8215991000":["mpowne кухонные и столовы","кг",3.5,2.25,2.25,"ЕА"],"8301100000":["","кг",4.5,2.0,1.0,"ЕА"],"8301200009":["","кг",4.0,4.0,4.0,"ЕА"],"8301401100":["замки, предназначенные дл","кг",7.0,2.2,2.2,"ЕА"],"8301401900":["прочие замки, предназначе","кг",6.0,2.1,2.1,"ЕА"],"8301600009":["части замков висячих и вре","кг",5.0,2.0,2.0,"ЕА"],"8302100000":["","кг",2.65,2.0,2.0,"ЕА"],"8302300009":["крепежная арматура, фурнн","кг",2.0,null,null,"КР"],"8302411000":["","кг",null,null,null,"ЕА"],"8302415000":["","кг",2.2,null,null,"ЕА"],"8302419000":["","кг",2.5,null,null,"ЕА"],"8302420000":["","кг",1.4,null,null,"ЕА"],"8302500000":["","кг",null,null,null,"ЕА"],"8302600009":["","кг",4.0,3.0,3.0,"ЕА"],"8306290009":["СТАТУЭТКИ И APYTHEY к","кг",1.98,null,null,"ЕА"],"8307100009":["","кг",3.4,null,null,"ЕА"],"8308200000":["заклепки трубчатые или ра кг 45%","кг",null,null,null,"КР"],"8308900000":["","кг",2.8,null,null,"ЕА"],"8309901000":["прочие закупорочные крыш","кг",9.0,5.5,null,"ЕА"],"8309909001":["","кг",5.0,2.0,1.2,"ЕА"],"8309909009":["прочие пробки, колпачки и","кг",5.0,2.0,1.2,"ЕА"],"8311100001":["электроды с сердечником и","кг",3.0,null,null,"КР"],"8311100009":["","кг",2.5,0.8,1.5,"ЕА"],"8311200000":["","кг",3.0,2.1,2.1,"ЕА"],"8403109000":["","кг",4.0,4.0,2.7,"ЕА"],"8406909000":["","кг",10.0,10.0,10.0,"ЕА"],"8407100003":["двигатели внутреннего стор","кг",300.0,300.0,null,"ЕА"],"8407211000":["","кг",10.0,null,null,"ЕА"],"8407343009":["","кг",0.9,0.9,null,"ЕА"],"8407349109":["","кг",8.0,8.0,null,"ЕА"],"8407349908":["","кг",8.0,4.5,null,"ЕА"],"8408205508":["","кг",1.5,1.5,null,"ЕА"],"8408205799":["","кг",1.5,1.5,null,"ЕА"],"8408209907":["","кг",3.0,2.6,null,"ЕА"],"8412904008":["","кг",10.0,null,null,"КР"],"8413302008":["насосы топливные. прочие","кг",16.4,null,null,"КР"],"8413705100":["","кг",4.05,null,null,"ЕА"],"8413705900":["насосы иситробежные, кг 9,00 3,00 3,00","кг",9.0,3.0,3.0,"ЕА"],"8413707500":["","кг",19.2,null,null,"ЕА"],"8413708100":["","кг",6.0,null,null,"ЕА"],"8413708900":["","кг",7.2,7.2,null,"ЕА"],"8413810000":["","кг",7.0,2.5,2.5,"ЕА"],"8413910008":["","кг",6.4,3.0,null,"ЕА"],"8414108900":["насосы вакуумные, прочие","кг",5.0,3.5,3.5,"ЕА"],"8414302005":["","кг",3.4,3.5,3.5,"ЕА"],"8414308107":["","кг",6.0,null,null,"КР"],"8414308109":["","кг",6.0,6.0,null,"ЕА"],"8414510000":["","кг",4.5,null,null,"КР"],"8414592000":["","кг",7.0,3.7,null,"ЕА"],"8414594000":["","кг",10.0,null,null,"КР"],"8414600001":["","кг",3.5,null,null,"КР"],"8414700000":["тазонепроницаемые шкафы","кг",12.67,12.07,null,"ЕА"],"8414801100":["","кг",8.0,7.3,null,"ЕА"],"8414802200":["компрессоры объемные воз","кг",4.65,2.6,null,"ЕА"],"8414807500":["","кг",7.0,null,null,"ЕА"],"8414809000":["","кг",8.0,null,null,"КР"],"8414900000":["","кг",8.9,null,null,"ЕА"],"8415109000":["установки для кондиционир","кг",5.0,4.0,null,"ЕА"],"8415820000":["","кг",7.0,6.0,null,"ЕА"],"8415830000":["","кг",7.0,6.0,null,"ЕА"],"8415900009":["","кг",4.65,4.65,4.65,"ЕА"],"8417900000":["","кг",7.0,3.0,3.0,"ЕА"],"8418102001":["","кг",4.5,null,null,"ЕА"],"8418108001":["","кг",2.8,2.8,null,"ЕА"],"8418109000":["","кг",8.0,4.8,6.0,"ЕА"],"8418219100":["","кг",4.0,3.0,3.0,"ЕА"],"8418302001":["","кг",4.0,3.0,3.0,"ЕА"],"8418302008":["","кг",4.0,2.5,2.5,"ЕА"],"8418402001":["","кг",3.0,null,null,"ЕА"],"8418501900":["","кг",6.3,3.2,null,"ЕА"],"8418509008":["","кг",8.0,null,null,"КР"],"8418690008":["","кг",6.0,4.8,null,"ЕА"],"8418991009":["","кг",7.0,5.0,null,"ЕА"],"8418999000":["прочие части холодильного","кг",5.0,3.9,null,"ЕА"],"8419120000":["солнечные водонагреватели","кг",3.0,null,null,"КР"],"8419190000":["прочие водонагреватели пр","кг",5.0,3.8,null,"ЕА"],"8419390008":["","кг",15.0,null,null,"КР"],"8419500000":["","кг",6.5,3.85,null,"ЕА"],"8419818000":["","кг",6.4,null,null,"ЕА"],"8419899890":["прочие машины, агрегаты #","кг",25.0,null,null,"КР"],"8419908509":["прочие части, кроме частей","кг",null,null,null,"КР"],"8421210009":["оборудование и устройства","кг",8.0,null,null,"ЕА"],"8421230000":["","кг",3.0,3.0,null,"ЕА"],"8421290003":["","кг",8.0,8.0,null,"ЕА"],"8421290009":["оборудование и устройства","кг",8.0,3.9,null,"ЕА"],"8421310000":["воздушные фильтры для дв кг 6,00 5.75 —","кг",6.0,null,null,"КР"],"8421320000":["каталитические нейтралим","кг",14.0,null,null,"ЕА"],"8421392008":["","кг",10.0,7.8,null,"ЕА"],"8421396100":["посредством каталитическо","кг",null,null,null,"ЕА"],"8421398002":["","кг",12.45,7.55,null,"ЕА"],"8421398006":["прочее оборудование и устр","кг",8.0,6.5,null,"ЕА"],"8421990005":["прочие части: прочие элеме","кг",10.0,4.0,null,"ЕА"],"8421990006":["прочие части xr","кг",10.0,4.0,null,"ЕА"],"8422110000":["","кг",4.55,null,null,"ЕА"],"8422300008":["оборудов.для заполнения, за","кг",10.0,10.0,10.0,"ЕА"],"8422400008":["","кг",25.0,5.0,5.0,"ЕА"],"8423101000":["","кг",2.0,null,null,"ЕА"],"8424200000":["","кг",10.0,null,null,"ЕА"],"8424300800":["","кг",4.5,null,null,"ЕА"],"8424499900":["прочие распылители для се","кг",20.0,null,null,"ЕА"],"8424890009":["wexannyocene устройства п","кг",10.0,null,null,"КР"],"8424900000":["","кг",3.5,null,null,"КР"],"8425110000":["тали подъемные и подъеми{ кг","кг",3.7,2.9,2.9,"ЕА"],"8425310000":["","кг",6.65,4.5,4.7,"ЕА"],"8426190000":["прочие краны мостовые, ко","кг",10.0,2.0,2.0,"ЕА"],"8426200000":["","кг",2.8,2.1,2.1,"ЕА"],"8426410007":["прочие механизмы самоход","кг",4.0,4.0,4.0,"ЕА"],"8326490099":["","кг",3.0,2.0,2.0,"ЕА"],"8426911009":["","кг",4.0,4.0,4.0,"ЕА"],"3426919009":["","кг",4.7,4.7,null,"ЕА"],"8427101000":["","кг",3.0,2.0,2.0,"ЕА"],"8427201100":["","кг",3.0,2.0,2.0,"ЕА"],"8427201909":["погрузчики самоходные. кг 30","кг",2.0,null,null,"ЕА"],"8428102002":["","кг",3.2,3.2,3.2,"ЕА"],"8428330000":["","кг",11.5,6.0,null,"ЕА"],"8428399009":["элеваторы и конвсйсры wen","кг",3.0,3.0,3.0,"ЕА"],"8428908000":["прочее оборудование anand кг 3,00 3,00 30","кг",3.0,null,null,"КР"],"8429110010":["","кг",10.0,3.5,3.5,"ЕА"],"8429110090":["","кг",null,null,null,"ЕА"],"8429200099":["","кг",null,null,null,"ЕА"],"8429401000":["","кг",null,null,null,"ЕА"],"8429519900":["прочис погрузчики одноков","кг",null,null,null,"ЕА"],"8429521001":["гусеничные экскаваторы по","кг",null,null,null,"ЕА"],"8429521009":["","кг",null,null,null,"КР"],"8429529000":["","кг",null,null,null,"ЕА"],"8429390000":["","кг",null,null,null,"ЕА"],"8430200000":["","кг",null,null,null,"ЕА"],"8430410008":["","кг",null,null,null,"ЕА"],"8431430000":["части, предназначенные ис","кг",7.0,3.0,3.0,"ЕА"],"8431492000":["части, предназначенные We","кг",3.3,1.8,null,"ЕА"],"8431498009":["части, предназначенные ис","кг",2.5,null,null,"ЕА"],"8432291000":["рыхлители м культиваторы","кг",6.0,2.2,2.2,"ЕА"],"8432391900":["","кг",10.0,3.5,3.5,"ЕА"],"8432900000":["части машин сельскохозяй","кг",4.0,1.9,1.9,"ЕА"],"8433400001":["","кг",2.0,2.0,2.0,"ЕА"],"8433510009":["комбайны зерноуборочные","кг",10.0,10.0,5.0,"ЕА"],"8433533000":["","кг",8.0,6.0,6.0,"ЕА"],"8433598509":["","кг",8.0,4.0,4.0,"ЕА"],"8433900000":["части машин или механизм","кг",10.0,2.5,2.5,"ЕА"],"8436100000":["машины м механизмы для {","кг",8.0,null,null,"КР"],"8436290000":["прочее оборудование для т","кг",4.5,3.5,3.5,"ЕА"],"8436809000":["","кг",10.0,4.0,4.0,"ЕА"],"8437100000":["","кг",10.0,null,null,"КР"],"8438101000":["","кг",15.0,4.0,4.0,"ЕА"],"8438500000":["оборудование для nepepabo","кг",15.0,null,null,"КР"],"8438809800":["","кг",9.0,4.0,4.0,"ЕА"],"8441300000":["","кг",10.0,5.0,5.0,"ЕА"],"8443312000":["","кг",15.45,null,null,"КР"],"8443321009":["","кг",13.0,null,null,"КР"],"8443999000":["","кг",20.0,13.3,16.65,"ЕА"],"8450111100":["полностью автоматические","кг",3.05,null,null,"ЕА"],"8450111900":["полностью автоматические","кг",3.05,3.05,null,"ЕА"],"8450119000":["полностью автоматические","кг",4.9,3.1,3.1,"ЕА"],"8450120000":["","кг",null,null,null,"ЕА"],"8450900000":["части к машинам стирал к","кг",2.8,2.7,null,"ЕА"],"8451210009":["машины сушильные смкост","кг",7.0,6.0,6.0,"ЕА"],"8452290000":["прочие швейные машины","кг",3.0,null,null,"КР"],"8455210009":["","кг",10.0,4.0,4.0,"ЕА"],"8455301000":["","кг",3.9,2.5,2.5,"ЕА"],"8455900000":["","кг",10.0,null,null,"КР"],"8457101008":["","кг",13.0,73.0,13.0,"ЕА"],"8457109008":["прочие шентры обрабатывай","кг",13.0,6.0,6.0,"ЕА"],"8458112000":["станки токарные mnorouene","кг",16.0,10.0,10.0,"ЕА"],"8458114109":["горизонтальные токарныез","кг",12.0,10.0,10.0,"ЕА"],"8458114900":["многошпиндельные кг 300","кг",20.0,null,null,"ЕА"],"8458118000":["прочие токарные станки ме","кг",8.0,6.0,6.0,"ЕА"],"8458190000":["","кг",9.0,4.0,4.0,"ЕА"],"8458912009":["","кг",33.0,14.0,14.0,"ЕА"],"8461501909":["","кг",5.0,null,null,"ЕА"],"8462230009":["","кг",10.0,3.5,null,"ЕА"],"8463109000":["","кг",5.0,5.0,null,"ЕА"],"8465912000":["","кг",5.0,4.95,null,"ЕА"],"8465920000":["","кг",3.0,4.8,null,"ЕА"],"8465990000":["","кг",3.5,null,null,"ЕА"],"8466937000":["","кг",7.0,5.0,null,"ЕА"],"8467119000":["","кг",10.0,2.0,null,"ЕА"],"8467211000":["","кг",3.2,null,null,"ЕА"],"8467219100":["","кг",10.0,3.0,null,"ЕА"],"8467219900":["","кг",5.0,null,null,"ЕА"],"8467221000":["","кг",5.0,null,null,"КР"],"8467223000":["пилы дисковые со встроенн","кг",4.9,4.5,null,"ЕА"],"8467229000":["","кг",4.0,2.0,null,"ЕА"],"8467292000":["","кг",null,null,null,"КР"],"8467295100":["аппараты углошлифовальн/ Kr _","кг",5.0,4.65,null,"ЕА"],"8467295900":["","кг",10.0,3.0,null,"ЕА"],"8467298000":["","кг",10.0,null,null,"ЕА"],"8467298509":["","кг",15.0,3.5,5.0,"ЕА"],"8467810000":["","кг",10.0,3.0,3.0,"ЕА"],"8467890000":["прочие инструменты ручны","кг",3.0,4.2,4.2,"ЕА"],"8471300000":["машины вычислительные ц","кг",120.0,null,null,"ЕА"],"8471410000":["","кг",15.0,15.0,15.0,"ЕА"],"8471490000":["кг 69,25 35,40 69.25","кг",69.25,35.4,69.25,"ЕА"],"8471500000":["блоки вычислит машин.бло","кг",40.0,30.0,null,"ЕА"],"8471606000":["","кг",7.0,3.0,3.0,"ЕА"],"8471607000":["","кг",11.5,null,null,"КР"],"8472909900":["","кг",7.15,5.5,5.5,"ЕА"],"8473308000":["частн и приналлежности ма","кг",3.5,3.2,3.2,"ЕА"],"8474100009":["машины для сортировки, г","кг",7.0,3.5,3.5,"ЕА"],"8374200003":["шековые дробилки necawox","кг",10.0,2.5,2.5,"ЕА"],"8474200008":["","кг",7.0,3.5,3.5,"ЕА"],"8474310001":["кг","кг",2.0,null,null,"ЕА"],"8474310009":["","кг",4.0,null,null,"КР"],"8474809080":["","кг",6.0,null,null,"КР"],"8474901000":["","кг",4.0,2.0,2.0,"ЕА"],"8474909000":["","кг",3.5,2.5,2.5,"ЕА"],"8477200000":["","кг",10.0,6.0,6.0,"ЕА"],"8477909000":["","кг",10.0,6.0,6.0,"ЕА"],"8479820000":["машины и механические пр","кг",10.0,3.0,5.0,"ЕА"],"8479899707":["прочие машины н механич{ кг в","кг",3.5,null,null,"ЕА"],"8480710000":["","кг",10.0,6.0,6.0,"ЕА"],"8481109908":["прочие клапаны рсдукцион","кг",7.0,null,null,"КР"],"8481201009":["клапаны регулирующие для","кг",7.0,3.0,5.0,"ЕА"],"8481209009":["","кг",25.0,null,null,"КР"],"8481309108":["","кг",15.0,2.5,null,"ЕА"],"8481309908":["","кг",15.0,4.0,4.0,"ЕА"],"8481401000":["клапаны предохранительны","кг",17.0,3.0,3.0,"ЕА"],"8481409009":["","кг",15.0,8.0,8.0,"ЕА"],"8481801100":["","кг",6.0,null,null,"ЕА"],"8481801900":["ПРОЧИЕ КРАНЫ, КЛАПА","кг",null,null,null,"КР"],"8481803900":["","кг",6.0,3.0,3.0,"ЕА"],"8481805990":["npowne клапаны контроля","кг",7.0,3.0,3.0,"ЕА"],"8481806100":["","кг",2.2,2.2,1.45,"ЕА"],"8481806390":["","кг",4.0,null,null,"ЕА"],"8481807900":["","кг",9.0,4.0,4.0,"ЕА"],"8481808199":["","кг",9.5,null,null,"КР"],"8481808508":["","кг",7.0,3.0,3.0,"ЕА"],"8481809907":["","кг",10.0,8.0,8.0,"ЕА"],"8481900000":["","кг",7.0,3.5,3.0,"ЕА"],"8482109008":["","кг",6.05,4.2,3.3,"ЕА"],"8482200009":["прочие подшипники ролик кг 4,90 26","кг",4.9,null,null,"ЕА"],"8482300009":["подшипники роликовые сф","кг",5.0,2.5,2.5,"ЕА"],"8482500009":["","кг",4.9,3.85,3.1,"ЕА"],"8482800009":["","кг",1.5,null,null,"ЕА"],"8482990000":["прочие части подшипников","кг",5.0,2.5,2.5,"ЕА"],"8483109500":["","кг",5.0,3.0,3.0,"ЕА"],"8483200000":["xopnyca полшипников со Bc","кг",3.0,null,null,"КР"],"8483308007":["","кг",17.0,4.0,4.0,"ЕА"],"8483405109":["коробки передач прочие","кг",5.0,4.0,4.0,"ЕА"],"8483409000":["зубчатые перелачи, npowne","кг",5.0,4.0,4.0,"ЕА"],"8483508000":["маховики и шкивы, включа","кг",3.0,4.0,4.0,"ЕА"],"8483608000":["","кг",5.0,4.0,4.0,"ЕА"],"8483908100":["","кг",8.0,2.9,2.9,"ЕА"],"8483908909":["","кг",9.0,3.0,3.0,"ЕА"],"8484100009":["","кг",8.0,3.5,3.5,"ЕА"],"8484900000":["наборы или комплекты про{ кг 6,00. 3,00 3,00","кг",6.0,3.0,3.0,"ЕА"],"8487909000":["ПРОЧИЕ ЧАСТИ ОБОРУД кг ти и","кг",null,null,null,"КР"],"8501109300":["прочие двигатели перемен кг","кг",10.0,null,null,"ЕА"],"8501109900":["","кг",8.0,3.5,3.5,"ЕА"],"8501310000":["двигатели постоянного xr 10,00 650","кг",10.0,null,null,"ЕА"],"8501510001":["","кг",10.0,5.0,3.0,"ЕА"],"8501522001":["двигатели переменного ток","кг",10.0,2.5,2.5,"ЕА"],"8501640000":["номинальной выходной мо","кг",3.1,null,null,"КР"],"8501800000":["генераторы переменного т кг 30","кг",null,null,null,"КР"],"8502120000":["","кг",9.0,3.0,3.0,"ЕА"],"8502134000":["","кг",8.0,null,null,"КР"],"8502202000":["","кг",4.9,3.7,null,"ЕА"],"8504340000":["трансформаторы прочне mol кг 675 3,25","кг",3.25,null,null,"ЕА"],"8504403008":["","кг",8.35,null,null,"КР"],"8504405500":["","кг",7.9,7.0,null,"ЕА"],"8504409100":["","кг",10.0,null,null,"КР"],"8504509500":["","кг",15.8,7.0,null,"ЕА"],"8505110000":["металлические магниты. x 6,00 3,00","кг",6.0,3.0,null,"ЕА"],"8505199000":["","кг",6.0,4.0,null,"ЕА"],"8506101100":["","кг",8.0,3.0,null,"ЕА"],"8507102003":["аккумуляторы электрически кг 1,80 1,80","кг",1.8,1.8,null,"ЕА"],"8507202000":["","кг",2.2,2.2,null,"ЕА"],"8507208008":["","кг",4.5,null,null,"КР"],"8507600000":["","кг",10.0,4.5,null,"ЕА"],"8508110000":["","кг",4.5,null,null,"ЕА"],"8508190001":["","кг",3.0,null,null,"КР"],"8508190009":["пылесосы,со встроенным э4 кг","кг",null,null,null,"ЕА"],"8509400000":["","кг",6.0,6.0,4.8,"ЕА"],"8509800000":["","кг",8.0,8.0,null,"ЕА"],"8510200000":["","кг",null,null,null,"КР"],"8511100009":["","кг",7.0,7.0,null,"ЕА"],"8511300008":["распределители; катушки $","кг",7.0,null,null,"КР"],"8511400008":["","кг",7.15,6.15,null,"ЕА"],"8511500008":["прочие генераторы, прочие","кг",6.7,6.7,null,"ЕА"],"8511900009":["прочие части aaexrpooGopyd кг","кг",3.5,3.5,null,"ЕА"],"8512200009":["приборы освещения или ви","кг",3.0,3.0,null,"ЕА"],"8512909008":["прочие части оборудования","кг",6.0,6.0,null,"ЕА"],"8513100000":["","кг",2.5,2.5,null,"ЕА"],"8514199000":["","кг",4.0,4.0,null,"ЕА"],"8516108000":["злектрические водонан кг 320 2,75 ie","кг",2.75,null,null,"ЕА"],"8516291000":["радиаторы жидконаполнен","кг",2.0,2.0,null,"ЕА"],"8516295000":["","кг",3.0,3.0,null,"ЕА"],"8516299100":["","кг",5.0,3.0,null,"ЕА"],"8516310009":["сушилки для волос прочие","кг",12.0,11.0,11.0,"ЕА"],"8516320000":["","кг",12.0,11.0,11.0,"ЕА"],"8516400000":["","кг",8.0,7.0,7.0,"ЕА"],"8516500000":["","кг",3.2,null,null,"КР"],"8516601010":["","кг",3.0,3.0,2.5,"ЕА"],"8516601090":["ПРОЧИЕ ЭЛЕ!","кг",1.88,null,null,"ЕА"],"8516605000":["","кг",3.0,null,null,"КР"],"8516607000":["","кг",5.0,5.0,null,"ЕА"],"8516608000":["","кг",4.0,3.85,null,"ЕА"],"8516609000":["","кг",2.7,2.2,null,"ЕА"],"8516710000":["","кг",6.0,5.0,null,"ЕА"],"8516797000":["","кг",5.0,4.45,4.45,"ЕА"],"8516802009":["","кг",3.5,3.5,null,"ЕА"],"8516808000":["электрические нагреватель","кг",6.0,6.0,null,"ЕА"],"8516900000":["","кг",3.0,3.0,null,"ЕА"],"8517130000":["50","шт",null,null,null,"ЕА"],"8517140000":["прочие аппараты телефони","шт",50.0,null,null,"ЕА"],"8517610008":["базовые станции прочие","кг",30.0,15.0,15.0,"ЕА"],"8517620003":["устройства вычислительны","кг",35.0,35.0,35.0,"ЕА"],"8517620009":["машины для приема, п xr 7.5 40,00 82.05","кг",40.0,82.05,null,"ЕА"],"8517790009":["прочие части телефонной а","кг",118.25,99.65,null,"ЕА"],"8518210000":["","кг",4.0,4.0,4.0,"ЕА"],"8518220009":["комплекты rpomKoror кг 365","кг",4.65,null,null,"ЕА"],"8518299600":["","кг",4.65,null,null,"ЕА"],"8518309500":["","кг",16.8,null,null,"КР"],"8518408008":["прочие электрические youn","кг",20.0,6.6,null,"ЕА"],"8519814500":["прочая аппаратура звуково{ кг. 30.00 12,00 12","кг",30.0,12.0,12.0,"ЕА"],"8521900009":["","кг",20.0,20.0,20.0,"ЕА"],"8524110014":["","кг",5.0,null,null,"ЕА"],"8524110019":["","кг",7.0,null,null,"КР"],"8524110027":["для товаров товарных пон","кг",1.2,null,null,"КР"],"8524110029":["предназначенные для товар","кг",null,null,null,"КР"],"8524110039":["ПРОЧИЕ x","кг",1.23,null,null,"КР"],"8524110059":["","кг",8.0,8.0,8.0,"ЕА"],"8524110071":["","кг",3.0,3.3,3.3,"ЕА"],"8524110076":["для товаров товарной познц кг","кг",null,null,null,"КР"],"8524110090":["","кг",24.6,20.66,null,"ЕА"],"8524120014":["модули с лоск диспллане","кг",5.0,null,null,"ЕА"],"8524120027":["для товаров товарных позн","кг",1.2,null,null,"КР"],"8524120029":["предназначенные для товар","кг",1.44,null,null,"ЕА"],"8524120039":["ПРОЧИЕ к","кг",1.23,null,null,"КР"],"8524120076":["для товаров товарной позиЦ{ кг 146 1.46","кг",1.46,null,null,"КР"],"8524120090":["","кг",24.08,20.24,null,"ЕА"],"8524190014":["","кг",5.0,3.67,null,"ЕА"],"8524190019":["прочие модули с плоск. ANC","кг",7.0,6.33,null,"ЕА"],"8524190027":["для товаров товарных пози","кг",1.2,null,null,"КР"],"8524190029":["предназначенные для товар","кг",1.44,null,null,"КР"],"8524190039":["","кг",1.23,null,null,"КР"],"8524190076":["ля товаров товарной nowt к","кг",1.46,null,null,"КР"],"8524190090":["прочие модули с плоск. anc","кг",24.08,14.59,20.24,"ЕА"],"8524910014":["woayancnnock. ancna.nane","кг",5.0,3.67,null,"ЕА"],"8524910019":["","кг",7.0,null,null,"ЕА"],"8524910027":["для товаров товарных поз","кг",1.2,null,null,"КР"],"8524910029":["предназначенные для товар","кг",1.44,null,null,"КР"],"8524910039":["","кг",1.23,null,null,"КР"],"8524910059":["","кг",8.0,8.0,8.0,"ЕА"],"8524910076":["","кг",1.46,null,null,"КР"],"8524910090":["","кг",24.08,14.59,20.28,"ЕА"],"8524920014":["модули с плоск. диспллане","кг",5.0,3.67,null,"ЕА"],"8524920027":["для товаров товарных поз","кг",1.2,null,null,"КР"],"8524920029":["предназначенные для товар","кг",1.44,null,null,"КР"],"8524920039":["","кг",1.23,null,null,"КР"],"8524920059":["","кг",8.0,8.0,8.0,"ЕА"],"8524920071":["мод_с пл. диспл. панел. 61","кг",3.0,3.3,3.3,"ЕА"],"8524920076":["","кг",1.46,null,null,"КР"],"8524920090":["","кг",24.08,14.59,20.24,"ЕА"],"8524990014":["","кг",5.0,3.67,null,"ЕА"],"8524990019":["прочие модули с плоской д","кг",7.0,null,null,"ЕА"],"8524990027":["для товаров товарных пози","кг",1.2,null,null,"КР"],"8524990029":["предназначенные для товар","кг",1.44,null,null,"ЕА"],"8524990039":["","кг",1.23,null,null,"КР"],"8524990059":["прочие модули с плоской д","кг",8.0,8.0,8.0,"ЕА"],"8524990074":["прочие модули с плоской д","кг",4.0,3.3,3.3,"ЕА"],"8524990076":["","кг",1.46,null,null,"КР"],"8524990090":["прочие модули с плоской au","кг",24.08,14.59,20.24,"ЕА"],"8525811900":["прочие телевизнонные каме","кг",40.0,40.0,40.0,"ЕА"],"8525821900":["","кг",40.0,40.0,40.0,"ЕА"],"8525831900":["прочие изделия ночного BI","кг",40.0,40.0,40.0,"ЕА"],"8525891900":["","кг",40.0,40.0,40.0,"ЕА"],"8525899900":["прочие запис. видсокамеры","кг",40.0,40.0,null,"ЕА"],"8526912000":["аппаратура радионавигаци","кг",120.0,null,null,"ЕА"],"8528521000":["мониторы прочие, нспользу","кг",20.0,17.0,17.0,"ЕА"],"8528529009":["","кг",12.0,12.0,12.0,"ЕА"],"8528599009":["мониторы прочие, цвстные.","кг",20.0,17.0,17.0,"ЕА"],"8528722001":["","кг",13.0,10.0,10.0,"ЕА"],"8528722009":["","кг",10.0,10.0,10.0,"ЕА"],"8528724000":["","кг",15.0,6.0,6.0,"ЕА"],"8529901019":["прочие части для модулей","кг",7.0,null,null,"ЕА"],"8529901027":["","кг",1.2,null,null,"КР"],"8529901029":["","кг",1.44,null,null,"КР"],"8529901039":["","кг",1.23,null,null,"КР"],"8529901059":["","кг",8.0,null,null,"ЕА"],"8529901071":["","кг",5.0,null,null,"ЕА"],"8529901074":["","кг",4.0,null,null,"ЕА"],"8529901075":["прочне части для модулей","кг",4.0,null,null,"ЕА"],"8529901076":["","кг",1.46,null,null,"КР"],"8529901090":["прочие части для модулей 7","кг",24.08,14.59,20.24,"ЕА"],"8529909600":["","кг",1.2,null,null,"КР"],"8535900008":["","кг",18.0,10.0,10.0,"ЕА"],"8536201007":["выключатели автоматическ","кг",13.0,4.0,4.0,"ЕА"],"8536209007":["","кг",20.0,7.0,7.0,"ЕА"],"8536302000":["","кг",15.0,3.5,3.5,"ЕА"],"8536419000":["","кг",17.0,null,null,"КР"],"8536490000":["","кг",30.0,8.0,8.0,"ЕА"],"8536501906":["переключатели прочие, на","кг",35.0,6.0,6.0,"ЕА"],"8536508002":["","кг",5.0,5.0,null,"ЕА"],"8536508008":["переключатели npowne: npo","кг",5.0,5.0,null,"ЕА"],"8536699008":["прочие штепсели и розетки","кг",2.5,2.5,2.5,"ЕА"],"8536900100":["предварительно собранные","кг",8.0,8.0,8.0,"ЕА"],"8536901000":["","кг",7.65,7.65,7.65,"ЕА"],"8537109800":["пульты, панели, консоли, с","кг",21.0,18.0,18.0,"ЕА"],"8537209200":["пульты, панели, консоли, Ct","кг",7.5,6.0,4.0,"ЕА"],"8538100000":["","кг",2.0,2.0,2.0,"ЕА"],"8538909200":["части прочие: электронные","кг",100.0,15.0,15.0,"ЕА"],"8538909908":["","кг",7.0,null,null,"ЕА"],"8539213009":["","кг",25.0,null,null,"ЕА"],"8539511014":["","кг",5.0,null,null,"ЕА"],"8539511015":["","кг",5.0,null,null,"ЕА"],"8539511022":["","кг",6.0,null,null,"ЕА"],"8539511029":["источники света светоднодн","кг",6.0,null,null,"ЕА"],"8539511093":["","кг",6.0,null,null,"ЕА"],"8539513000":["","кг",7.0,null,null,"ЕА"],"8539514012":["","кг",4.5,null,null,"ЕА"],"8539514019":["","кг",4.5,null,null,"ЕА"],"8539514022":["","кг",4.5,null,null,"ЕА"],"8539514029":["источники света с xr","кг",null,null,null,"ЕА"],"8539514093":["","кг",null,null,null,"ЕА"],"8539514094":["","кг",4.5,null,null,"ЕА"],"8539514099":["","кг",4.5,null,null,"ЕА"],"8539519009":["","кг",20.15,null,null,"КР"],"8539520001":["кг","кг",0.79,null,null,"КР"],"8539520003":["источники света свстодиоди","кг",4.5,2.5,2.5,"ЕА"],"8539520009":["","кг",4.0,2.5,2.5,"ЕА"],"8539908002":["части ламп прочие для тов.","кг",5.0,4.0,null,"ЕА"],"8541430000":["","кг",3.5,2.0,2.0,"ЕА"],"8541490000":["","кг",5.0,null,null,"КР"],"8541510000":["преобразователи на основс","кг",14.64,18.53,null,"ЕА"],"8541590000":["прочие приборы полупрово","кг",17.72,14.18,null,"ЕА"],"8543400000":["","кг",20.15,20.0,null,"ЕА"],"8543708000":["","кг",20.15,20.0,15.45,"ЕА"],"8544200000":["","кг",3.0,null,null,"ЕА"],"8544300007":["","кг",10.0,3.0,3.0,"ЕА"],"8544429007":["прочие проводники электр","кг",8.0,5.0,null,"ЕА"],"8544429009":["проводники электрические","кг",4.5,null,null,"ЕА"],"8544499108":["провода и кабели с изолиро","кг",5.0,4.0,4.0,"ЕА"],"8544700000":["кабели волоконно-оптическ","кг",6.0,3.0,3.0,"ЕА"],"8545110020":["ектроды, используемые в","кг",3.0,2.7,2.7,"ЕА"],"8545190000":["","кг",1.0,null,null,"КР"],"8546200000":["изоляторы электрические i","кг",4.0,1.6,1.5,"ЕА"],"8607191009":["","кг",1.8,1.8,null,"ЕА"],"8609009009":["","кг",0.4,0.4,0.4,"ЕА"],"8701211011":["тракторы колесные для пол","ДЕИ",45000.0,40000.0,40000.0,"ЕА"],"8701211019":["тракторы колесные для пол","ДЕИ",40000.0,35000.0,null,"ЕА"],"8701219012":["тракторы колесные для пол","кг",2.0,2.0,2.0,"ЕА"],"8701219019":["БЫВШИЕ В ЭКСПЛУАТА","шт",16000.0,16000.0,null,"ЕА"],"8701221011":["тракторы колесные для пол","ДЕИ",45000.0,40000.0,40000.0,"ЕА"],"8701291011":["тракторы колесные для пол} ДЕИ 45000.00","ДЕИ",45000.0,40000.0,null,"ЕА"],"8701931000":["","кг",9.0,3.5,3.5,"ЕА"],"8701931009":["новые тракторы. с мощност","ДЕИ",40000.0,null,null,"ЕА"],"8701951009":["новые тракторы, с мощност","ДЕИ",40000.0,40000.0,null,"ЕА"],"8702101193":["прочмовые моторные тран{ ДЕИ 60000.00","ДЕИ",60000.0,45000.0,40000.0,"ЕА"],"8702101199":["прочие новые моторные Tpa ДЕИ 35.0000","ДЕИ",33000.0,null,null,"ЕА"],"8702901190":["прочие новые моторные тр{ ДЕИ 50000.00","ДЕИ",50000.0,null,null,"ЕА"],"8703211091":["","кг",3.5,2.0,3.5,"ЕА"],"8703211099":["","кг",3.5,3.5,3.5,"ЕА"],"8703221099":["прочие транспортные cpeac","кг",6000.0,null,null,"ЕА"],"8703231983":["автомобили с двигателем в","кг",40000.0,25000.0,null,"ЕА"],"8703239082":["автомобили с двигателем в","кг",null,null,null,"ЕА"],"8703239083":["автомобили с двигателем в","кг",3.5,3.5,null,"ЕА"],"8703239087":["автомобили с двигателем в","кг",3.5,3.5,null,"ЕА"],"8703239088":["автомобили с двигателем в","кг",3.5,3.5,null,"ЕА"],"8703239089":["автомобили с двигателем","кг",3.5,3.5,null,"ЕА"],"8703249093":["бывшие в эксплуатации ав ДЕИ 6000.00","ДЕИ",6000.0,6000.0,null,"ЕА"],"8703249094":["бывшие в эксплуатациии ав","ДЕИ",8000.0,null,null,"ЕА"],"8703249098":["автомобили с двигателем в","ДЕИ",10000.0,10000.0,null,"ЕА"],"8703321990":["прочис новые транспортны","ДЕИ",30000.0,15000.0,15000.0,"ЕА"],"8703329094":["бывшие в эксплуатавтомоб","ДЕИ",4700.0,null,null,"ЕА"],"8703405991":["транспер-вауновые.привод.","ДЕИ",35000.0,14000.0,14000.0,"ЕА"],"8703405993":["трансп.ср-ва.приводв DEH 30000.00","кг",30000.0,25000.0,null,"ЕА"],"8703405995":["spancn.cp-sa,npwooa.e neve ДЕИ 55000.00","ДЕИ",55000.0,35000.0,null,"ЕА"],"8703505991":["транспср-ваупривод в движ","ДЕИ",60000.0,50000.0,null,"ЕА"],"8703603098":["15000.00","кг",15000.0,15000.0,15000.0,"ЕА"],"8703603099":["15060.00","кг",15000.0,15060.0,15000.0,"ЕА"],"8703800009":["","кг",2.0,2.0,2.0,"ЕА"],"8703900090":["17 500.00","кг",500.0,500.0,500.0,"ЕА"],"8704101022":["самосвалы с поршни двигате","ДЕИ",null,null,null,"ЕА"],"8704101029":["прочие самосвалы с поршн","кг",70000.0,70000.0,70000.0,"ЕА"],"8704213200":["моторные т/с для перевозк","кг",35000.0,10000.0,10000.0,"ЕА"],"8704219200":["моторные т/с для перевозки","ДЕИ",10000.0,null,null,"ЕА"],"8704219801":["мотор. x/¢ для перевоз. гру","ДЕИ",3000.0,null,null,"ЕА"],"8704229209":["worop. т/с для перев. грузоф ДЕИ 14000.00","ДЕИ",14000.0,14000.0,14000.0,"ЕА"],"8704239209":["мотор. т/с для перев. rp.: п","ДЕИ",35000.0,30000.0,null,"ЕА"],"8704313200":["мотор. т/с ana перев. rp.: 1","ДЕИ",20000.0,20000.0,20000.0,"ЕА"],"8704319200":["мотор. т/с для перев. гр","ДЕИ",10000.0,10000.0,10000.0,"ЕА"],"8703100091":["прочис автокраны новые","ДЕИ",40000.0,40000.0,40000.0,"ЕА"],"8705100095":["ПРОЧИЕ АВТОКРАНЫ БЫ шт","шт",270.0,null,null,"КР"],"8705400001":["автобстономешалки новые","ДЕИ",40000.0,24000.0,null,"ЕА"],"8705400005":["АВТОБЕТОНОМЕШАЛКИ шт","шт",15430.0,null,null,"КР"],"8705903001":["автомобили для перекачки { ДЕЙ 100 000.00","кг",null,null,null,"ЕА"],"8705903005":["АВТОМОБИЛИ ДЛЯ ПЕР","шт",32050.0,null,null,"КР"],"8705908005":["моторные транспортные cpq AEH 150 000.00","кг",null,null,null,"ЕА"],"8705908009":["ПРОЧИЕ БЫВШИЕ В ЭК шт","шт",870.0,6870.0,null,"ЕА"],"8706001190":["","кг",0.8,null,null,"ЕА"],"8706001909":["прочие шасси с установлен","кг",0.9,0.9,0.9,"ЕА"],"8706009909":["ПРОЧИЕ WIACCHC ABUT","кг",0.62,0.62,null,"ЕА"],"8707109000":["прочис кузова для моторны","кг",null,null,null,"ЕА"],"8707909009":["прочие кузова (включая","кг",2.5,2.5,2.5,"ЕА"],"8708109009":["прочис бамперы и их части","кг",1.5,1.5,null,"ЕА"],"8708220009":["","кг",1.5,1.5,1.5,"ЕА"],"8708299009":["","кг",1.5,1.5,1.5,"ЕА"],"8708309109":["","кг",1.5,1.5,1.5,"ЕА"],"8708309909":["прочие тормоза и тормоза c","кг",2.2,null,null,"ЕА"],"8708405009":["прочие коробки передач","кг",2.0,2.0,2.0,"ЕА"],"8708409909":["","кг",1.5,1.5,1.5,"ЕА"],"8708503509":["","кг",2.0,2.0,2.0,"ЕА"],"8708509909":["части и принадлежности ма","кг",1.5,1.5,1.5,"ЕА"],"8708705009":["","кг",1.5,1.5,1.5,"ЕА"],"8708709909":["","кг",1.5,1.5,1.5,"ЕА"],"8708803509":["","кг",1.5,1.5,1.5,"ЕА"],"8708809909":["прочне системы подвески н","кг",1.5,1.5,1.5,"ЕА"],"8708913509":["","кг",1.5,1.5,1.5,"ЕА"],"8708919909":["ПРОЧИЕ РАДИАТОРЫ И{ кг","кг",null,null,null,"КР"],"8708923509":["глушители и выхлопные тр","кг",1.5,1.5,1.5,"ЕА"],"8708939009":["","кг",1.5,1.5,1.5,"ЕА"],"8708943509":["","кг",1.5,null,null,"КР"],"8708949909":["части рулевых Konec,pyaces","кг",1.5,1.5,null,"ЕА"],"8708999709":["прочие части м принадлежн","кг",1.5,1.5,null,"ЕА"],"8709119000":["прочие транспортные среде","кг",2.0,2.0,null,"ЕА"],"8711100000":["мотоциклы (мопеды) н send ДЕИ 1000","ДЕИ",100.0,100.0,null,"ЕА"],"8711209200":["мотоциклы, мопеды и всло{ ДЕИ 250.00","ДЕИ",250.0,null,null,"ЕА"],"8711209800":["прочие мотоциклы a EK 350.00","кг",350.0,null,null,"ЕА"],"8711301000":["мотоциклы (мопелы) н вел ДЕИ 900.00","ДЕИ",900.0,null,null,"ЕА"],"8711309000":["мотоциклы (мопеды) н peng ДЕЙ. 90000","кг",750.0,750.0,null,"ЕА"],"8711400000":["мотоциклы (мопеды) м вл ДЕИ 1000,00","ДЕИ",1000.0,2000.0,1000.0,"ЕА"],"8711500000":["мотоциклы (мопеды) и Beng","кг",3000.0,null,null,"ЕА"],"8711609000":["ДЕЙ! 20000","кг",5.0,null,null,"ЕА"],"8712003000":["","кг",7.0,2.9,2.75,"ЕА"],"8712007000":["Велосипелы двухколесные","кг",1.6,null,null,"ЕА"],"8714999009":["ПРОЧИЕ «","кг",1.23,null,null,"КР"],"8715001000":["","кг",10.0,2.5,2.5,"ЕА"],"8716310000":["прицепы-цистерны и полу ДЕИ 10000,00","ДЕИ",10000.0,15000.0,15000.0,"ЕА"],"8716393001":["новые полуприцепы автомо","кг",15000.0,18750.0,750.0,"ЕА"],"8716393002":["полуприцепы новые прочие! ДЕЙ 50000.00","кг",50000.0,50000.0,50000.0,"ЕА"],"8716393009":["прочие новые полуприцель","ДЕИ",15000.0,null,null,"ЕА"],"8716398007":["прочнс, бывшие в эксплуат","кг",2.0,2.0,2.0,"ЕА"],"8716800000":["транспортные средства про","кг",1.5,1.2,1.2,"ЕА"],"8716905000":["","кг",1.8,1.8,1.8,"ЕА"],"8716909000":["прочие части к прицепам и","кг",1.5,1.25,1.25,"ЕА"],"8902001000":["","кг",4.0,4.0,4.0,"ЕА"],"9001300000":["динзы контактные = 120,00","кг",120.0,100.0,null,"ЕА"],"9001504100":["динзы для очков из прочих","кг",null,null,null,"ЕА"],"9001900009":["волокна оптические и жгут","кг",10.0,10.0,10.0,"ЕА"],"9002190000":["объективы прочие x 300,00_","кг",300.0,null,null,"КР"],"9003110000":["оправы и арматура из плас","кг",80.0,null,null,"ЕА"],"9003190009":["оправы и арматура из друг","кг",250.0,80.0,null,"ЕА"],"9004109100":["очки commesauurrnne с amd кг 20000","кг",15.0,15.0,null,"ЕА"],"9003100000":["","кг",4.0,null,null,"ЕА"],"9013800000":["","кг",6.0,6.0,6.0,"ЕА"],"9017801000":["стержня измерительные и","кг",3.0,1.5,1.5,"ЕА"],"9018311009":["прочие шприцы, © иглами","кг",6.0,null,null,"КР"],"9018321000":["","кг",20.0,6.0,6.0,"ЕА"],"9018410000":["бормашины, совмещенные","кг",40.0,null,null,"КР"],"9018499000":["прочие приборы и yorpolicr","кг",30.0,10.0,10.0,"ЕА"],"9018509000":["инструменты и устройства { кг 2500","кг",null,null,null,"КР"],"9018902000":["эндоскопы: кг 300,00_","кг",300.0,120.0,null,"ЕА"],"9018903000":["","кг",25.0,10.0,10.0,"ЕА"],"9019101000":["","кг",7.0,5.0,3.0,"ЕА"],"9019109009":["","кг",8.0,null,null,"КР"],"9021101000":["","кг",10.0,5.0,5.0,"ЕА"],"9021108004":["шины и прочие приспособ.","кг",200.4,null,null,"ЕА"],"9021290004":["зубы искусственные и стом","кг",null,null,null,"ЕА"],"9021909001":["стенты коронарные: кг з0000","кг",300.0,null,null,"ЕА"],"9021909009":["прочие приспособления, Kod кг 20000","кг",null,null,null,"ЕА"],"9022140000":["аппаратура на основе pene","кг",50.0,null,null,"ЕА"],"9022190000":["прочая аппаратура wa основ кг 60.0","кг",25.0,null,null,"ЕА"],"9028200000":["СЧЕТЧИКИ ЖИДКОСТИ","кг",8.0,null,null,"ЕА"],"9028901000":["части и принадлежности дд","кг",12.0,6.0,6.0,"ЕА"],"9032890000":["","кг",10.0,4.0,4.0,"ЕА"],"9102110000":["","кг",70.0,20.0,20.0,"ЕА"],"9102210000":["","ДЕИ",120.0,40.0,40.0,"ЕА"],"9401200009":["","кг",10.0,null,null,"КР"],"9401310000":["мебель для сидения врашак","кг",7.0,3.6,null,"ЕА"],"9401390000":["","кг",7.0,3.0,null,"ЕА"],"9403202009":["","кг",2.3,null,null,"ЕА"],"9403208009":["мебель металлическая (не","кг",3.0,2.4,3.0,"ЕА"],"9403401000":["","кг",4.0,3.65,null,"ЕА"],"9403300009":["","кг",4.0,null,null,"ЕА"],"9403601009":["","кг",4.0,3.65,3.65,"ЕА"],"9403603000":["мебель деревянная магазин{ кг 5.00 3%","кг",5.0,null,null,"ЕА"],"9403609009":["мебель деревянная прочая:","кг",5.0,null,null,"КР"],"9403700002":["ходунки na мебельных коже","кг",4.2,null,null,"КР"],"9403700003":["ходунки на мебельных Kone","кг",4.2,2.3,2.3,"ЕА"],"9403700008":["","кг",4.2,3.5,3.0,"ЕА"],"9403890000":["","кг",4.0,2.5,null,"ЕА"],"9403910000":["","кг",2.5,1.5,0.5,"ЕА"],"9403990001":["мебель прочая м се части:","кг",2.65,null,null,"КР"],"9404400009":["","кг",9.0,4.8,4.0,"ЕА"],"9404908000":["прочис основы marpawane;","кг",9.0,4.0,null,"ЕА"],"9403110013":["mocr. w пр. элек. осв. обор.","кг",5.0,4.0,4.0,"ЕА"],"9405110014":["","кг",5.0,4.0,4.0,"ЕА"],"9405110022":["дюст_и пр. элек. осв. обор.","кг",3.3,null,null,"ЕА"],"9405110029":["дюст_и пр. элек. oce. обор.","кг",6.0,3.3,null,"ЕА"],"9405110033":["mocr. и пр. элек. осв. обор.","кг",6.0,4.0,null,"ЕА"],"9405110039":["mocr. wnp. элек. осв. обор.","кг",6.0,null,null,"ЕА"],"9403190015":["люстры н прочее anckrp.oc","кг",3.0,4.0,4.0,"ЕА"],"9405190029":["люстры и прочее электр. 06","кг",6.0,3.3,3.3,"ЕА"],"9405190032":["mocr. w пр. элек. осв. обор.","кг",6.0,null,null,"КР"],"9405190039":["mocr. w пр. элек. ось. обор.","кг",6.0,null,null,"КР"],"9405290032":["прочие светильники элетри","кг",3.0,2.75,2.75,"ЕА"],"9405310000":["световые гирлянды типа we","кг",7.0,3.75,4.5,"ЕА"],"9405410012":["","кг",4.5,4.25,4.25,"ЕА"],"9403410019":["","кг",4.5,4.25,null,"ЕА"],"9405410022":["прочие электр. cver. woceet","кг",4.5,4.5,4.0,"ЕА"],"9405410029":["прочие электр. cect. и освс","кг",4.5,null,null,"КР"],"9405410032":["","кг",4.5,4.2,null,"ЕА"],"9405410033":["","кг",4.5,4.2,4.45,"ЕА"],"9405410039":["прочие элек. свет. и освст. { кг 450","кг",null,null,null,"ЕА"],"9405420012":["","кг",4.5,null,null,"КР"],"9405420019":["прочие элек. свет. woceer. { кг 350 425 425","кг",null,null,null,"ЕА"],"9405420032":["","кг",4.2,null,null,"ЕА"],"9405420033":["","кг",4.5,4.2,4.45,"ЕА"],"9405420039":["","кг",4.5,null,null,"ЕА"],"9405490019":["","кг",4.5,4.25,null,"ЕА"],"9405490029":["","кг",4.5,4.5,4.0,"ЕА"],"9405490032":["","кг",4.5,3.5,4.0,"ЕА"],"9403490036":["","кг",4.5,null,null,"КР"],"9405490039":["","кг",4.5,4.2,null,"ЕА"],"9403911000":["","кг",3.5,null,null,"КР"],"9405990008":["","кг",5.0,4.0,null,"ЕА"],"9406903908":["","кг",3.0,2.5,1.0,"ЕА"],"9406909009":["","кг",2.5,2.5,2.5,"ЕА"],"9503001009":["","кг",3.0,null,null,"КР"],"9503002100":["","кг",5.0,3.3,3.3,"ЕА"],"9503003500":["","кг",6.0,3.5,null,"ЕА"],"9503003900":["","кг",7.0,null,null,"ЕА"],"9503004100":["","кг",7.0,4.2,null,"ЕА"],"9303004900":["","кг",3.0,3.3,3.3,"ЕА"],"9503007000":["","кг",5.0,3.3,3.3,"ЕА"],"9303007500":["","кг",3.0,3.3,3.3,"ЕА"],"9503007900":["","кг",10.0,6.5,6.5,"ЕА"],"9503009500":["","кг",5.0,2.4,2.4,"ЕА"],"9503009901":["","кг",3.0,null,null,"ЕА"],"9503009909":["","кг",5.0,3.3,null,"ЕА"],"9504300001":["","кг",17.0,null,null,"ЕА"],"9504908009":["","кг",4.0,3.3,null,"ЕА"],"9305109000":["","кг",4.0,3.3,3.3,"ЕА"],"9603909900":["прметлы щетки(вкллшетки","кг",4.0,null,null,"КР"],"9606100000":["к","кг",null,null,null,"КР"],"9606210000":["ПУГОВИЦЫ ПЛАСТМАСЕ к","кг",1.24,null,null,"КР"],"9607110000":["ЗАСТЕЖКИ МОЛНИИ { к","кг",0.9,null,null,"КР"],"9607190000":["прочие застежки молнии","кг",4.5,2.0,2.0,"ЕА"],"9608101000":["ручки шариковые с жидким к","кг",3.9,null,null,"КР"],"9608109900":["ручки шариковые: прочие","кг",1.5,null,null,"ЕА"],"9608200000":["","кг",10.0,2.7,2.7,"ЕА"],"9615110000":["расчески, rpeGun для волос","кг",2.5,2.5,2.5,"ЕА"],"9617000001":["","кг",4.0,3.0,3.0,"ЕА"],"9619007109":["","кг",7.5,3.8,3.8,"ЕА"],"9619008101":["ДЕТСКИЕ ПЕЛЕНКИИП{ к","кг",null,null,null,"КР"],"9619008109":["","кг",4.0,2.0,null,"ЕА"],"9619008909":["прочие (например, изделия кг","кг",2.4,2.4,null,"ЕА"],"9620000009":["","кг",2.55,null,null,"КР"],"6517130000":["APPLE PHONES Pro Ц","кг",null,null,null,"ЕА"],"8703800002":["","кг",152.07,null,null,"КР"],"8703231940":["","кг",690.0,100.0,null,"ЕА"],"8703231981":["","кг",930.0,700.0,null,"ЕА"],"8703241092":["","кг",null,null,null,"ЕА"],"8703231982":["","кг",250.0,500.0,null,"ЕА"],"8703241091":["","кг",500.0,null,null,"ЕА"],"8703241098":["","кг",550.0,500.0,null,"ЕА"],"8703331990":["","кг",200.0,null,null,"ЕА"],"8703231988":["","кг",72000.0,null,null,"ЕА"],"3703231982":["","кг",20000.0,null,null,"ЕА"],"3703231981":["","кг",null,null,null,"ЕА"],"8517130000_16PM":["APPLE iPHONE 16 Pro Max","шт",1000,null,null,"ЕА"],"8517130000_16P":["APPLE iPHONE 16 Pro","шт",950,null,null,"ЕА"],"8517130000_16+":["APPLE iPHONE 16 Plus","шт",900,null,null,"ЕА"],"8517130000_16":["APPLE iPHONE 16","шт",800,null,null,"ЕА"],"8517130000_15PM":["APPLE iPHONE 15 Pro Max","шт",800,null,null,"ЕА"],"8517130000_15P":["APPLE iPHONE 15 Pro","шт",700,null,null,"ЕА"],"8517130000_15+":["APPLE iPHONE 15 Plus","шт",650,null,null,"ЕА"],"8517130000_15":["APPLE iPHONE 15","шт",550,null,null,"ЕА"],"8517130000_14PM":["APPLE iPHONE 14 Pro Max","шт",500,null,null,"ЕА"],"8517130000_14P":["APPLE iPHONE 14 Pro","шт",400,null,null,"ЕА"],"8517130000_14+":["APPLE iPHONE 14 Plus","шт",400,null,null,"ЕА"],"8517130000_14":["APPLE iPHONE 14","шт",350,null,null,"ЕА"],"8517130000_13PM":["APPLE iPHONE 13 Pro Max","шт",350,null,null,"ЕА"],"8517130000_13P":["APPLE iPHONE 13 Pro","шт",300,null,null,"ЕА"],"8517130000_13m":["APPLE iPHONE 13 mini","шт",250,null,null,"ЕА"],"8517130000_13":["APPLE iPHONE 13","шт",250,null,null,"ЕА"],"8517130000_12PM":["APPLE iPHONE 12 Pro Max","шт",300,null,null,"ЕА"],"8517130000_12P":["APPLE iPHONE 12 Pro","шт",250,null,null,"ЕА"],"8517130000_12m":["APPLE iPHONE 12 mini","шт",200,null,null,"ЕА"],"8517130000_12":["APPLE iPHONE 12","шт",200,null,null,"ЕА"],"8517130000_11PM":["APPLE iPHONE 11 Pro Max","шт",200,null,null,"ЕА"],"8517130000_11P":["APPLE iPHONE 11 Pro","шт",150,null,null,"ЕА"],"8517130000_11":["APPLE iPHONE 11","шт",100,null,null,"ЕА"]};
+const ETT = {"0202": 5, "0203": 5, "0204": 5, "0207": 5, "0209": 5, "0302": 10, "0303": 10, "0304": 10, "0306": 10, "0307": 10, "0401": 5, "0402": 15, "0403": 15, "0404": 15, "0405": 15, "0406": 15, "0601": 5, "0602": 5, "0603": 5, "0604": 5, "0701": 10, "0702": 10, "0703": 10, "0704": 10, "0705": 10, "0706": 10, "0707": 10, "0709": 10, "0710": 10, "0712": 10, "0801": 5, "0802": 5, "0803": 5, "0804": 5, "0805": 5, "0806": 5, "0807": 5, "0808": 5, "0809": 5, "0810": 5, "0811": 5, "0813": 5, "0901": 0, "0902": 5, "1001": 5, "1002": 5, "1005": 5, "1006": 5, "1101": 10, "1202": 5, "1507": 5, "1509": 10, "1511": 5, "1512": 5, "1601": 15, "1602": 15, "1604": 10, "1605": 10, "1701": 15, "1704": 5, "1805": 5, "1806": 5, "1901": 5, "2707": 0, "2710": 5, "2711": 5, "2818": 5, "2823": 0, "2836": 0, "3002": 0, "3003": 0, "3004": 0, "3301": 0, "3302": 5, "3303": 10, "3304": 10, "3305": 10, "3306": 10, "3307": 10, "3401": 5, "3402": 5, "3901": 5, "3902": 5, "3903": 5, "3904": 5, "3905": 5, "3906": 5, "3920": 10, "3921": 10, "3923": 10, "3924": 10, "3925": 10, "4011": 10, "4012": 10, "4407": 5, "4410": 10, "4411": 10, "4412": 10, "4418": 10, "4802": 5, "4804": 5, "4805": 5, "4810": 5, "4819": 5, "4820": 5, "5208": 10, "5209": 10, "5407": 10, "5408": 10, "5512": 10, "5513": 10, "5514": 10, "5515": 10, "5516": 10, "6101": 10, "6102": 10, "6103": 10, "6104": 10, "6105": 10, "6106": 10, "6107": 10, "6108": 10, "6109": 10, "6110": 10, "6111": 10, "6112": 10, "6201": 10, "6202": 10, "6203": 10, "6204": 10, "6205": 10, "6206": 10, "6401": 10, "6402": 10, "6403": 10, "6404": 10, "6405": 10, "6901": 10, "6902": 10, "6907": 10, "6910": 10, "6911": 15, "6912": 15, "7005": 10, "7006": 10, "7007": 10, "7013": 15, "7201": 0, "7202": 5, "7203": 0, "7204": 0, "7205": 5, "7206": 5, "7207": 5, "7208": 5, "7209": 5, "7210": 5, "7211": 5, "7212": 5, "7213": 5, "7214": 5, "7215": 5, "7216": 5, "7217": 5, "7219": 5, "7220": 5, "7225": 5, "7226": 5, "7301": 5, "7302": 5, "7303": 5, "7304": 5, "7305": 5, "7306": 5, "7307": 5, "7308": 5, "7312": 5, "7315": 5, "7318": 5, "7320": 5, "7321": 5, "7323": 5, "7326": 5, "7601": 5, "7604": 5, "7606": 5, "7608": 5, "7610": 5, "7616": 5, "8401": 0, "8402": 0, "8403": 0, "8407": 0, "8408": 0, "8409": 0, "8413": 0, "8414": 5, "8415": 5, "8418": 5, "8422": 0, "8423": 0, "8425": 0, "8427": 0, "8428": 0, "8429": 0, "8431": 0, "8432": 0, "8433": 0, "8450": 5, "8452": 5, "8462": 0, "8465": 0, "8467": 0, "8471": 0, "8472": 0, "8473": 0, "8474": 0, "8477": 0, "8479": 0, "8481": 0, "8482": 5, "8483": 5, "8501": 0, "8502": 0, "8504": 5, "8505": 5, "8506": 5, "8507": 5, "8508": 5, "8509": 5, "8510": 5, "8516": 5, "8517": 0, "8518": 10, "8519": 10, "8521": 10, "8525": 10, "8527": 10, "8528": 10, "8529": 5, "8531": 5, "8539": 10, "8701": 5, "8702": 10, "8703": 15, "8704": 15, "8707": 10, "8708": 10, "8711": 5, "8712": 10, "8714": 10, "8716": 10, "9001": 0, "9002": 0, "9003": 10, "9004": 10, "9006": 10, "9007": 10, "9013": 0, "9017": 0, "9018": 0, "9019": 0, "9021": 0, "9022": 0, "9101": 10, "9102": 10, "9103": 10, "9401": 15, "9402": 5, "9403": 15, "9404": 15, "9405": 15, "9503": 10, "9504": 10, "9505": 10, "9506": 10, "9601": 10, "9602": 10, "9603": 10, "9606": 10, "9607": 10, "9608": 10, "9615": 10, "9616": 10, "9619": 10, "9620": 10};
+
+// ── STATE ──
+const S = {
+  rawCode: '', group: 2, nds: true,
+  history: [], weight: 1000, invoice: 0
+};
+
+const groupDesc = {
+  1: 'Китай — применяется колонка Китай из СИР (если есть), иначе Группа 2.',
+  2: 'Группа 2 — развивающиеся страны (основная для большинства импорта). СИР по Группе 2.',
+  3: 'Группа 1 — развитые страны: ЕС, США, Япония. Самая высокая ставка СИР.'
+};
+const groupNames = {1:'Китай / Гр.2', 2:'Гр.2 (развив.)', 3:'Гр.1 (развитые)'};
+
+// ── HELPERS ──
+function cleanCode(r){ return (r||'').replace(/\D/g,'').slice(0,10); }
+function getETT(code){
+  const c = code.padEnd(10,'0');
+  for(const n of [8,6,4]){ const k=c.slice(0,n); if(ETT[k]!==undefined)return ETT[k]; }
+  return null;
+}
+function getSIR(code){
+  if(SIR[code])return {key:code,d:SIR[code]};
+  for(const sfx of ['_16PM','_16P','_16+','_16','_15PM','_15P','_15+','_15','_14PM','_14P','_14+','_14','_13PM','_13P','_13m','_13','_12PM','_12P','_12m','_12','_11PM','_11P','_11']){
+    if(SIR[code+sfx])return{key:code+sfx,d:SIR[code+sfx]};
+  }
+  return null;
+}
+function getGroupSIR(d, group){
+  // d = [desc, unit, g1, g2, g3, type]
+  // group 1 = China (use g2, best rate for China)
+  // group 2 = Developing (g2)
+  // group 3 = Developed (g1, highest)
+  if(!d) return null;
+  if(group===3) return d[2]; // g1 for developed
+  const g2 = d[3]; const g1 = d[2];
+  return (g2!==null&&g2!==undefined) ? g2 : g1; // g2 preferred, fallback g1
+}
+function getSimilar(code){
+  const res=[];
+  const prefs=[code.slice(0,6),code.slice(0,4),code.slice(0,2)];
+  for(const[k,v] of Object.entries(SIR)){
+    const kc=k.slice(0,10);
+    if(kc===code)continue;
+    for(const p of prefs){
+      if(kc.startsWith(p)&&v[2]!==null){res.push([kc,v]);break;}
+    }
+    if(res.length>=10)break;
+  }
+  return res;
+}
+function fmtM(v){
+  if(v===null||v===undefined||isNaN(v)||v===0)return '—';
+  return '$'+Number(v).toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtN(v){
+  if(v===null||v===undefined||isNaN(v))return '—';
+  return Number(v).toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+// ── CALC ──
+function doCalc(code, weight, invoice, manualVP, nds, group){
+  const sir = getSIR(code);
+  const ettRate = getETT(code);
+  const sirD = sir ? sir.d : null;
+  const sirVal = getGroupSIR(sirD, group);
+  const vpRaw = (manualVP!==''&&manualVP!==null&&manualVP!==undefined)
+    ? parseFloat(manualVP)
+    : (ettRate!==null ? ettRate : 0);
+  const vpPct = vpRaw/100;
+  const minInvoice = sirVal!==null ? sirVal*weight : null;
+  const base = minInvoice!==null
+    ? Math.max(invoice>0?invoice:0, minInvoice)
+    : (invoice>0?invoice:0);
+  if(base===0)return{sir,ettRate,sirD,sirVal,vpRaw,vpPct,minInvoice,base:0,poshlina:0,ndsAmt:0,sbor:0,kassa:0,load:0};
+  const poshlina = base*vpPct;
+  const ndsAmt = nds?(base+poshlina)*0.12:0;
+  const sbor = base*0.004;
+  const kassa = poshlina+ndsAmt+sbor;
+  const load = kassa/base*100;
+  return{sir,ettRate,sirD,sirVal,vpRaw,vpPct,minInvoice,base,poshlina,ndsAmt,sbor,kassa,load};
+}
+
+// ── UI ──
+function onCode(raw){
+  S.rawCode = raw;
+  const code = cleanCode(raw);
+  const hint = document.getElementById('codeParsed');
+  if(!raw){ hint.textContent='Любой формат — пробелы и символы убираются автоматически'; hint.className='code-parsed'; }
+  else if(code.length<10){ hint.className='code-parsed partial'; hint.textContent='→ '+code+' (ещё '+(10-code.length)+' цифр)'; }
+  else{ hint.className='code-parsed ok'; hint.innerHTML='✓ <strong>'+code+'</strong>'; }
+  recalc();
+}
+function setGroup(g){
+  S.group = g;
+  [1,2,3].forEach(i=>{
+    const el = document.getElementById('gBtn'+i);
+    el.className = 'group-btn'+(i===g?' active':'');
+  });
+  document.getElementById('groupDesc').textContent = groupDesc[g];
+  recalc();
+}
+function setNDS(v){
+  S.nds=v;
+  document.getElementById('ndsYes').className='nds-btn'+(v?' yes':'');
+  document.getElementById('ndsNo').className='nds-btn'+(!v?' no':'');
+  recalc();
+}
+function recalc(){
+  const code = cleanCode(S.rawCode);
+  const weight = parseFloat(document.getElementById('weight').value)||0;
+  const invoice = parseFloat(document.getElementById('invoice').value)||0;
+  const mvp = document.getElementById('manualVP').value;
+  S.weight = weight; S.invoice = invoice;
+  const ett = code.length===10 ? getETT(code) : null;
+  const vpHint = document.getElementById('vpAutoHint');
+  if(vpHint) vpHint.textContent = ett!==null ? '(авто: '+ett+'% из ЕТТ)' : '(введите вручную)';
+  if(code.length<10){
+    document.getElementById('resultGrid').innerHTML = `<div class="empty-state"><div class="empty-icon">⌨️</div><div class="empty-title">Введите код ТН ВЭД</div><div class="empty-sub">Начните вводить код слева —<br>результаты появятся здесь сразу</div></div>`;
+    return;
+  }
+  const res = doCalc(code, weight, invoice, mvp, S.nds, S.group);
+  const sir = res.sir;
+  renderResult(code, res, sir);
+}
+
+function renderResult(code, res, sir){
+  const el = document.getElementById('resultGrid');
+  const d = res.sirD;
+  const unit = d ? d[1] : 'кг';
+  document.getElementById('unitLabel').textContent = '('+unit+')';
+
+  let html = '';
+
+  // ── SIR CARD ──
+  if(sir){
+    const g1=d[2], g2=d[3], g3=d[4];
+    const activeG = res.sirVal;
+    const isChinaGroup = S.group===1;
+    const isDevGroup = S.group===2;
+    const isDevdGroup = S.group===3;
+
+    // Which group is "recommended"
+    const hasG2 = g2!==null&&g2!==undefined;
+    
+    html += `<div class="sir-card">
+      <div class="sir-card-header">
+        <div class="sir-card-title">СИР — Стоимостный индикатор риска</div>
+        <div><span class="sir-card-code">${code}</span> <span class="${d[5]==='ЕА'?'badge-ea':'badge-kr'}">${d[5]==='ЕА'?'УСИР ЕАЭС':'СИР КР'}</span></div>
+      </div>
+      <div class="sir-card-body">
+        <div style="font-size:15px;font-weight:600;margin-bottom:14px;color:var(--text)">${d[0]||'—'}</div>
+        
+        <div class="sir-groups">
+          <div class="sir-group ${isDevGroup||isChinaGroup?'active-main':''}" onclick="setGroup(2)">
+            ${hasG2?'<div class="recommended">▶ осн.</div>':''}
+            <div class="sir-group-label">Гр.2 / Развивающ.</div>
+            <div class="sir-group-val">${g2!==null&&g2!==undefined?'$'+g2:'=Гр.1'}</div>
+            <div class="sir-group-sub">Китай, Турция, Индия</div>
+          </div>
+          <div class="sir-group ${isDevdGroup?'active':''}" onclick="setGroup(3)">
+            <div class="sir-group-label">Гр.1 / Развитые</div>
+            <div class="sir-group-val">${g1!==null?'$'+g1:'—'}</div>
+            <div class="sir-group-sub">ЕС, США, Япония</div>
+          </div>
+          <div class="sir-group" onclick="setGroup(2)">
+            <div class="sir-group-label">Гр.3 / НРС</div>
+            <div class="sir-group-val">${g3!==null?'$'+g3:'—'}</div>
+            <div class="sir-group-sub">Наим. развитые</div>
+          </div>
+        </div>
+
+        ${res.minInvoice!==null?`
+        <div class="min-invoice">
+          <div class="min-invoice-label">Минимальная инвойсовая стоимость</div>
+          <div class="min-invoice-val">${fmtM(res.minInvoice)}</div>
+          <div class="min-invoice-formula">${fmtN(S.weight)} ${unit} × $${res.sirVal}/${unit} = ${fmtM(res.minInvoice)}</div>
+          <div class="min-invoice-warn">⚠ Инвойс ниже этой суммы → таможня пересчитает базу по СИР</div>
+        </div>`:''}
+
+        <div class="ett-row">
+          <span style="font-size:12px;color:var(--t2)">ВП по ЕТТ ЕАЭС:</span>
+          <span class="ett-chip"><span class="pct">${res.ettRate!==null?res.ettRate+'%':'?'}</span></span>
+          <span class="ett-hint">→ нагрузка ~${res.ettRate===0?12.4:res.ettRate===5?18:res.ettRate===10?23.6:res.ettRate===15?29.2:'?'}% от базы</span>
+        </div>
+      </div>
+    </div>`;
+  } else {
+    // NOT FOUND
+    const similar = getSimilar(code);
+    html += `<div class="notfound-card">
+      <div class="notfound-title">📭 Код ${code} — СИР не установлен</div>
+      <div style="font-size:12px;color:var(--t2);margin-bottom:4px">ВП по ЕТТ: <strong style="color:var(--text)">${res.ettRate!==null?res.ettRate+'%':'не определено'}</strong></div>
+      ${similar.length>0?`<div style="font-size:11px;color:var(--t3);margin:10px 0 6px">Похожие коды из той же группы:</div>
+      <div class="similar-list">${similar.map(([k,v])=>`
+        <div class="similar-item" onclick="jumpToCode('${k}')">
+          <span class="sim-code">${k}</span>
+          <span class="sim-desc">${v[0]||'—'}</span>
+          <span class="sim-price">${v[3]!==null&&v[3]!==undefined?'$'+v[3]:v[2]!==null?'$'+v[2]:'—'}/${v[1]}</span>
+        </div>`).join('')}
+      </div>`:''}
+    </div>`;
+  }
+
+  // ── КASSA CARD ──
+  if(res.base > 0){
+    const loadW = Math.min(res.load/35*100,100);
+    html += `<div class="kassa-card">
+      <div class="kassa-header">
+        <div class="kassa-title">Расчёт таможенных платежей</div>
+        <div style="font-size:11px;color:var(--green-l);font-family:var(--mono)">База: ${fmtM(res.base)} ${res.base>res.minInvoice&&res.minInvoice?'(инвойс)':'(по СИР)'}</div>
+      </div>
+      <div class="kassa-body">
+        <div class="kassa-breakdown">
+          <div class="kassa-item">
+            <div class="kassa-item-label">Пошлина ВП ${res.vpRaw.toFixed(0)}%</div>
+            <div class="kassa-item-val">${fmtM(res.poshlina)}</div>
+          </div>
+          <div class="kassa-item">
+            <div class="kassa-item-label">НДС ${S.nds?'12%':'откл.'}</div>
+            <div class="kassa-item-val">${S.nds?fmtM(res.ndsAmt):'—'}</div>
+          </div>
+          <div class="kassa-item">
+            <div class="kassa-item-label">Сбор 0.4%</div>
+            <div class="kassa-item-val">${fmtM(res.sbor)}</div>
+          </div>
+        </div>
+        <div class="kassa-total">
+          <div class="kassa-total-label">💰 КАССА</div>
+          <div class="kassa-total-val">${fmtM(res.kassa)}</div>
+        </div>
+        <div class="kassa-load">
+          <span class="load-pct">${res.load.toFixed(2)}%</span>
+          <div class="load-bar-bg"><div class="load-bar-fill" style="width:${loadW}%"></div></div>
+          <span class="load-hint">от таможенной базы</span>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function jumpToCode(code){
+  document.getElementById('codeInput').value = code;
+  onCode(code);
+  showPage('calc');
+}
+
+// ── DB TABLE ──
+function renderDB(){
+  const q = (document.getElementById('dbSearch').value||'').toLowerCase().trim();
+  const entries = Object.entries(SIR);
+  const filtered = q ? entries.filter(([k,v])=>k.slice(0,10).includes(q)||(v[0]||'').toLowerCase().includes(q)) : entries;
+  const shown = filtered.slice(0,300);
+  document.getElementById('dbCount').textContent = shown.length+' из '+filtered.length+' записей'+(filtered.length<entries.length?' (фильтр)':'');
+  document.getElementById('dbBody').innerHTML = shown.map(([k,v])=>{
+    const kc = k.slice(0,10);
+    const g2 = v[3]!==null&&v[3]!==undefined ? '$'+v[3] : '';
+    const g1 = v[2]!==null ? '$'+v[2] : '—';
+    const g3 = v[4]!==null&&v[4]!==undefined ? '$'+v[4] : '—';
+    return `<tr onclick="jumpToCode('${kc}')">
+      <td class="td-code">${kc}</td>
+      <td><span class="${v[5]==='ЕА'?'badge-ea':'badge-kr'}">${v[5]}</span></td>
+      <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v[0]||'—'}</td>
+      <td style="color:var(--t3)">${v[1]}</td>
+      <td class="td-g2">${g2||g1}</td>
+      <td class="td-g1">${g1}</td>
+      <td style="font-family:var(--mono);color:var(--t3)">${g3}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── HISTORY ──
+function saveHist(){
+  const code = cleanCode(S.rawCode);
+  if(code.length<10)return;
+  const mvp = document.getElementById('manualVP').value;
+  const res = doCalc(code, S.weight, S.invoice, mvp, S.nds, S.group);
+  if(res.base===0)return;
+  const d = res.sirD;
+  S.history.unshift({
+    ts: new Date().toLocaleTimeString('ru-RU'),
+    code, desc: d?d[0]:'—', unit: d?d[1]:'кг',
+    weight: S.weight, invoice: S.invoice,
+    group: S.group, groupName: groupNames[S.group],
+    sirVal: res.sirVal, ettRate: res.ettRate,
+    vpRaw: res.vpRaw, nds: S.nds,
+    base: res.base, minInvoice: res.minInvoice,
+    poshlina: res.poshlina, ndsAmt: res.ndsAmt,
+    sbor: res.sbor, kassa: res.kassa, load: res.load
+  });
+  if(S.history.length>50) S.history.pop();
+  renderHist();
+  const btn = document.querySelector('.btn-green');
+  if(btn){const t=btn.textContent;btn.textContent='✓ Сохранено';setTimeout(()=>btn.textContent=t,1500);}
+}
+function clearHist(){ S.history=[]; renderHist(); }
+function renderHist(){
+  const cnt = document.getElementById('histCount');
+  const body = document.getElementById('histBody');
+  cnt.textContent = S.history.length+' записей';
+  if(!S.history.length){
+    body.innerHTML='<div class="hist-empty">Нет сохранённых расчётов. Нажмите «Сохранить в историю» в калькуляторе.</div>';
+    return;
+  }
+  body.innerHTML='<div style="overflow:auto;border-radius:12px;border:1px solid var(--border)"><table class="db-table"><thead><tr><th>Время</th><th>Код</th><th>Описание</th><th>Вес</th><th>Группа</th><th>СИР</th><th>ВП%</th><th>Мин.инвойс</th><th>База</th><th>Пошлина</th><th>НДС</th><th>КАССА</th><th>%</th></tr></thead><tbody>'+
+  S.history.map(r=>`<tr onclick="jumpToCode('${r.code}')" style="cursor:pointer">
+    <td style="color:var(--t3);font-size:11px">${r.ts}</td>
+    <td class="td-code">${r.code}</td>
+    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t2)">${r.desc}</td>
+    <td style="font-family:var(--mono)">${r.weight} ${r.unit}</td>
+    <td style="font-size:11px;color:var(--t3)">${r.groupName}</td>
+    <td class="td-g2">${r.sirVal?'$'+r.sirVal:'—'}</td>
+    <td style="font-family:var(--mono);color:var(--t2)">${r.vpRaw.toFixed(0)}%</td>
+    <td class="td-g2">${fmtM(r.minInvoice)}</td>
+    <td style="font-family:var(--mono);color:var(--t2)">${fmtM(r.base)}</td>
+    <td style="font-family:var(--mono);color:var(--t2)">${fmtM(r.poshlina)}</td>
+    <td style="font-family:var(--mono);color:var(--t2)">${r.nds?fmtM(r.ndsAmt):'—'}</td>
+    <td style="font-family:var(--mono);color:var(--green-l);font-weight:700">${fmtM(r.kassa)}</td>
+    <td style="font-family:var(--mono);color:var(--amber)">${r.load.toFixed(1)}%</td>
+  </tr>`).join('')+'</tbody></table></div>';
+}
+
+// ── PAGES ──
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+  if(id==='sir') renderDB();
+  if(id==='hist') renderHist();
+}
+
+// INIT
+renderDB();
+</script>
+</body>
+</html>
