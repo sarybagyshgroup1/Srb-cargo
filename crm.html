@@ -728,7 +728,7 @@ let clients=[],orders=[];
 let SF='all',VF='all',CF='all';
 let activePD='day',activeSvcTab='buy',activePanelOid=null,activeClientId=null;
 let sortK='date',sortD='desc';
-let GS_URL='https://script.google.com/macros/s/AKfycbwiAr_VO8PjptVIpwiBVYzReew2Xaalq7lUyD3PrmO_8DXz7GHLX7_gtDYkIFzdG7y3AA/exec';
+let GS_URL='https://script.google.com/macros/s/AKfycbzOZjZ-8EWxpfmK7gkML1xKOdaEyJFZELEXAHx14qK1ydAGCD6MQjMbtgey5kKLDKiDrw/exec';
 let syncBusy=false,syncTimer=null;
 
 /* ═══ STORAGE ═══ */
@@ -763,6 +763,33 @@ function setBadge(state,txt){
   l.textContent=txt;
 }
 
+/* POST через form-submit обходит CORS и работает из file:// */
+async function gsPost(payload){
+  return new Promise((resolve)=>{
+    const form=document.createElement('form');
+    form.method='POST';
+    form.action=GS_URL;
+    form.target='gs-iframe';
+    form.style.display='none';
+    const inp=document.createElement('input');
+    inp.type='hidden';inp.name='payload';
+    inp.value=JSON.stringify(payload);
+    form.appendChild(inp);
+    let iframe=document.getElementById('gs-iframe');
+    if(!iframe){
+      iframe=document.createElement('iframe');
+      iframe.name='gs-iframe';iframe.id='gs-iframe';
+      iframe.style.display='none';
+      document.body.appendChild(iframe);
+    }
+    iframe.onload=()=>resolve(true);
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    setTimeout(()=>resolve(true),3000);
+  });
+}
+
 async function gsGet(){
   if(!GS_URL)return null;
   for(let i=0;i<3;i++){
@@ -770,7 +797,7 @@ async function gsGet(){
       const r=await fetch(GS_URL+'?action=get&t='+Date.now());
       const d=await r.json();
       if(d.ok)return d.data;
-    }catch(e){if(i===2)return null;await new Promise(r=>setTimeout(r,800));}
+    }catch(e){if(i===2)return null;await new Promise(r=>setTimeout(r,900));}
   }
   return null;
 }
@@ -779,22 +806,19 @@ async function gsPush(){
   if(!GS_URL||syncBusy)return;
   syncBusy=true;setBadge('syncing','Сохранение…');
   try{
-    await fetch(GS_URL,{
-      method:'POST',
-      mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'save',c:clients,o:orders})
-    });
-    // no-cors means we can't read response, assume ok
-    setBadge('cloud','☁ Сохранено');
-    // Verify after 2s
-    setTimeout(async()=>{
-      const d=await gsGet();
-      if(d){setBadge('cloud','☁ Синхронизировано');}
-    },2500);
+    /* Используем fetch с GET + параметры — Apps Script принимает через doGet */
+    const payload=encodeURIComponent(JSON.stringify({c:clients,o:orders}));
+    const r=await fetch(GS_URL+'?action=save&data='+payload+'&t='+Date.now());
+    const d=await r.json();
+    if(d&&d.ok){
+      setBadge('cloud','☁ Сохранено в Sheets');
+      toast('☁ Данные сохранены в Google Sheets');
+    } else {
+      throw new Error(d&&d.error||'unknown');
+    }
   }catch(e){
-    setBadge('error','Ошибка сети');
-    toast('⚠️ Ошибка облака: '+e.message.slice(0,40));
+    setBadge('error','Ошибка: '+e.message.slice(0,30));
+    toast('⚠️ Ошибка сохранения: '+e.message.slice(0,50));
   }
   syncBusy=false;
 }
@@ -807,12 +831,13 @@ async function gsPull(showLoading=true){
     clients=d.c||[];orders=d.o||[];
     saveLocal();render();hstats();
     setBadge('cloud','☁ Синхронизировано');
-    if(showLoading)toast('☁ Данные загружены: '+clients.length+' клиентов, '+orders.length+' заказов');
+    if(showLoading)toast('☁ Загружено: '+clients.length+' клиентов, '+orders.length+' заказов');
   }else if(d===null){
     setBadge('error','Нет связи');
-    if(showLoading)toast('⚠️ Нет связи с облаком');
+    if(showLoading)toast('⚠️ Нет связи с Google Sheets');
   }else{
-    setBadge('cloud','☁ Облако пустое');
+    setBadge('cloud','☁ Sheets пустой');
+    if(showLoading)toast('☁ Google Sheets пока пуст');
   }
   if(showLoading)showLoad(false);
 }
