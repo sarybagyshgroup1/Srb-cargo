@@ -4,7 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SRB Cargo — Доставка из Китая</title>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
@@ -13,70 +15,78 @@ html{scroll-behavior:smooth;}
   --black:#0f1210;--white:#ffffff;--gray:#f4f5f3;
   --muted:#6b7280;--border:#e4e7e2;--red:#e24b4a;
   --radius:16px;--radius-sm:10px;
+  --ease:cubic-bezier(0.22,1,0.36,1);
 }
 body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);overflow-x:hidden;}
-.hero{min-height:100vh;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1.5rem;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(26,170,110,0.18) 0%,transparent 70%);top:-100px;left:-100px;pointer-events:none;}
-.hero::after{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(26,170,110,0.12) 0%,transparent 70%);bottom:-80px;right:-80px;pointer-events:none;}
-.hero-badge{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--green);border:1px solid rgba(26,170,110,0.35);border-radius:100px;padding:6px 16px;margin-bottom:2rem;}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+
+/* ───────── INTRO / HERO ───────── */
+.hero{min-height:100svh;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1.5rem;position:relative;overflow:hidden;}
+.glow{position:absolute;border-radius:50%;pointer-events:none;will-change:transform;}
+.glow-1{width:600px;height:600px;background:radial-gradient(circle,rgba(26,170,110,0.18) 0%,transparent 70%);top:-120px;left:-120px;animation:float1 14s ease-in-out infinite;}
+.glow-2{width:420px;height:420px;background:radial-gradient(circle,rgba(26,170,110,0.12) 0%,transparent 70%);bottom:-90px;right:-90px;animation:float2 18s ease-in-out infinite;}
+@keyframes float1{0%,100%{transform:translate(0,0);}50%{transform:translate(40px,30px);}}
+@keyframes float2{0%,100%{transform:translate(0,0);}50%{transform:translate(-35px,-25px);}}
+
+.hero-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;}
+.hero-badge{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--green);border:1px solid rgba(26,170,110,0.35);border-radius:100px;padding:6px 16px;margin-bottom:1.75rem;}
 .hero-logo{font-family:'Unbounded',sans-serif;font-size:clamp(52px,12vw,96px);font-weight:900;color:var(--white);letter-spacing:-0.02em;line-height:1;text-align:center;margin-bottom:0.5rem;}
 .hero-logo span{color:var(--green);}
-.hero-tagline{font-size:clamp(13px,2vw,16px);color:rgba(255,255,255,0.45);text-align:center;margin-bottom:3rem;letter-spacing:0.02em;}
-.reg-card{width:100%;max-width:480px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:2rem;position:relative;z-index:1;backdrop-filter:blur(10px);}
-.reg-title{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:600;color:var(--white);margin-bottom:6px;}
-.reg-sub{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:1.5rem;line-height:1.5;}
-.reg-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
-.reg-field label{font-size:12px;font-weight:500;color:rgba(255,255,255,0.5);letter-spacing:0.04em;}
-.reg-field input{font-family:'Inter',sans-serif;font-size:15px;padding:13px 16px;border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-sm);background:rgba(255,255,255,0.06);color:var(--white);outline:none;transition:border-color 0.2s,background 0.2s;}
-.reg-field input::placeholder{color:rgba(255,255,255,0.2);}
-.reg-field input:focus{border-color:var(--green);background:rgba(26,170,110,0.08);}
-.reg-btn{width:100%;padding:15px;background:var(--green);border:none;border-radius:var(--radius-sm);font-family:'Unbounded',sans-serif;font-size:13px;font-weight:600;color:var(--white);cursor:pointer;transition:background 0.2s,transform 0.15s;margin-top:6px;letter-spacing:0.04em;}
-.reg-btn:hover{background:var(--green-dark);}
-.reg-btn:active{transform:scale(0.98);}
-.reg-btn:disabled{opacity:0.6;cursor:not-allowed;}
-.scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,0.25);font-size:11px;letter-spacing:0.08em;animation:bounce 2s infinite;}
-.scroll-hint svg{width:18px;height:18px;}
-@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
-.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity 0.3s;padding:1rem;backdrop-filter:blur(4px);}
-.popup-overlay.active{opacity:1;pointer-events:all;}
-.popup{background:var(--black);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:500px;position:relative;transform:translateY(30px) scale(0.96);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);max-height:90vh;overflow-y:auto;}
-.popup-overlay.active .popup{transform:translateY(0) scale(1);}
-.popup-close{position:absolute;top:1.25rem;right:1.25rem;width:32px;height:32px;border:1px solid rgba(255,255,255,0.15);border-radius:50%;background:transparent;color:rgba(255,255,255,0.5);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
-.popup-close:hover{background:rgba(255,255,255,0.08);color:var(--white);}
-.popup-congrats{font-size:12px;font-weight:500;color:var(--green);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;}
-.popup-name{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--white);margin-bottom:1.5rem;}
-.code-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(26,170,110,0.12);border:1px solid rgba(26,170,110,0.3);border-radius:12px;padding:14px 20px;margin-bottom:1.75rem;}
-.code-label{font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:2px;}
-.code-value{font-family:'Unbounded',sans-serif;font-size:32px;font-weight:900;color:var(--green);letter-spacing:0.05em;}
-.popup-section-title{font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;margin-top:1.25rem;}
-.address-block{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;margin-bottom:8px;}
-.address-pre{font-family:'Inter',sans-serif;font-size:13px;color:rgba(255,255,255,0.85);line-height:1.7;white-space:pre-wrap;word-break:break-all;background:transparent;border:none;margin:0;padding:0;user-select:all;}
-.address-city{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:600;color:var(--green);letter-spacing:0.06em;margin-bottom:6px;}
-.popup-copy-btn{width:100%;margin-top:1.5rem;padding:13px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);cursor:pointer;transition:all 0.2s;}
-.popup-copy-btn:hover{border-color:var(--green);color:var(--green);}
+.hero-tagline{font-size:clamp(13px,2vw,16px);color:rgba(255,255,255,0.45);text-align:center;margin-bottom:2.75rem;letter-spacing:0.02em;}
+
+.hero-q{font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:1rem;letter-spacing:0.04em;}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:520px;}
+.choice{position:relative;overflow:hidden;text-align:left;padding:1.4rem 1.25rem;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--white);cursor:pointer;font-family:'Inter',sans-serif;transition:transform .25s var(--ease),border-color .25s,background .25s;backdrop-filter:blur(10px);}
+.choice::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 120%,rgba(26,170,110,0.35),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none;}
+.choice:hover{transform:translateY(-4px);border-color:rgba(26,170,110,0.6);}
+.choice:hover::after{opacity:1;}
+.choice:active{transform:translateY(-1px) scale(0.99);}
+.choice.primary{background:var(--green);border-color:var(--green);}
+.choice.primary:hover{background:var(--green-dark);}
+.choice-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);margin-bottom:0.85rem;}
+.choice-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;}
+.choice-title{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:600;margin-bottom:5px;}
+.choice-sub{font-size:12px;line-height:1.45;color:rgba(255,255,255,0.5);}
+.choice.primary .choice-sub{color:rgba(255,255,255,0.75);}
+
+.scroll-hint{margin-top:2.5rem;display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,0.22);font-size:11px;letter-spacing:0.08em;animation:bounce 2.4s infinite;}
+.scroll-hint svg{width:16px;height:16px;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
+
+/* появление hero */
+.rise{opacity:0;transform:translateY(18px);animation:rise .7s var(--ease) forwards;}
+.d1{animation-delay:.05s;}.d2{animation-delay:.15s;}.d3{animation-delay:.25s;}.d4{animation-delay:.35s;}.d5{animation-delay:.45s;}
+@keyframes rise{to{opacity:1;transform:translateY(0);}}
+
+/* reveal при скролле */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s var(--ease),transform .6s var(--ease);will-change:transform,opacity;}
+.reveal.in{opacity:1;transform:none;}
+
+/* ───────── CALC ───────── */
 .calc-section{background:var(--gray);padding:5rem 1.5rem;}
 .section-header{text-align:center;margin-bottom:3rem;}
 .section-eyebrow{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--green);margin-bottom:12px;}
 .section-title{font-family:'Unbounded',sans-serif;font-size:clamp(24px,5vw,36px);font-weight:700;color:var(--black);line-height:1.2;}
+.section-sub{font-size:14px;color:var(--muted);margin-top:10px;}
 .calc-wrap{max-width:640px;margin:0 auto;}
 .calc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.75rem;margin-bottom:1rem;}
 .step-label{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .step-num{width:20px;height:20px;background:var(--black);color:var(--white);border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .city-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.city-btn{padding:13px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--black);font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.18s;text-align:center;}
+.city-btn{padding:13px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--black);font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .18s;text-align:center;}
 .city-btn:hover{border-color:var(--green);color:var(--green);}
 .city-btn.active{border-color:var(--green);background:var(--green-light);color:var(--green-dark);font-weight:600;}
 .inputs-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .input-group{display:flex;flex-direction:column;gap:6px;}
 .input-group label{font-size:13px;color:var(--muted);font-weight:500;}
-.input-group input{font-family:'Inter',sans-serif;font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--gray);color:var(--black);outline:none;transition:border-color 0.15s,background 0.15s;}
+.input-group input{font-family:'Inter',sans-serif;font-size:15px;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--gray);color:var(--black);outline:none;transition:border-color .15s,background .15s;}
 .input-group input:focus{border-color:var(--green);background:var(--white);}
 .input-group input::placeholder{color:#c0c5bc;}
 .input-group input.error{border-color:var(--red);background:#fff5f5;}
 .err-msg{font-size:12px;color:var(--red);display:none;}
 .err-msg.visible{display:block;}
 .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.cat-card{padding:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;background:transparent;text-align:left;transition:all 0.18s;}
+.cat-card{padding:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;background:transparent;text-align:left;transition:all .18s;}
 .cat-card:hover{border-color:var(--green);background:var(--green-light);}
 .cat-card.active{border-color:var(--green);background:var(--green-light);}
 .cat-num{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:600;color:var(--green);letter-spacing:0.08em;margin-bottom:5px;}
@@ -89,19 +99,64 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
 .r-val{font-size:13px;color:rgba(255,255,255,0.9);font-weight:500;}
 .result-total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(255,255,255,0.12);padding-top:14px;margin-top:4px;}
 .r-total-label{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:600;color:rgba(255,255,255,0.5);letter-spacing:0.06em;text-transform:uppercase;}
-.r-total-val{font-family:'Unbounded',sans-serif;font-size:28px;font-weight:700;color:var(--green);letter-spacing:-0.02em;}
+.r-total-val{font-family:'Unbounded',sans-serif;font-size:28px;font-weight:700;color:var(--green);letter-spacing:-0.02em;transition:transform .18s var(--ease);}
+.r-total-val.pulse{transform:scale(1.06);}
 .r-hint{font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px;line-height:1.5;}
 .gabrit-note{background:#1a2a1f;border:1px solid rgba(26,170,110,0.25);border-radius:var(--radius);padding:1.25rem 1.5rem;font-size:14px;color:rgba(255,255,255,0.8);line-height:1.6;margin-top:0.5rem;text-align:center;}
+
+/* ───────── REG SECTION (внизу) ───────── */
+.reg-section{background:var(--black);padding:5rem 1.5rem;position:relative;overflow:hidden;}
+.reg-section .glow-1{top:-200px;left:50%;transform:translateX(-50%);animation:none;opacity:.7;}
+.reg-head{text-align:center;margin-bottom:2rem;position:relative;z-index:1;}
+.reg-head .section-title{color:var(--white);}
+.reg-head .section-sub{color:rgba(255,255,255,0.4);}
+.reg-card{width:100%;max-width:480px;margin:0 auto;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:2rem;position:relative;z-index:1;backdrop-filter:blur(10px);}
+.reg-title{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:600;color:var(--white);margin-bottom:6px;}
+.reg-sub{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:1.5rem;line-height:1.5;}
+.reg-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.reg-field label{font-size:12px;font-weight:500;color:rgba(255,255,255,0.5);letter-spacing:0.04em;}
+.reg-field input{font-family:'Inter',sans-serif;font-size:15px;padding:13px 16px;border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-sm);background:rgba(255,255,255,0.06);color:var(--white);outline:none;transition:border-color .2s,background .2s;}
+.reg-field input::placeholder{color:rgba(255,255,255,0.2);}
+.reg-field input:focus{border-color:var(--green);background:rgba(26,170,110,0.08);}
+.reg-btn{width:100%;padding:15px;background:var(--green);border:none;border-radius:var(--radius-sm);font-family:'Unbounded',sans-serif;font-size:13px;font-weight:600;color:var(--white);cursor:pointer;transition:background .2s,transform .15s;margin-top:6px;letter-spacing:0.04em;}
+.reg-btn:hover{background:var(--green-dark);}
+.reg-btn:active{transform:scale(0.98);}
+.reg-btn:disabled{opacity:0.6;cursor:not-allowed;}
+.reg-card.flash{animation:flash 1s var(--ease);}
+@keyframes flash{0%,100%{box-shadow:0 0 0 0 rgba(26,170,110,0);}30%{box-shadow:0 0 0 6px rgba(26,170,110,0.25);}}
+
+/* ───────── POPUP ───────── */
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .3s;padding:1rem;backdrop-filter:blur(4px);}
+.popup-overlay.active{opacity:1;pointer-events:all;}
+.popup{background:var(--black);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:500px;position:relative;transform:translateY(30px) scale(0.96);transition:transform .35s cubic-bezier(0.34,1.56,0.64,1);max-height:90vh;overflow-y:auto;}
+.popup-overlay.active .popup{transform:translateY(0) scale(1);}
+.popup-close{position:absolute;top:1.25rem;right:1.25rem;width:32px;height:32px;border:1px solid rgba(255,255,255,0.15);border-radius:50%;background:transparent;color:rgba(255,255,255,0.5);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.popup-close:hover{background:rgba(255,255,255,0.08);color:var(--white);}
+.popup-congrats{font-size:12px;font-weight:500;color:var(--green);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;}
+.popup-name{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;color:var(--white);margin-bottom:1.5rem;}
+.code-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(26,170,110,0.12);border:1px solid rgba(26,170,110,0.3);border-radius:12px;padding:14px 20px;margin-bottom:1.75rem;}
+.code-label{font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:2px;}
+.code-value{font-family:'Unbounded',sans-serif;font-size:32px;font-weight:900;color:var(--green);letter-spacing:0.05em;}
+.popup-section-title{font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;margin-top:1.25rem;}
+.address-block{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;margin-bottom:8px;}
+.address-pre{font-family:'Inter',sans-serif;font-size:13px;color:rgba(255,255,255,0.85);line-height:1.7;white-space:pre-wrap;word-break:break-all;background:transparent;border:none;margin:0;padding:0;user-select:all;}
+.address-city{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:600;color:var(--green);letter-spacing:0.06em;margin-bottom:6px;}
+.popup-copy-btn{width:100%;margin-top:1.5rem;padding:13px;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:rgba(255,255,255,0.6);cursor:pointer;transition:all .2s;}
+.popup-copy-btn:hover{border-color:var(--green);color:var(--green);}
+
+/* ───────── FOOTER ───────── */
+.site-footer{background:#0a0c0a;padding:2.5rem 1.5rem;text-align:center;}
 .wa-buttons{display:flex;flex-direction:column;gap:12px;max-width:400px;margin:0 auto 2rem;}
-.wa-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 20px;background:#25D366;color:#fff;border-radius:var(--radius-sm);font-family:'Unbounded',sans-serif;font-size:13px;font-weight:600;text-decoration:none;transition:background 0.2s,transform 0.15s;letter-spacing:0.02em;}
+.wa-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 20px;background:#25D366;color:#fff;border-radius:var(--radius-sm);font-family:'Unbounded',sans-serif;font-size:13px;font-weight:600;text-decoration:none;transition:background .2s,transform .15s;letter-spacing:0.02em;}
 .wa-btn:hover{background:#1ebe5a;transform:scale(1.02);}
-.site-footer{background:var(--black);padding:2.5rem 1.5rem;text-align:center;}
 .footer-logo{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;color:var(--white);margin-bottom:8px;}
 .footer-logo span{color:var(--green);}
 .footer-text{font-size:13px;color:rgba(255,255,255,0.35);line-height:1.6;}
 .footer-text a{color:var(--green);text-decoration:none;}
+
 @media(max-width:480px){
   .hero-logo{font-size:48px;}
+  .choice-grid{grid-template-columns:1fr;}
   .inputs-row{grid-template-columns:1fr;}
   .cat-grid{grid-template-columns:1fr;}
   .r-total-val{font-size:22px;}
@@ -112,12 +167,119 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
 </head>
 <body>
 
+<!-- ═══ ЭКРАН ВЫБОРА ═══ -->
 <section class="hero">
-  <div class="hero-badge">Доставка из Китая · Cargo</div>
-  <div class="hero-logo">SRB<span>.</span></div>
-  <div class="hero-tagline">Фошань · Иу · Урумчи → Кыргызстан</div>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  <div class="hero-inner">
+    <div class="hero-badge rise d1">Доставка из Китая · Cargo</div>
+    <div class="hero-logo rise d2">SRB<span>.</span></div>
+    <div class="hero-tagline rise d3">Фошань · Иу · Урумчи → Кыргызстан</div>
 
-  <div class="reg-card">
+    <div class="hero-q rise d4">С чего начнём?</div>
+    <div class="choice-grid rise d5">
+      <button class="choice primary" onclick="goTo('calculator')">
+        <div class="choice-icon">
+          <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h2M14 11h2M8 16h2M14 16h2"/></svg>
+        </div>
+        <div class="choice-title">Рассчитать стоимость</div>
+        <div class="choice-sub">Вес, объём, категория — цена сразу</div>
+      </button>
+      <button class="choice" onclick="goTo('register', true)">
+        <div class="choice-icon">
+          <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+        </div>
+        <div class="choice-title">Получить код клиента</div>
+        <div class="choice-sub">Персональный код и адреса складов</div>
+      </button>
+    </div>
+
+    <div class="scroll-hint rise d5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      Листайте вниз
+    </div>
+  </div>
+</section>
+
+<!-- ═══ КАЛЬКУЛЯТОР ═══ -->
+<section class="calc-section" id="calculator">
+  <div class="section-header reveal">
+    <div class="section-eyebrow">Тарифы SRB Cargo</div>
+    <div class="section-title">Посчитайте ваш груз</div>
+    <div class="section-sub">Цена обновляется на ходу. Закуп $10 уже включён в итог.</div>
+  </div>
+  <div class="calc-wrap">
+    <div class="calc-card reveal">
+      <div class="step-label"><span class="step-num">1</span> Город отправки</div>
+      <div class="city-row">
+        <button class="city-btn active" data-city="foshan" onclick="selectCity(this)">Фошань</button>
+        <button class="city-btn" data-city="yiwu" onclick="selectCity(this)">Иу</button>
+        <button class="city-btn" data-city="urumqi" onclick="selectCity(this)">Урумчи</button>
+      </div>
+    </div>
+    <div class="calc-card reveal">
+      <div class="step-label"><span class="step-num">2</span> Вес и объём груза</div>
+      <div class="inputs-row">
+        <div class="input-group">
+          <label>Вес (кг)</label>
+          <input type="number" id="weight" min="1" placeholder="например: 250" oninput="calculate()"/>
+          <span class="err-msg" id="weight-error">Груз не может быть ниже 50 кг</span>
+        </div>
+        <div class="input-group">
+          <label>Объём (м³) — для лёгких грузов</label>
+          <input type="number" id="volume" min="0" step="0.01" placeholder="например: 0.5" oninput="calculate()"/>
+        </div>
+      </div>
+    </div>
+    <div class="calc-card reveal">
+      <div class="step-label"><span class="step-num">3</span> Категория товара</div>
+      <div class="cat-grid">
+        <button class="cat-card active" data-cat="1" onclick="selectCat(this)">
+          <div class="cat-num">Категория 1</div>
+          <div class="cat-name">Мебель, посуда, канцелярия, ткань, велосипед, зонт, вешалка, полки, шурупы, гвозди</div>
+        </button>
+        <button class="cat-card" data-cat="2" onclick="selectCat(this)">
+          <div class="cat-num">Категория 2</div>
+          <div class="cat-name">Автозапчасти, игрушки, спорт, парики, постельное бельё, носки</div>
+        </button>
+        <button class="cat-card" data-cat="3" onclick="selectCat(this)">
+          <div class="cat-num">Категория 3</div>
+          <div class="cat-name">Бытовая техника, электроинструменты, аккумуляторы, принтеры, техника</div>
+        </button>
+        <button class="cat-card" data-cat="4" onclick="selectCat(this)">
+          <div class="cat-num">Категория 4</div>
+          <div class="cat-name">Мотоциклы, самокаты, косметика, аксессуары, шапки, часы, очки</div>
+        </button>
+      </div>
+    </div>
+    <div class="result-card reveal">
+      <div class="result-rows">
+        <div class="result-row"><span class="r-label">Город</span><span class="r-val" id="r-city">Фошань</span></div>
+        <div class="result-row"><span class="r-label">Категория</span><span class="r-val" id="r-cat">Категория 1</span></div>
+        <div class="result-row"><span class="r-label">Ставка</span><span class="r-val" id="r-rate">Введите вес выше</span></div>
+        <div class="result-row"><span class="r-label">Расчётный вес</span><span class="r-val" id="r-weight">—</span></div>
+        <div class="result-row"><span class="r-label">Доставка</span><span class="r-val" id="r-ship">—</span></div>
+        <div class="result-row"><span class="r-label">Закуп</span><span class="r-val" id="r-fee">$10.00</span></div>
+      </div>
+      <div class="result-total">
+        <span class="r-total-label">Итого</span>
+        <span class="r-total-val" id="r-total">—</span>
+      </div>
+      <p class="r-hint" id="r-hint"></p>
+    </div>
+    <div class="gabrit-note reveal">📦 Большой груз? Чем больше объём — тем выгоднее цена. Напишите нам для индивидуального расчёта.</div>
+  </div>
+</section>
+
+<!-- ═══ ПОЛУЧИТЬ КОД (после расчёта) ═══ -->
+<section class="reg-section" id="register">
+  <div class="glow glow-1"></div>
+  <div class="reg-head reveal">
+    <div class="section-eyebrow">Шаг 2</div>
+    <div class="section-title">Готовы отправлять?</div>
+    <div class="section-sub">Получите код клиента — без него груз не примут на складе.</div>
+  </div>
+  <div class="reg-card reveal" id="reg-card">
     <div class="reg-title">Получить код клиента</div>
     <div class="reg-sub">Введите ваши данные — мы создадим персональный код для отправки грузов на наши склады.</div>
     <div class="reg-field">
@@ -129,11 +291,6 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
       <input type="tel" id="reg-phone" placeholder="+996 700 000 000" value="+996 " onfocus="srbPhoneFocus(this)" />
     </div>
     <button class="reg-btn" id="reg-btn" onclick="registerClient()">Получить код →</button>
-  </div>
-
-  <div class="scroll-hint">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-    Калькулятор доставки
   </div>
 </section>
 
@@ -167,79 +324,13 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
   </div>
 </div>
 
-<section class="calc-section" id="calculator">
-  <div class="section-header">
-    <div class="section-eyebrow">Тарифы SRB Cargo</div>
-    <div class="section-title">Посчитайте ваш груз</div>
-  </div>
-  <div class="calc-wrap">
-    <div class="calc-card">
-      <div class="step-label"><span class="step-num">1</span> Город отправки</div>
-      <div class="city-row">
-        <button class="city-btn active" data-city="foshan" onclick="selectCity(this)">Фошань</button>
-        <button class="city-btn" data-city="yiwu" onclick="selectCity(this)">Иу</button>
-        <button class="city-btn" data-city="urumqi" onclick="selectCity(this)">Урумчи</button>
-      </div>
-    </div>
-    <div class="calc-card">
-      <div class="step-label"><span class="step-num">2</span> Вес и объём груза</div>
-      <div class="inputs-row">
-        <div class="input-group">
-          <label>Вес (кг)</label>
-          <input type="number" id="weight" min="1" placeholder="например: 250" oninput="calculate()"/>
-          <span class="err-msg" id="weight-error">Груз не может быть ниже 50 кг</span>
-        </div>
-        <div class="input-group">
-          <label>Объём (м³) — для лёгких грузов</label>
-          <input type="number" id="volume" min="0" step="0.01" placeholder="например: 0.5" oninput="calculate()"/>
-        </div>
-      </div>
-    </div>
-    <div class="calc-card">
-      <div class="step-label"><span class="step-num">3</span> Категория товара</div>
-      <div class="cat-grid">
-        <button class="cat-card active" data-cat="1" onclick="selectCat(this)">
-          <div class="cat-num">Категория 1</div>
-          <div class="cat-name">Мебель, посуда, канцтовары, ткань, велосипед, зонт, полки, шурупы и тд</div>
-        </button>
-        <button class="cat-card" data-cat="2" onclick="selectCat(this)">
-          <div class="cat-num">Категория 2</div>
-          <div class="cat-name">Автозапчасти, игрушки, спорт, парики, постельное бельё, носки и тд</div>
-        </button>
-        <button class="cat-card" data-cat="3" onclick="selectCat(this)">
-          <div class="cat-num">Категория 3</div>
-          <div class="cat-name">Бытовая техника, электроинструменты, аккумуляторы, принтеры и тд</div>
-        </button>
-        <button class="cat-card" data-cat="4" onclick="selectCat(this)">
-          <div class="cat-num">Категория 4</div>
-          <div class="cat-name">Мотоциклы, электросамокаты, косметика, аксессуары, шапки, часы, очки</div>
-        </button>
-      </div>
-    </div>
-    <div class="result-card">
-      <div class="result-rows">
-        <div class="result-row"><span class="r-label">Город</span><span class="r-val" id="r-city">Фошань</span></div>
-        <div class="result-row"><span class="r-label">Категория</span><span class="r-val" id="r-cat">Категория 1</span></div>
-        <div class="result-row"><span class="r-label">Ставка</span><span class="r-val" id="r-rate">Введите вес выше</span></div>
-        <div class="result-row"><span class="r-label">Расчётный вес</span><span class="r-val" id="r-weight">—</span></div>
-      </div>
-      <div class="result-total">
-        <span class="r-total-label">Итого</span>
-        <span class="r-total-val" id="r-total">—</span>
-      </div>
-      <p class="r-hint" id="r-hint"></p>
-    </div>
-    <div class="gabrit-note">📦 Большой груз? Чем больше объём — тем выгоднее цена. Напишите нам для индивидуального расчёта.</div>
-  </div>
-</section>
-
 <footer class="site-footer">
   <div class="wa-buttons">
-    <a class="wa-btn" href="https://wa.me/996708888313" target="_blank">
+    <a class="wa-btn" href="https://wa.me/996708888313" target="_blank" rel="noopener">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.117 1.528 5.845L0 24l6.335-1.508A11.956 11.956 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.877 9.877 0 01-5.031-1.378l-.361-.214-3.741.981.999-3.648-.235-.374A9.859 9.859 0 012.106 12C2.106 6.58 6.58 2.106 12 2.106c5.421 0 9.894 4.474 9.894 9.894 0 5.421-4.473 9.894-9.894 9.894z"/></svg>
       +996 708 888 313
     </a>
-    <a class="wa-btn" href="https://wa.me/996550021168" target="_blank">
+    <a class="wa-btn" href="https://wa.me/996550021168" target="_blank" rel="noopener">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.117 1.528 5.845L0 24l6.335-1.508A11.956 11.956 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.894a9.877 9.877 0 01-5.031-1.378l-.361-.214-3.741.981.999-3.648-.235-.374A9.859 9.859 0 012.106 12C2.106 6.58 6.58 2.106 12 2.106c5.421 0 9.894 4.474 9.894 9.894 0 5.421-4.473 9.894-9.894 9.894z"/></svg>
       +996 550 021 168
     </a>
@@ -249,15 +340,31 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
 </footer>
 
 <script>
-// ════════════════════════════════════════
-// ТВОЙ Apps Script URL — НЕ МЕНЯЙ
-// ════════════════════════════════════════
+// ═══ НАВИГАЦИЯ С ЭКРАНА ВЫБОРА ═══
+function goTo(id, flash) {
+  const el = document.getElementById(id);
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (flash) {
+    setTimeout(() => {
+      const card = document.getElementById('reg-card');
+      card.classList.add('flash');
+      setTimeout(() => card.classList.remove('flash'), 1000);
+      document.getElementById('reg-name').focus({ preventScroll: true });
+    }, 700);
+  }
+}
+
+// ═══ REVEAL ПРИ СКРОЛЛЕ ═══
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// ═══ GOOGLE SHEETS ═══
 const GS_URL = 'https://script.google.com/macros/s/AKfycbyohbGFEibniB_zF38j60cMBWfp43hgL9DAm0HcIKigtSwlQNXp0YQR2XhPLkf0CgZfGw/exec';
 
-// ════════════════════════════════════════
-// ПОЛУЧИТЬ СЛЕДУЮЩИЙ КОД ИЗ ТАБЛИЦЫ
-// Читает реальный последний код из Google Sheets
-// ════════════════════════════════════════
 async function fetchNextCode() {
   try {
     const res = await fetch(GS_URL, { method: 'GET' });
@@ -265,16 +372,12 @@ async function fetchNextCode() {
     const lastNum = parseInt(data.lastCode) || 50;
     return String(lastNum + 1).padStart(3, '0');
   } catch(e) {
-    // Если не удалось получить — берём из localStorage как запасной вариант
     console.warn('Не удалось получить код из таблицы, используем localStorage:', e);
     const stored = parseInt(localStorage.getItem('srb_last_code') || '50');
     return String(stored + 1).padStart(3, '0');
   }
 }
 
-// ════════════════════════════════════════
-// РЕГИСТРАЦИЯ КЛИЕНТА
-// ════════════════════════════════════════
 async function registerClient() {
   const name  = document.getElementById('reg-name').value.trim();
   const phone = document.getElementById('reg-phone').value.trim();
@@ -286,16 +389,13 @@ async function registerClient() {
   btn.disabled    = true;
   btn.textContent = 'Создаём код...';
 
-  // 1. Получаем реальный следующий код из таблицы
   const code     = await fetchNextCode();
   const fullCode = 'SRB' + code;
   const date     = new Date().toLocaleString('ru-RU');
   const phoneClear = phone.replace(/\s+/g, '');
 
-  // 2. Сохраняем в localStorage как резерв
   localStorage.setItem('srb_last_code', parseInt(code));
 
-  // 3. Записываем в Google Sheets
   try {
     await fetch(GS_URL, {
       method: 'POST',
@@ -307,7 +407,6 @@ async function registerClient() {
     console.warn('Ошибка записи в таблицу:', e);
   }
 
-  // 4. Показываем попап
   showPopup(name, fullCode);
 
   btn.disabled    = false;
@@ -360,24 +459,23 @@ function copyAddresses() {
   });
 }
 
-// ════════════════════════════════════════
-// CALCULATOR
-// ════════════════════════════════════════
+// ═══ CALCULATOR ═══
+// База + $0.05/кг (кат.2 до плотности 200: +$0.10/кг) + $10/м³
+const PURCHASE_FEE = 10;
+
 const RATES = {
-  cat1: { r600:0.85, r400:0.90, r300:0.95, r200:1.00, r150:1.05, r100:1.10, m3:140 },
-  cat2: { r600:1.00, r400:1.10, r300:1.20, r200:1.25, r150:1.40, r100:1.50, m3:160 },
-  cat3: { r600:1.20, r400:1.25, r300:1.35, r200:1.45, r150:1.55, r100:1.70, m3:190 },
-  cat4: { r600:1.70, r400:1.80, r300:1.90, r200:2.00, r150:2.10, r100:2.20, m3:230 }
+  cat1: { tiers:[[600,0.70],[400,0.75],[300,0.80],[200,0.85],[150,0.90],[0,0.95]], m3:115 },
+  cat2: { tiers:[[600,0.85],[400,0.95],[250,1.00],[0,1.20]],                        m3:135 },
+  cat3: { tiers:[[600,1.05],[400,1.10],[300,1.20],[200,1.30],[150,1.40],[0,1.55]], m3:180 },
+  cat4: { tiers:[[400,1.45],[300,1.50],[250,1.60],[200,1.70],[150,1.80],[0,1.90]], m3:210 }
 };
-const RATES_URUMQI = {
-  cat1: { r600:0.75, r400:0.80, r300:0.85, r200:0.90, r150:0.95, r100:1.00, m3:130 },
-  cat2: { r600:0.90, r400:1.00, r300:1.10, r200:1.15, r150:1.30, r100:1.40, m3:150 },
-  cat3: { r600:1.10, r400:1.15, r300:1.25, r200:1.35, r150:1.45, r100:1.60, m3:180 },
-  cat4: { r600:1.60, r400:1.70, r300:1.80, r200:1.90, r150:2.00, r100:2.10, m3:220 }
-};
+const CITY_DISCOUNT_KG = 0.10;
+const CITY_DISCOUNT_M3 = 10;
 const CITY_NAMES = { foshan:'Фошань', yiwu:'Иу', urumqi:'Урумчи' };
+
 let selectedCity = 'foshan';
 let selectedCat = '1';
+let lastTotal = null;
 
 function selectCity(el) {
   document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
@@ -395,85 +493,94 @@ function selectCat(el) {
   calculate();
 }
 
-function getRate(catRates, kg, m3) {
-  var val = (m3 > 0 && kg > 0) ? kg / m3 : kg;
-  if (val >= 600) return catRates.r600;
-  if (val >= 400) return catRates.r400;
-  if (val >= 300) return catRates.r300;
-  if (val >= 200) return catRates.r200;
-  if (val >= 150) return catRates.r150;
-  return catRates.r100;
+function getRate(cat, val) {
+  const tiers = RATES['cat'+cat].tiers;
+  for (const [min, rate] of tiers) if (val >= min) return rate;
+  return tiers[tiers.length-1][1];
 }
 
 function fmt(num) {
   return parseFloat(num).toLocaleString('ru-RU', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
+function pulseTotal() {
+  const el = document.getElementById('r-total');
+  el.classList.add('pulse');
+  setTimeout(() => el.classList.remove('pulse'), 180);
+}
+
 function calculate() {
   const kg  = parseFloat(document.getElementById('weight').value) || 0;
   const m3  = parseFloat(document.getElementById('volume').value) || 0;
   const isUrumqi = selectedCity === 'urumqi';
-  const catRates = isUrumqi ? RATES_URUMQI['cat'+selectedCat] : RATES['cat'+selectedCat];
   const weightInput = document.getElementById('weight');
   const weightError = document.getElementById('weight-error');
   const rRate  = document.getElementById('r-rate');
   const rWeight= document.getElementById('r-weight');
+  const rShip  = document.getElementById('r-ship');
+  const rFee   = document.getElementById('r-fee');
   const rTotal = document.getElementById('r-total');
   const rHint  = document.getElementById('r-hint');
   const hasWeight = document.getElementById('weight').value !== '';
 
+  rFee.textContent = '$' + fmt(PURCHASE_FEE);
+
   if (hasWeight && kg > 0 && kg < 50) {
     weightInput.classList.add('error');
     weightError.classList.add('visible');
-    rRate.textContent='—'; rWeight.textContent='—'; rTotal.textContent='—'; rHint.textContent='';
+    rRate.textContent='—'; rWeight.textContent='—'; rShip.textContent='—'; rTotal.textContent='—'; rHint.textContent='';
+    lastTotal = null;
     return;
   }
   weightInput.classList.remove('error');
   weightError.classList.remove('visible');
 
   if (kg === 0 && m3 === 0) {
-    rRate.textContent='Введите вес выше'; rWeight.textContent='—'; rTotal.textContent='—'; rHint.textContent='';
+    rRate.textContent='Введите вес выше'; rWeight.textContent='—'; rShip.textContent='—'; rTotal.textContent='—'; rHint.textContent='';
+    lastTotal = null;
     return;
   }
 
   let hint = '';
   const density = (m3 > 0 && kg > 0) ? kg / m3 : null;
+  let ship = 0;
 
   if (density !== null && density < 100) {
-    const rate  = catRates.m3;
-    const total = rate * m3;
+    let rate = RATES['cat'+selectedCat].m3;
+    if (isUrumqi) rate -= CITY_DISCOUNT_M3;
+    ship = rate * m3;
     rRate.textContent  = '$' + rate + ' / м³';
     rWeight.textContent= m3.toFixed(2) + ' м³ (плотность ' + density.toFixed(0) + ' кг/м³)';
-    rTotal.textContent = '$' + fmt(total);
     hint = 'Плотность ниже 100 кг/м³ — расчёт по объёму.';
   } else {
-    const rate  = getRate(catRates, kg, m3);
-    const total = rate * kg;
+    const val = density !== null ? density : kg;
+    let rate = getRate(selectedCat, val);
+    if (isUrumqi) rate = Math.max(0, rate - CITY_DISCOUNT_KG);
+    ship = rate * kg;
     rRate.textContent  = '$' + rate.toFixed(2) + ' / кг';
     rWeight.textContent= kg.toLocaleString('ru-RU') + ' кг' + (density ? ' (плотность ' + density.toFixed(0) + ' кг/м³)' : '');
-    rTotal.textContent = '$' + fmt(total);
     if (density !== null) hint = 'Плотность ' + density.toFixed(0) + ' кг/м³ — ставка по диапазону плотности.';
-    if (kg >= 50 && kg < 100) hint += (hint?' ':'') + 'Применён минимальный тариф (100–149).';
   }
-  if (isUrumqi) hint += (hint?' ':'') + 'Скидка $0.10/кг для Урумчи.';
+
+  const total = ship + PURCHASE_FEE;
+  rShip.textContent  = '$' + fmt(ship);
+  rTotal.textContent = '$' + fmt(total);
+  if (lastTotal !== null && Math.abs(lastTotal - total) > 0.001) pulseTotal();
+  lastTotal = total;
+
+  if (isUrumqi) hint += (hint?' ':'') + 'Скидка для Урумчи применена.';
+  hint += (hint?' ':'') + 'Включён закуп $10.';
   rHint.textContent = hint;
 }
 
-document.getElementById('reg-phone').addEventListener('keydown', e => {
-  if (e.key === 'Enter') registerClient();
-});
-
-function srbPhoneFocus(el) {
-  if (!el.value.startsWith('+996')) el.value = '+996 ';
-}
-
-document.getElementById('reg-phone').addEventListener('keydown', function(e) {
-  const val = this.value;
+// ═══ ТЕЛЕФОН ═══
+const phoneEl = document.getElementById('reg-phone');
+phoneEl.addEventListener('keydown', e => { if (e.key === 'Enter') registerClient(); });
+phoneEl.addEventListener('keydown', function(e) {
   const pos = this.selectionStart;
-  if ((e.key === 'Backspace' || e.key === 'Delete') && pos <= 5 && val.startsWith('+996')) {
-    e.preventDefault();
-  }
+  if ((e.key === 'Backspace' || e.key === 'Delete') && pos <= 5 && this.value.startsWith('+996')) e.preventDefault();
 });
+function srbPhoneFocus(el) { if (!el.value.startsWith('+996')) el.value = '+996 '; }
 </script>
 </body>
 </html>
