@@ -543,6 +543,19 @@ td .ck,th .ck{width:17px;height:17px;cursor:pointer;accent-color:var(--acc)}
   .f{grid-template-columns:1fr!important}
   .dk{grid-template-columns:1fr 1fr}
 }
+/* ===== КАРТА: масштаб и перетаскивание ===== */
+.mapwrap{position:relative;border-radius:14px;overflow:hidden}
+.mapwrap svg{cursor:grab;touch-action:none;display:block;width:100%;height:auto}
+.mapwrap svg:active{cursor:grabbing}
+.mapctl{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:7px;z-index:2}
+.mapctl button{width:36px;height:36px;border-radius:11px;background:var(--card);border:1px solid var(--line);
+  color:var(--tx);font-size:18px;font-weight:700;line-height:1;display:grid;place-items:center;
+  box-shadow:0 6px 16px -8px rgba(0,0,0,.5);transition:.15s}
+.mapctl button:hover{border-color:var(--acc);color:var(--acc);transform:translateY(-1px)}
+.mapctl button:active{transform:scale(.94)}
+.maphint{position:absolute;left:12px;bottom:12px;z-index:2;font-size:10.5px;color:var(--tx3);
+  background:color-mix(in srgb,var(--card) 82%,transparent);border:1px solid var(--line);
+  border-radius:9px;padding:4px 9px;pointer-events:none}
 </style>
 </head>
 <body>
@@ -657,7 +670,7 @@ td .ck,th .ck{width:17px;height:17px;cursor:pointer;accent-color:var(--acc)}
     <button class="btn g" id="csv">CSV</button><button class="btn" data-go="imp">Импорт</button></div>
 
   <div class="card" style="margin-bottom:12px">
-    <div class="chead"><div><h3>Добавить груз</h3><div class="cs">Ставка выбирается по плотности кг/м³, цену клиенту ставите вы</div></div></div>
+    <div class="chead"><div><h3>Добавить груз</h3><div class="cs">Себестоимость — по плотности кг/м³. Ставите наценку — цена считается сама, за кг или за куб</div></div></div>
     <div class="f">
       <div class="fi"><label>Номер груза</label><input id="a_id" placeholder="321-XP-111-12"></div>
       <div class="fi"><label>Код клиента</label><input id="a_code" placeholder="XP"></div>
@@ -666,9 +679,10 @@ td .ck,th .ck{width:17px;height:17px;cursor:pointer;accent-color:var(--acc)}
       <div class="fi"><label>Мест</label><input id="a_pcs" type="number" placeholder="12"></div>
       <div class="fi"><label>Вес, кг</label><input id="a_w" type="number" step="0.1" placeholder="101"></div>
       <div class="fi"><label>Объём, м³</label><input id="a_m3" type="number" step="0.001" placeholder="0.563"></div>
-      <div class="fi"><label>Упаковка, $</label><input id="a_pack" type="number" step="1" placeholder="0"></div>
-      <div class="fi"><label>Доп. услуги, $</label><input id="a_svc" type="number" step="1" placeholder="скотч, обрешётка"></div>
-      <div class="fi"><label>Цена клиенту</label><input id="a_sell" type="number" step="0.01" placeholder="авто"></div>
+      <div class="fi"><label>Наценка $/ед <span class="mut">над себест.</span></label><input id="a_mk" type="number" step="0.01" placeholder="авто"></div>
+      <div class="fi"><label>Цена клиенту <span class="mut">жёстко</span></label><input id="a_sell" type="number" step="0.01" placeholder="авто"></div>
+      <div class="fi"><label>Обрешётка, $</label><input id="a_pack" type="number" step="1" placeholder="0"></div>
+      <div class="fi"><label>Скотч / доп, $</label><input id="a_svc" type="number" step="1" placeholder="0"></div>
       <div class="fi"><label>Рейс</label><select id="a_trip"></select></div>
       <div class="fi"><label>Кит. авто</label><input id="a_cn" placeholder="номер"></div>
       <div class="fi"><label>Дата склада</label><input id="a_date" type="date"></div>
@@ -944,6 +958,9 @@ td .ck,th .ck{width:17px;height:17px;cursor:pointer;accent-color:var(--acc)}
           <option value="2592000">Раз в 30 дней</option></select></div>
         <div class="fi"><label>Отправлять правки в таблицу</label><select id="gsPush">
           <option value="1">Да, сразу</option><option value="0">Нет, только читать</option></select></div>
+        <div class="fi"><label>Синхронизировать настройки <span class="mut">(себест., пароли, роли)</span></label><select id="gsMeta">
+          <option value="0">Нет — только на этом устройстве</option>
+          <option value="1">Да — через лист «meta»</option></select></div>
       </div>
       <div style="display:flex;gap:9px;margin-top:12px;flex-wrap:wrap">
         <button class="btn" id="gsSave">Подключить</button>
@@ -1003,6 +1020,27 @@ td .ck,th .ck{width:17px;height:17px;cursor:pointer;accent-color:var(--acc)}
 </div>
 
 <script>
+/* ================= ХРАНИЛИЩЕ УСТРОЙСТВА =================
+   На GitHub Pages window.storage не существует — раньше система уходила в
+   режим «память» и теряла данные при перезагрузке. Даём надёжную обёртку
+   поверх localStorage. Если и его нет — работаем в памяти. */
+if(!window.storage){
+  try{
+    var _ls=window.localStorage;var _t="__srb_test__";_ls.setItem(_t,"1");_ls.removeItem(_t);
+    window.storage={
+      get:function(k){var v=_ls.getItem(k);return v==null?Promise.reject(new Error("empty")):Promise.resolve({value:v})},
+      set:function(k,v){_ls.setItem(k,v);return Promise.resolve()},
+      remove:function(k){_ls.removeItem(k);return Promise.resolve()}
+    };
+  }catch(e){
+    var _mem={};
+    window.storage={
+      get:function(k){return _mem[k]==null?Promise.reject(new Error("empty")):Promise.resolve({value:_mem[k]})},
+      set:function(k,v){_mem[k]=v;return Promise.resolve()},
+      remove:function(k){delete _mem[k];return Promise.resolve()}
+    };
+  }
+}
 /* ================= МОДЕЛЬ ================= */
 var STAGES=["Заявка","Поиск","Согласование","Выкуплено","Склад Китай","Отправлено"];
 var CST=["Склад Китай","В пути Китай","Граница","В пути КР","В Бишкеке","Выдан"];
@@ -1031,6 +1069,8 @@ var DEF={usd:87.5,arcEst:8400,mkKg:0.45,mkM3:45,pref:"SRB",
 var S={cargo:[],clients:[],fin:[],trips:[],buys:[],goals:[],pays:[],notes:[],cfg:JSON.parse(JSON.stringify(DEF))};
 /* ================= КАРТА МАРШРУТА ================= */
 var MAP_PICK="";
+var MAP_VIEW=null;      // текущая область просмотра карты (масштаб/сдвиг)
+var MAP_DRAGGED=false;  // был ли перетаск — чтобы не срабатывал клик по точке
 var MAP_PTS=[
   {id:"bishkek", n:"Бишкек",   sub:"склад выдачи", x:173, y:70,  t:"kg"},
   {id:"kant",    n:"Кант",     sub:"таможня",      x:196, y:69,  t:"kg"},
@@ -1200,16 +1240,31 @@ function tierFor(cat,d){
 }
 function calc(){
   S.cargo.forEach(function(c){
+    if(!c.st||CST.indexOf(c.st)<0)c.st="Склад Китай"; // у каждого груза всегда есть статус
     var C=catOf(c.cat);
     c._d=dens(c.w,c.m3);
     var t=tierFor(c.cat,c._d);
     c._byM3=t.byM3;c._unit=t.byM3?"м³":"кг";
     c._qty=t.byM3?(+c.m3||0):(+c.w||0);
     c._costR=t.rate;
+    /* Цена = себестоимость + наценка. Наценку считаем ОТДЕЛЬНО для каждого груза,
+       авто за кг или за куб (по ступени плотности). Приоритет:
+       1) c.sell — жёсткая цена $/ед, введённая вручную (перекрывает всё)
+       2) фикс. ставка клиента (если задана в карточке — старое поведение)
+       3) себестоимость + наценка: груза → клиента по умолчанию → общая */
+    var cli=S.clients.find(function(x){return x.code===c.code});
     var indiv=clientRate(c.code,c.cat,t.byM3);
-    c._indiv=!!(indiv&&!(+c.sell>0));
-    c._sellR=(+c.sell>0)?+c.sell:(indiv||(t.rate+(t.byM3?S.cfg.mkM3:S.cfg.mkKg)));
-    var pk=(+c.pack||0)+(+c.svc||0);
+    var perMk=+c.mk||0;
+    var cliMk=cli?(t.byM3?(+cli.mkM||0):(+cli.mkK||0)):0;
+    var mk=perMk>0?perMk:(cliMk>0?cliMk:(t.byM3?S.cfg.mkM3:S.cfg.mkKg));
+    c._mkR=mk;
+    var autoSell=t.rate+mk;
+    c._fix=!(+c.sell>0)&&indiv>0;     // применена фикс. ставка клиента
+    c._indiv=c._fix;
+    c._auto=!(+c.sell>0)&&!(indiv>0); // цена = себест + наценка
+    c._sellR=(+c.sell>0)?+c.sell:(indiv>0?indiv:autoSell);
+    var pk=(+c.pack||0)+(+c.svc||0);  // доп. расходы: обрешётка + скотч, $
+    c._extra=pk;
     if(c.arc&&!(+c.sell>0)){
       c._cost=0;c._rev=0;c._prof=0;c._som=0;c._noPrice=true;c._est=0;
     }else{
@@ -1250,11 +1305,19 @@ function seed(){
 }
 async function load(){
   var ok=false;
-  try{var r=await window.storage.get("srb:v5");S=JSON.parse(r.value);ok=true}catch(e){}
-  if(!ok){try{await window.storage.set("srb:v5",JSON.stringify(S))}catch(e){MEM=true}seed()}
+  try{var r=await window.storage.get("srb:v5");var parsed=JSON.parse(r.value);if(parsed&&typeof parsed==="object"){S=parsed;ok=true}}catch(e){}
+  if(!ok){
+    // Свежее устройство: НЕ грузим демо — данные подтянутся из Google-таблицы при старте.
+    try{await window.storage.set("srb:v5",JSON.stringify(S))}catch(e){MEM=true}
+  }
   ["cargo","clients","fin","trips","buys","goals","pays","notes"].forEach(function(k){if(!S[k])S[k]=[]});
   if(!S.cfg)S.cfg=JSON.parse(JSON.stringify(DEF));
   if(!S.cfg.users)S.cfg.users=DEF.users.slice();
+  // Разовое обновление ссылки: если устройство хранит старое (уже недоступное) развёртывание — переключаем на новое
+  if(S.cfg.gs&&/AKfycbxOHX1eeIXs-kMW5wk4rJYmnTg8PlB9Fs8ckuzmVHD5WmIP0cHZnQtcoGfqsQUdIt4gAw/.test(S.cfg.gs.url||"")){
+    S.cfg.gs.url="https://script.google.com/macros/s/AKfycbwAPctTVPrYHmoJLgOP__1QA9VXkgWqWFnkthSYTozPdRB9mK0q-YzYdguIOXY5540LdQ/exec";
+    S.cfg.gs.meta=1;
+  }
   el("stinfo").textContent=MEM
     ?"Постоянное хранилище недоступно — данные живут до закрытия вкладки. Обязательно скачивайте копию."
     :"Данные сохраняются автоматически после каждого действия и будут на месте при следующем открытии. Копию можно скачать и восстановить в один клик.";
@@ -1312,6 +1375,9 @@ document.querySelectorAll("#theme button").forEach(function(b){
   };
 });
 document.body.addEventListener("click",function(e){
+  var inv=e.target.closest("[data-inv]");
+  if(inv){e.stopImmediatePropagation();var ic=S.cargo.find(function(x){return x.id===inv.dataset.inv});
+    if(ic)invoiceJPEG(ic.code,"file",ic.id);return}
   var ec=e.target.closest("[data-edc]"),ecl=e.target.closest("[data-edcl]"),ef=e.target.closest("[data-edf]"),
       dcl=e.target.closest("[data-delcl]");
   if(ec){e.stopImmediatePropagation();editCargo(ec.dataset.edc);return}
@@ -1499,7 +1565,7 @@ function cargo(){
   var TOTAL=L.length,CAP=200;
   var V=L.slice(0,CAP);
   el("tcargo").innerHTML=V.map(function(c){
-    return'<tr'+(PICK[c.id]?' style="background:var(--card2)"':'')+'><td><input type="checkbox" class="ck" data-pick="'+esc(c.id)+'"'+(PICK[c.id]?' checked':'')+'></td><td><span class="code">'+esc(c.id.length>16?c.id.slice(-9):c.id)+'</span></td><td class="mut mono">'+esc(c.code)+'</td><td>'+(esc(cname(c.code))||'<span class="mut">—</span>')+'</td><td class="mut">'+(esc(c.name)||"—")+'</td><td>'+catTag(c.cat)+'</td><td class="rt mono mut">'+(c.pcs||"—")+'</td><td class="rt mono">'+c.w+'</td><td class="rt mono mut">'+(c.m3||"—")+'</td><td class="rt mono" style="color:var(--amber)">'+(c._d>9000?"—":fmt(c._d))+'</td><td class="rt mono mut cost">'+f2(c._costR)+'</td><td class="rt"><input class="ed" type="number" step="0.01" value="'+f2(c._sellR)+'" data-sell="'+esc(c.id)+'" title="$/'+c._unit+'"></td><td class="rt mono">'+f2(c._rev)+'</td><td class="rt mono cost" style="color:'+(c._prof>=0?"var(--acc2)":"var(--red)")+'">'+f2(c._prof)+'</td><td class="mono mut" style="font-size:11.5px">'+(esc(c.trip)||"—")+'</td><td class="mono mut" style="font-size:11.5px">'+(esc(c.date)||"—")+'</td><td>'+stTag(c.st)+'</td><td class="rt"><span class="rowbtn"><button class="iconb" data-edc="'+esc(c.id)+'" title="Изменить">✎</button><button class="iconb dg" data-del="'+esc(c.id)+'" title="Удалить">✕</button></span></td></tr>'}).join("")
+    return'<tr'+(PICK[c.id]?' style="background:var(--card2)"':'')+'><td><input type="checkbox" class="ck" data-pick="'+esc(c.id)+'"'+(PICK[c.id]?' checked':'')+'></td><td><span class="code">'+esc(c.id.length>16?c.id.slice(-9):c.id)+'</span></td><td class="mut mono">'+esc(c.code)+'</td><td>'+(esc(cname(c.code))||'<span class="mut">—</span>')+'</td><td class="mut">'+(esc(c.name)||"—")+'</td><td>'+catTag(c.cat)+'</td><td class="rt mono mut">'+(c.pcs||"—")+'</td><td class="rt mono">'+c.w+'</td><td class="rt mono mut">'+(c.m3||"—")+'</td><td class="rt mono" style="color:var(--amber)">'+(c._d>9000?"—":fmt(c._d))+'</td><td class="rt mono mut cost">'+f2(c._costR)+'</td><td class="rt"><input class="ed" type="number" step="0.01" value="'+f2(c._sellR)+'" data-sell="'+esc(c.id)+'" title="$/'+c._unit+'"></td><td class="rt mono">'+f2(c._rev)+'</td><td class="rt mono cost" style="color:'+(c._prof>=0?"var(--acc2)":"var(--red)")+'">'+f2(c._prof)+'</td><td class="mono mut" style="font-size:11.5px">'+(esc(c.trip)||"—")+'</td><td class="mono mut" style="font-size:11.5px">'+(esc(c.date)||"—")+'</td><td>'+stTag(c.st)+'</td><td class="rt"><span class="rowbtn"><button class="iconb" data-inv="'+esc(c.id)+'" title="Накладная этого груза">🧾</button><button class="iconb" data-edc="'+esc(c.id)+'" title="Изменить">✎</button><button class="iconb dg" data-del="'+esc(c.id)+'" title="Удалить">✕</button></span></td></tr>'}).join("")
     ||'<tr><td colspan="18"><div class="empty"><b>Ничего не найдено</b>Измените фильтры или загрузите файл</div></td></tr>';
   if(TOTAL>CAP)el("tcargo").insertAdjacentHTML("beforeend",
     '<tr><td colspan="18"><div class="empty" style="padding:16px"><b>Показано '+CAP+' из '+TOTAL+'</b>Итоги ниже посчитаны по всем строкам. Сузьте период или поиск, чтобы увидеть остальные</div></td></tr>');
@@ -1689,12 +1755,12 @@ function editUser(i){
     u.n=nn;u.login=nl;u.pin=np;
     if(newR!==wasR){u.r=newR;u.p=(PRESET[newR]||PRESET.custom).p.slice()}
     if(ME&&ME===u)applyRole();
-    save();render();closeD();toast("Сохранено");
+    cfgTouch();save();render();closeD();toast("Сохранено");
   };
   var dl2=el("u_e_del");
   if(dl2)dl2.onclick=function(){
     snap("Удалён сотрудник "+u.n);
-    S.cfg.users.splice(i,1);save();render();closeD();toast("Сотрудник удалён");
+    S.cfg.users.splice(i,1);cfgTouch();save();render();closeD();toast("Сотрудник удалён");
   };
 }
 document.body.addEventListener("click",function(e){
@@ -1739,10 +1805,15 @@ function waHref(code){
   if(!c.phone)return "";
   return "https://wa.me/"+String(c.phone).replace(/\D/g,"")+"?text="+encodeURIComponent(waText(code));
 }
-function invoiceJPEG(code,mode){
+function invoiceJPEG(code,mode,onlyId){
   var c=S.clients.find(function(x){return x.code===code})||{code:code,name:code};
-  var list=S.cargo.filter(function(x){return x.code===code&&x.st!=="Выдан"});
-  if(!list.length)list=S.cargo.filter(function(x){return x.code===code});
+  var list;
+  if(onlyId){var one=S.cargo.find(function(x){return x.id===onlyId});list=one?[one]:[];
+    if(!list.length)return toast("Груз не найден")}
+  else{
+    list=S.cargo.filter(function(x){return x.code===code&&x.st!=="Выдан"});
+    if(!list.length)list=S.cargo.filter(function(x){return x.code===code});
+  }
   if(!list.length)return toast("У клиента нет грузов");
   var st=stats(),acc=st.acc[code]||0,paid=st.paid[code]||0;
   var W=1080,pad=44,rh=38,head=176,foot=200;
@@ -1756,7 +1827,7 @@ function invoiceJPEG(code,mode){
   x.fillStyle="#FFFFFF";x.font="700 32px Manrope, Arial";
   x.fillText("SRB CARGO",pad,52);
   x.font="400 15px Inter, Arial";x.fillStyle="#A9D7BC";
-  x.fillText("Накладная на выдачу · "+today(),pad,80);
+  x.fillText((onlyId?"Накладная на груз "+String(onlyId).slice(-12):"Накладная на выдачу")+" · "+today(),pad,80);
   x.textAlign="right";x.fillStyle="#FFFFFF";x.font="700 22px Manrope, Arial";
   x.fillText(code,W-pad,52);
   x.font="400 14px Inter, Arial";x.fillStyle="#A9D7BC";
@@ -1810,7 +1881,7 @@ function invoiceJPEG(code,mode){
   x.fillStyle="#6B8578";x.font="400 13px Inter, Arial";
   x.fillText("Телефон: "+(c.phone||"—"),pad,y+6);
   x.fillText("Документ сформирован автоматически в SRB Cargo OS",pad,y+28);
-  var fname="nakladnaya-"+code+"-"+today()+".jpg";
+  var fname="nakladnaya-"+code+(onlyId?"-"+String(onlyId).replace(/[^A-Za-z0-9]+/g,"").slice(-8):"")+"-"+today()+".jpg";
   var url=cv.toDataURL("image/jpeg",.94);
   if(mode==="preview"){
     var box=el("invbox");if(!box)return;
@@ -1860,11 +1931,16 @@ function drawCli(code){
       return'<div class="li"><div class="g"><b>'+esc(f.c)+'</b><span>'+esc(f.d)+' · '+(esc(f.n)||"—")+'</span></div><b class="mono" style="color:'+(f.t==="in"?"var(--acc2)":"var(--red)")+'">'+(f.t==="in"?"+":"−")+fmt(f.s)+'</b><button class="btn g sm" data-delf="'+esc(f.id)+'">✕</button></div>'
     }).join(""):'<div class="empty"><b>Платежей нет</b></div>')+'</div>':'')+
   '<div class="dsec" id="ds-r">'+
-    '<p class="mut" style="font-size:12.5px;margin-bottom:11px">Личные ставки этого клиента. Пусто — берётся общий прайс с наценкой. Заполнено — подставляется автоматически во все его грузы.</p>'+
-    '<div class="f" style="grid-template-columns:1fr 1fr 1fr 1fr">'+
-    [1,2,3,4].map(function(n){return'<div class="fi"><label>'+n+' кат, $/кг</label><input type="number" step="0.01" data-rate="k'+n+'" value="'+((c.rates&&c.rates["k"+n])||"")+'" placeholder="общий"></div>'}).join("")+
-    [1,2,3,4].map(function(n){return'<div class="fi"><label>'+n+' кат, $/м³</label><input type="number" step="1" data-rate="m'+n+'" value="'+((c.rates&&c.rates["m"+n])||"")+'" placeholder="общий"></div>'}).join("")+
+    '<p class="mut" style="font-size:12.5px;margin-bottom:9px">Цена каждого груза считается сама: <b>себестоимость + наценка</b>, за кг или за куб. Здесь — наценка этого клиента по умолчанию. Можно поменять её на любом отдельном грузе.</p>'+
+    '<div class="f" style="grid-template-columns:1fr 1fr">'+
+    '<div class="fi"><label>Наценка $/кг</label><input type="number" step="0.01" data-mk="k" value="'+(c.mkK||"")+'" placeholder="общая ('+f2(S.cfg.mkKg)+')"></div>'+
+    '<div class="fi"><label>Наценка $/м³</label><input type="number" step="1" data-mk="m" value="'+(c.mkM||"")+'" placeholder="общая ('+f2(S.cfg.mkM3)+')"></div>'+
     '</div>'+
+    '<details style="margin-top:11px"><summary class="mut" style="cursor:pointer;font-size:12px">Жёсткая ставка $/ед по категориям (перекрывает наценку) — обычно не нужна</summary>'+
+    '<div class="f" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-top:9px">'+
+    [1,2,3,4].map(function(n){return'<div class="fi"><label>'+n+' кат, $/кг</label><input type="number" step="0.01" data-rate="k'+n+'" value="'+((c.rates&&c.rates["k"+n])||"")+'" placeholder="—"></div>'}).join("")+
+    [1,2,3,4].map(function(n){return'<div class="fi"><label>'+n+' кат, $/м³</label><input type="number" step="1" data-rate="m'+n+'" value="'+((c.rates&&c.rates["m"+n])||"")+'" placeholder="—"></div>'}).join("")+
+    '</div></details>'+
     '<div class="f" style="grid-template-columns:1fr 1fr;margin-top:10px">'+
     '<div class="fi"><label>Лимит долга, сом</label><input type="number" data-lim="1" value="'+(c.limit||"")+'" placeholder="без лимита"></div>'+
     '<div class="fi"><label>Отсрочка, дней</label><input type="number" data-lim="2" value="'+(c.days||"")+'" placeholder="10"></div></div>'+
@@ -1882,8 +1958,11 @@ function drawCli(code){
     c.rates=c.rates||{};
     document.querySelectorAll("#drawer [data-rate]").forEach(function(x){
       if(x.value)c.rates[x.dataset.rate]=+x.value;else delete c.rates[x.dataset.rate]});
+    var mkk=document.querySelector('#drawer [data-mk="k"]'),mkm=document.querySelector('#drawer [data-mk="m"]');
+    c.mkK=+mkk.value||0;c.mkM=+mkm.value||0;
     var lim=document.querySelector('#drawer [data-lim="1"]'),dd=document.querySelector('#drawer [data-lim="2"]');
     c.limit=+lim.value||0;c.days=+dd.value||0;
+    c.u=nowISO();
     save();render();toast("Прайс клиента сохранён");
   };
   el("dinv").onclick=function(){invoiceJPEG(code,"preview")};
@@ -2019,24 +2098,51 @@ function editCargo(id){
    fRow("Дата",inp("e_date",c.date,"date"))+
    fRow("Статус",sel("e_st",c.st,CST))+
    fRow("Трек-номер",inp("e_track",c.track||"","","необязательно"))+
-   fRow("Цена клиенту, $",inp("e_sell",c.sell||"","number","пусто = архив без цены"))+
-   fRow("Упаковка, $",inp("e_pack",c.pack||"","number"))+
-   fRow("Доп. услуги, $",inp("e_svc",c.svc||"","number"))+
+   fRow("Наценка $/ед <span class='mut'>над себест., авто за кг/м³</span>",inp("e_mk",c.mk||"","number","авто"))+
+   fRow("Цена клиенту $/ед <span class='mut'>жёстко, перекрывает наценку</span>",inp("e_sell",c.sell||"","number","пусто = по наценке"))+
+   '<div class="edrow"><label>Доп. расходы, $</label><div class="f" style="grid-template-columns:1fr 1fr;gap:8px">'+
+     '<div class="fi"><label style="font-size:10.5px">Обрешётка</label>'+inp("e_pack",c.pack||"","number","0")+'</div>'+
+     '<div class="fi"><label style="font-size:10.5px">Скотч / прочее</label>'+inp("e_svc",c.svc||"","number","0")+'</div></div></div>'+
    fRow("Учёт",sel("e_arc",c.arc?"1":"0",[["0","Считать деньги"],["1","Архив — без цен"]]))+
-   '<div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">'+
-   '<button class="btn" id="e_save">Сохранить</button>'+
+   '<div class="hint" id="e_calc" style="margin-top:12px"></div>'+
+   '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">'+
+   '<button class="btn" id="e_inv">Накладная этого груза</button>'+
+   '<button class="btn g" id="e_save">Сохранить</button>'+
    '<button class="btn g" id="e_dup">Копия</button>'+
-   '<button class="btn g" id="e_del" style="color:var(--red);margin-left:auto">Удалить груз</button></div>';
+   '<button class="btn g" id="e_del" style="color:var(--red);margin-left:auto">Удалить груз</button></div>'+
+   '<div id="invbox" style="margin-top:12px"></div>';
   el("drawer").classList.add("on");el("scrim").classList.add("on");
   el("dclose").onclick=closeD;
+  function eCalc(){
+    var w=+el("e_w").value||0,m3=+el("e_m3").value||0,cat=+el("e_cat").value||1;
+    var sell=+el("e_sell").value||0,mkIn=+el("e_mk").value||0;
+    var pk=(+el("e_pack").value||0)+(+el("e_svc").value||0);
+    var d=dens(w,m3),t=tierFor(cat,d),unit=t.byM3?"м³":"кг",qty=t.byM3?m3:w;
+    var indiv=clientRate(c.code,cat,t.byM3);
+    var cli=S.clients.find(function(x){return x.code===c.code});
+    var cliMk=cli?(t.byM3?(+cli.mkM||0):(+cli.mkK||0)):0;
+    var mk=mkIn>0?mkIn:(cliMk>0?cliMk:(t.byM3?S.cfg.mkM3:S.cfg.mkKg));
+    var sellR=sell>0?sell:(indiv>0?indiv:t.rate+mk);
+    var rev=qty*sellR+pk,cost=qty*t.rate+pk;
+    el("e_calc").innerHTML='<span>Плотн.: <b>'+(d>9000?"—":fmt(d))+'</b></span>'+
+      (costv()?'<span>Себест.: <b>'+f2(t.rate)+' $/'+unit+'</b></span>':'')+
+      (costv()?'<span>Наценка: <b>'+f2(mk)+' $/'+unit+'</b></span>':'')+
+      '<span>Цена: <b>'+f2(sellR)+' $/'+unit+'</b></span>'+
+      (pk?'<span>Доп: <b>$'+fmt(pk)+'</b></span>':'')+
+      '<span>К оплате: <b>$'+f2(rev)+'</b> · '+fmt(rev*S.cfg.usd)+' сом</span>'+
+      (costv()?'<span>Прибыль: <b>$'+f2(rev-cost)+'</b></span>':'');
+  }
+  ["e_w","e_m3","e_cat","e_sell","e_mk","e_pack","e_svc"].forEach(function(i){el(i).addEventListener("input",eCalc)});
+  eCalc();
+  el("e_inv").onclick=function(){invoiceJPEG(c.code,"preview",c.id)};
   el("e_save").onclick=function(){
     snap("Изменён груз "+(c.code||c.id));
     c.code=normCode(el("e_code").value)||c.code;
     c.name=el("e_name").value.trim();
     c.w=+el("e_w").value||0;c.m3=+el("e_m3").value||0;c.pcs=+el("e_pcs").value||1;
     c.cat=+el("e_cat").value||1;c.city=el("e_city").value.trim();
-    c.date=el("e_date").value;c.st=el("e_st").value;c.track=el("e_track").value.trim();
-    c.sell=+el("e_sell").value||0;c.pack=+el("e_pack").value||0;c.svc=+el("e_svc").value||0;
+    c.date=el("e_date").value;c.st=el("e_st").value||"Склад Китай";c.track=el("e_track").value.trim();
+    c.sell=+el("e_sell").value||0;c.mk=+el("e_mk").value||0;c.pack=+el("e_pack").value||0;c.svc=+el("e_svc").value||0;
     c.arc=el("e_arc").value==="1"?1:0;
     if(c.code)ensure(c.code);
     c.u=nowISO();afterEdit();toast("Груз сохранён");
@@ -2410,7 +2516,7 @@ function tariffs(){
     inp.onchange=function(){
       var C=catOf(inp.dataset.c);
       if(inp.dataset.m3)C.m3=+inp.value;else C.t[+inp.dataset.i][1]=+inp.value;
-      save();render();toast("Себестоимость обновлена");
+      cfgTouch();save();render();toast("Себестоимость обновлена");
     };
   });
 }
@@ -2418,15 +2524,16 @@ function tariffs(){
   el(i).onchange=function(){
     S.cfg.usd=+el("s_rate").value||87.5;S.cfg.mkKg=+el("s_mkkg").value||0;
     S.cfg.mkM3=+el("s_mkm3").value||0;S.cfg.pref=el("s_pref").value.trim()||"SRB";
-    save();render();toast("Применено");
+    cfgTouch();save();render();toast("Применено");
   };
 });
-el("tarreset").onclick=function(){var u=S.cfg.users;S.cfg=JSON.parse(JSON.stringify(DEF));S.cfg.users=u;save();render();tariffs();toast("Прайс SRB восстановлен")};
+el("tarreset").onclick=function(){var u=S.cfg.users;S.cfg=JSON.parse(JSON.stringify(DEF));S.cfg.users=u;cfgTouch();save();render();tariffs();toast("Прайс SRB восстановлен")};
 
 /* ============ ДЕЙСТВИЯ ============ */
 function ensure(code){if(code&&!S.clients.find(function(c){return c.code===code}))S.clients.push({code:code,name:"",phone:""})}
 function preCalc(){
-  var w=+el("a_w").value||0,m3=+el("a_m3").value||0,cat=+el("a_cat").value||1,sell=+el("a_sell").value||0;
+  var w=+el("a_w").value||0,m3=+el("a_m3").value||0,cat=+el("a_cat").value||1;
+  var sell=+el("a_sell").value||0,mkIn=+el("a_mk").value||0;
   var pk=(+el("a_pack").value||0)+(+el("a_svc").value||0),code=el("a_code").value.trim().toUpperCase();
   var nm=el("a_name").value.trim(),ac=autoCat(nm);
   var warn="";
@@ -2434,15 +2541,20 @@ function preCalc(){
   if(!w){el("calchint").innerHTML=warn||"Введите вес и объём — покажу плотность, ступень и прибыль";return}
   var d=dens(w,m3),t=tierFor(cat,d);
   var qty=t.byM3?m3:w,unit=t.byM3?"м³":"кг";
+  var cli=S.clients.find(function(x){return x.code===code});
   var indiv=clientRate(code,cat,t.byM3);
-  var auto=indiv||(t.rate+(t.byM3?S.cfg.mkM3:S.cfg.mkKg));
-  if(!el("a_sell").dataset.touched){el("a_sell").value=f2(auto);sell=auto}
-  var sellR=sell>0?sell:auto;
+  var cliMk=cli?(t.byM3?(+cli.mkM||0):(+cli.mkK||0)):0;
+  var mk=mkIn>0?mkIn:(cliMk>0?cliMk:(t.byM3?S.cfg.mkM3:S.cfg.mkKg));
+  var auto=t.rate+mk;
+  var sellR=sell>0?sell:(indiv>0?indiv:auto);
   var rev=qty*sellR+pk,cost=qty*t.rate+pk;
+  var mkSrc=mkIn>0?"":(cliMk>0?" клиента":" общая");
   el("calchint").innerHTML=(warn?warn+" ":"")+'<span>Плотность: <b>'+(d>9000?"нет объёма":fmt(d)+" кг/м³")+'</b></span>'+
     '<span>Ступень: <b>'+(t.byM3?"по кубам":t.min+"+")+'</b></span>'+
-    (costv()?'<span>Себестоимость: <b>'+f2(t.rate)+' $/'+unit+'</b></span>':'')+
-    '<span>Цена'+(indiv?" клиента":"")+': <b>'+f2(sellR)+' $/'+unit+'</b></span>'+
+    (costv()?'<span>Себест.: <b>'+f2(t.rate)+' $/'+unit+'</b></span>':'')+
+    (costv()?'<span>Наценка'+mkSrc+': <b>'+f2(mk)+' $/'+unit+'</b></span>':'')+
+    '<span>Цена'+(sell>0?" жёстк.":(indiv>0?" фикс.":""))+': <b>'+f2(sellR)+' $/'+unit+'</b></span>'+
+    (pk?'<span>Доп: <b>$'+fmt(pk)+'</b></span>':'')+
     '<span>К оплате: <b>$'+f2(rev)+'</b> · '+fmt(rev*S.cfg.usd)+' сом</span>'+
     (costv()?'<span>Прибыль: <b>$'+f2(rev-cost)+'</b></span>':'');
 }
@@ -2453,7 +2565,7 @@ el("a_name").addEventListener("input",function(){
   preCalc();
 });
 el("a_cat").addEventListener("change",function(){this.dataset.touched="1"});
-["a_w","a_m3","a_cat","a_sell","a_pack","a_svc","a_code"].forEach(function(i){
+["a_w","a_m3","a_cat","a_sell","a_mk","a_pack","a_svc","a_code"].forEach(function(i){
   el(i).addEventListener("input",preCalc);el(i).addEventListener("change",preCalc)});
 el("a_id").addEventListener("blur",function(){
   var p=parseCode(this.value);if(p.code&&!el("a_code").value)el("a_code").value=p.code;
@@ -2468,9 +2580,9 @@ el("addc").onclick=function(){
   ensure(code);
   var trip=el("a_trip").value,t=tripOf(trip);
   S.cargo.push({id:id,code:code,name:g("a_name"),cat:+el("a_cat").value||1,pcs:+g("a_pcs")||1,
-    w:+g("a_w")||0,m3:+g("a_m3")||0,pack:+g("a_pack")||0,svc:+g("a_svc")||0,sell:+g("a_sell")||0,
-    cn:g("a_cn"),trip:trip,st:t?t.st:"Склад Китай",date:g("a_date")||today()});
-  ["a_id","a_code","a_name","a_pcs","a_w","a_m3","a_pack","a_svc","a_sell","a_cn"].forEach(function(i){el(i).value=""});
+    w:+g("a_w")||0,m3:+g("a_m3")||0,pack:+g("a_pack")||0,svc:+g("a_svc")||0,sell:+g("a_sell")||0,mk:+g("a_mk")||0,
+    cn:g("a_cn"),trip:trip,st:"Склад Китай",date:g("a_date")||today()});
+  ["a_id","a_code","a_name","a_pcs","a_w","a_m3","a_pack","a_svc","a_sell","a_mk","a_cn"].forEach(function(i){el(i).value=""});
   delete el("a_sell").dataset.touched;delete el("a_cat").dataset.touched;
   save();render();preCalc();toast("Груз добавлен");
 };
@@ -2524,7 +2636,7 @@ el("adduser").onclick=function(){
   var r=el("u_r").value;
   S.cfg.users.push({n:n,login:lg,pin:p,r:r,p:(PRESET[r]||PRESET.custom).p.slice()});
   el("u_n").value="";el("u_p").value="";if(el("u_l"))el("u_l").value="";
-  save();render();drawUsers();toast("Сотрудник добавлен");
+  cfgTouch();save();render();drawUsers();toast("Сотрудник добавлен");
 };
 el("b_photo").onchange=function(){
   var f=this.files[0];if(!f)return;
@@ -2569,7 +2681,7 @@ document.body.addEventListener("click",function(e){
     S.cargo.forEach(function(c){if(c.trip===id)c.trip=""});save();render();return}
   if(b){snap("Удалена заявка");S.buys=S.buys.filter(function(x){return x.id!==b.dataset.delb});save();render();toast("Заявка удалена");return}
   if(gg){snap("Удалена цель");S.goals=S.goals.filter(function(x){return x.id!==gg.dataset.delg});save();render();toast("Цель удалена");return}
-  if(u){S.cfg.users.splice(+u.dataset.delu,1);save();render();drawUsers();return}
+  if(u){S.cfg.users.splice(+u.dataset.delu,1);cfgTouch();save();render();drawUsers();return}
   if(nd){var n=S.notes.find(function(x){return x.id===nd.dataset.nd});n.done=1;save();render();return}
   if(cl){openCli(cl.dataset.cli);return}
   if(tr){openTrip(tr.dataset.trip);return}
@@ -2599,7 +2711,7 @@ el("imp").onchange=function(){
   r.readAsText(f);
 };
 el("demo").onclick=function(){seed();render();toast("Демо загружено")};
-el("wipe").onclick=function(){snap("Очистка всех данных");var u=S.cfg.users;S={cargo:[],clients:[],fin:[],trips:[],buys:[],goals:[],notes:[],cfg:JSON.parse(JSON.stringify(DEF))};S.cfg.users=u;save();render();tariffs();toast("Очищено")};
+el("wipe").onclick=function(){snap("Очистка всех данных");var u=S.cfg.users;S={cargo:[],clients:[],fin:[],trips:[],buys:[],goals:[],pays:[],notes:[],cfg:JSON.parse(JSON.stringify(DEF))};S.cfg.users=u;cfgTouch();save();render();tariffs();toast("Очищено")};
 
 /* ============ ИМПОРТ ============ */
 function parseCode(s){
@@ -3095,8 +3207,8 @@ if(el("bkSave")){
 /* ================= GOOGLE ТАБЛИЦА: ДВУСТОРОННЯЯ СВЯЗЬ ================= */
 var GS_T=null;
 var GS_MAP={
-  clients:{arr:"clients",key:"code",fields:["code","name","phone","email","debt","limit","days","u","del"]},
-  cargo:{arr:"cargo",key:"id",fields:["id","code","name","cat","pcs","w","m3","pack","svc","sell","track","trip","city","st","date","arc","u","del"]},
+  clients:{arr:"clients",key:"code",fields:["code","name","phone","email","debt","limit","days","mkK","mkM","u","del"]},
+  cargo:{arr:"cargo",key:"id",fields:["id","code","name","cat","pcs","w","m3","pack","svc","sell","mk","track","trip","city","st","date","arc","u","del"]},
   fin:{arr:"fin",key:"id",fields:["id","t","s","c","k","n","d","u","del"]},
   trips:{arr:"trips",key:"id",fields:["id","city","cn","out","brd","kg","drv","eta","cost","st","u","del"]},
   buys:{arr:"buys",key:"id",fields:["id","code","title","who","due","bud","cost","comm","st","note","u","del"]},
@@ -3109,7 +3221,31 @@ function touchAll(){
     (S[GS_MAP[k].arr]||[]).forEach(function(o){if(!o.u)o.u=nowISO()});
   });
 }
-function gsCfg(){S.cfg.gs=S.cfg.gs||{url:"https://script.google.com/macros/s/AKfycbxOHX1eeIXs-kMW5wk4rJYmnTg8PlB9Fs8ckuzmVHD5WmIP0cHZnQtcoGfqsQUdIt4gAw/exec",token:"srb-9f3k2p7x1q8w4z6m",auto:300,push:1};return S.cfg.gs}
+function gsCfg(){S.cfg.gs=S.cfg.gs||{url:"https://script.google.com/macros/s/AKfycbwAPctTVPrYHmoJLgOP__1QA9VXkgWqWFnkthSYTozPdRB9mK0q-YzYdguIOXY5540LdQ/exec",token:"srb-9f3k2p7x1q8w4z6m",auto:300,push:1,meta:1};return S.cfg.gs}
+/* Настройки (себестоимость, наценки, пользователи/пароли, роли, курс) не входят
+   в «Итог». Помечаем время их изменения — чтобы синхронизировать между устройствами. */
+function cfgTouch(){S.cfg._u=nowISO()}
+/* Что кладём в лист meta (справочники, которых нет в таблице). Пароли синхронизируются,
+   чтобы вход работал с любого устройства. */
+function cfgForSync(){
+  var o=JSON.parse(JSON.stringify(S.cfg));
+  if(o.gs&&o.gs.token)o.gs=Object.assign({},o.gs); // токен оставляем — иначе новое устройство не подключится
+  return o;
+}
+function applyRemoteCfg(inc){
+  if(!inc||typeof inc!=="object")return false;
+  var localU=S.cfg._u||"", remoteU=inc._u||"";
+  // Применяем удалённые настройки, если это устройство их ещё не меняло,
+  // либо в таблице они новее. Иначе не трогаем (чтобы не затереть свежие правки).
+  if(localU && !(remoteU>localU))return false;
+  var keepGsUrl=(S.cfg.gs&&S.cfg.gs.url)||"";
+  ["usd","mkKg","mkM3","pref","arcEst","cats","users","_u"].forEach(function(k){
+    if(inc[k]!==undefined)S.cfg[k]=inc[k];
+  });
+  // не даём таблице сломать текущее подключение, если там пусто
+  if((!S.cfg.gs||!S.cfg.gs.url)&&keepGsUrl){S.cfg.gs=S.cfg.gs||{};S.cfg.gs.url=keepGsUrl}
+  return true;
+}
 function gsLog(html,cls){
   var e=el("gsLog");if(e)e.innerHTML=html;
   var st=el("gsState");
@@ -3187,8 +3323,13 @@ async function gsGet(quiet){
       });
       if(add||upd||del)rep.push(k+": +"+add+" / ~"+upd+(del?" / −"+del:""));
     });
+    // Справочники/настройки из листа meta (себестоимость, наценки, пользователи, роли)
+    if(g.meta&&j.meta&&j.meta.length){
+      var mrow=j.meta.filter(function(r){return String(r.k)==="cfg"})[0];
+      if(mrow&&mrow.v){try{if(applyRemoteCfg(JSON.parse(mrow.v)))rep.push("настройки ←")}catch(e){}}
+    }
     g.last=nowISO();
-    await save();render();
+    await save();render();tariffs();applyPerms();
     var t=new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
     gsChip("таблица · "+t,"t-2");
     gsLog("<span>Прочитано в "+t+"</span>"+(rep.length?"<span>"+esc(rep.join(" · "))+"</span>":"<span>изменений нет</span>"),"t-2");
@@ -3203,11 +3344,12 @@ function normRow(kind,r){
   GS_MAP[kind].fields.forEach(function(f){if(r[f]!==undefined&&f!=="del")o[f]=r[f]});
   if(kind==="cargo"){
     o.code=normCode(o.code);o.cat=parseInt(o.cat,10)||1;
-    o.w=+o.w||0;o.m3=+o.m3||0;o.pcs=+o.pcs||1;o.sell=+o.sell||0;
+    o.w=+o.w||0;o.m3=+o.m3||0;o.pcs=+o.pcs||1;o.sell=+o.sell||0;o.mk=+o.mk||0;
     o.pack=+o.pack||0;o.svc=+o.svc||0;o.arc=String(o.arc)==="1"?1:0;
+    if(!o.st||CST.indexOf(o.st)<0)o.st="Склад Китай";
     o.date=String(o.date||"").slice(0,10);
   }
-  if(kind==="clients"){o.code=normCode(o.code);o.phone=normPhone(o.phone)||String(o.phone||"")}
+  if(kind==="clients"){o.code=normCode(o.code);o.phone=normPhone(o.phone)||String(o.phone||"");o.mkK=+o.mkK||0;o.mkM=+o.mkM||0}
   if(kind==="fin"){
     o.k=normCode(o.k);o.s=+o.s||0;
     var t=String(o.t||"").toLowerCase();
@@ -3243,6 +3385,10 @@ async function gsPut(quiet){
     });
     total+=body[k].length;
   });
+  // Настройки в отдельный лист meta (не входят в «Итог»). Отправляем ТОЛЬКО если
+  // явно включено в настройках — чтобы не рисковать основной синхронизацией на
+  // скриптах, которые не знают про лист meta.
+  if(g.meta){try{body.meta=[{k:"cfg",v:JSON.stringify(cfgForSync())}]}catch(e){}}
   if(!quiet)gsLog("Отправляю "+total+" строк…");
   gsChip("запись…","t-1");
   try{
@@ -3268,6 +3414,7 @@ function gsFill(){
   if(!el("gsUrl"))return;
   el("gsUrl").value=g.url||"";el("gsTok").value=g.token||"";
   el("gsAuto").value=String(g.auto||0);el("gsPush").value=String(g.push===0?0:1);
+  if(el("gsMeta"))el("gsMeta").value=String(g.meta?1:0);
   var b=bkCfg();
   if(el("bkEvery")){el("bkEvery").value=String(b.every||0);el("bkWhere").value=b.where||"file"}
   schedInfo();
@@ -3282,6 +3429,7 @@ if(el("gsSave")){
     var g=gsCfg();
     g.url=el("gsUrl").value.trim();g.token=el("gsTok").value.trim();
     g.auto=+el("gsAuto").value||0;g.push=+el("gsPush").value?1:0;
+    g.meta=el("gsMeta")&&+el("gsMeta").value?1:0;
     save();gsTimer();gsGet();
   };
   el("gsGet").onclick=function(){gsGet()};
@@ -3443,15 +3591,31 @@ function drawMap(){
       '<text x="'+q.x+'" y="'+(q.y+r+15)+'" text-anchor="middle" font-size="9.5" fill="var(--tx3)">'+esc(p.sub)+'</text></g>';
   }).join("");
 
-  el("mapBox").innerHTML='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+
+  if(!MAP_VIEW)MAP_VIEW={x:0,y:0,w:W,h:H};
+  el("mapBox").innerHTML='<div class="mapwrap">'+
+    '<svg id="mapSvg" viewBox="'+MAP_VIEW.x+' '+MAP_VIEW.y+' '+MAP_VIEW.w+' '+MAP_VIEW.h+'">'+
     '<defs>'+
       '<linearGradient id="mgSky" x1="0" y1="0" x2="1" y2="1">'+
-        '<stop offset="0" stop-color="var(--acc)" stop-opacity=".07"/>'+
-        '<stop offset="1" stop-color="var(--blue)" stop-opacity=".07"/></linearGradient>'+
+        '<stop offset="0" stop-color="var(--acc)" stop-opacity=".08"/>'+
+        '<stop offset="1" stop-color="var(--blue)" stop-opacity=".08"/></linearGradient>'+
+      '<radialGradient id="mgVin" cx="50%" cy="42%" r="75%">'+
+        '<stop offset="60%" stop-color="#000" stop-opacity="0"/>'+
+        '<stop offset="100%" stop-color="#000" stop-opacity=".18"/></radialGradient>'+
+      '<filter id="mgSh" x="-30%" y="-30%" width="160%" height="160%">'+
+        '<feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#000" flood-opacity=".28"/></filter>'+
     '</defs>'+
-    '<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="url(#mgSky)" rx="14"/>'+
+    '<rect x="-400" y="-300" width="'+(W+800)+'" height="'+(H+600)+'" fill="var(--card)"/>'+
+    '<rect x="-400" y="-300" width="'+(W+800)+'" height="'+(H+600)+'" fill="url(#mgSky)"/>'+
     grid+land+ridge+labels+
-    lines+dots+'</svg>';
+    lines+'<g filter="url(#mgSh)">'+dots+'</g>'+
+    '<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="url(#mgVin)" pointer-events="none"/>'+
+    '</svg>'+
+    '<div class="mapctl"><button data-mz="in" title="Приблизить">＋</button>'+
+    '<button data-mz="out" title="Отдалить">−</button>'+
+    '<button data-mz="reset" title="Сбросить масштаб">⤢</button></div>'+
+    '<div class="maphint">колесо — масштаб · тянуть — двигать</div>'+
+    '</div>';
+  wireMapZoom(W,H);
 
   el("mapLegs").innerHTML=MAP_PTS.filter(function(p){return byPt[p.id]>0}).map(function(p){
     return '<div class="li clickable" data-mp="'+p.id+'"><span style="width:10px;height:10px;border-radius:50%;background:'+COL[p.t]+';display:inline-block"></span>'+
@@ -3462,6 +3626,46 @@ function drawMap(){
   var kg=L.reduce(function(a,c){return a+(+c.w||0)},0);
   el("mapSub").textContent=L.length+" грузов · "+fmt(kg)+" кг в пути";
   drawMapCargo();
+}
+function wireMapZoom(W,H){
+  var svg=el("mapSvg");if(!svg)return;
+  var AR=H/W, MINW=W*0.28, MAXW=W*1.5;
+  function apply(){svg.setAttribute("viewBox",MAP_VIEW.x+" "+MAP_VIEW.y+" "+MAP_VIEW.w+" "+MAP_VIEW.h)}
+  function clamp(){
+    MAP_VIEW.w=Math.max(MINW,Math.min(MAXW,MAP_VIEW.w));MAP_VIEW.h=MAP_VIEW.w*AR;
+    var padX=W*0.35,padY=H*0.35;
+    MAP_VIEW.x=Math.max(-padX,Math.min(W-MAP_VIEW.w+padX,MAP_VIEW.x));
+    MAP_VIEW.y=Math.max(-padY,Math.min(H-MAP_VIEW.h+padY,MAP_VIEW.y));
+  }
+  function toSvg(cx,cy){var r=svg.getBoundingClientRect();
+    return{x:MAP_VIEW.x+((cx-r.left)/r.width)*MAP_VIEW.w,y:MAP_VIEW.y+((cy-r.top)/r.height)*MAP_VIEW.h}}
+  function zoomAt(factor,px,py){
+    var nw=Math.max(MINW,Math.min(MAXW,MAP_VIEW.w*factor)),f=nw/MAP_VIEW.w;
+    MAP_VIEW.x=px-(px-MAP_VIEW.x)*f;MAP_VIEW.y=py-(py-MAP_VIEW.y)*f;
+    MAP_VIEW.w=nw;MAP_VIEW.h=nw*AR;clamp();apply();
+  }
+  svg.addEventListener("wheel",function(e){e.preventDefault();var p=toSvg(e.clientX,e.clientY);
+    zoomAt(e.deltaY>0?1.12:0.88,p.x,p.y)},{passive:false});
+  var drag=null;
+  svg.addEventListener("pointerdown",function(e){
+    drag={x:e.clientX,y:e.clientY,vx:MAP_VIEW.x,vy:MAP_VIEW.y,moved:false};
+    try{svg.setPointerCapture(e.pointerId)}catch(_){}
+  });
+  svg.addEventListener("pointermove",function(e){
+    if(!drag)return;var r=svg.getBoundingClientRect();
+    if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>4)drag.moved=true;
+    MAP_VIEW.x=drag.vx-(e.clientX-drag.x)/r.width*MAP_VIEW.w;
+    MAP_VIEW.y=drag.vy-(e.clientY-drag.y)/r.height*MAP_VIEW.h;clamp();apply();
+  });
+  function endDrag(){if(drag&&drag.moved){MAP_DRAGGED=true;setTimeout(function(){MAP_DRAGGED=false},60)}drag=null}
+  svg.addEventListener("pointerup",endDrag);
+  svg.addEventListener("pointercancel",endDrag);
+  svg.addEventListener("pointerleave",function(){if(drag&&!drag.moved)drag=null});
+  el("mapBox").querySelectorAll("[data-mz]").forEach(function(b){b.onclick=function(e){
+    e.stopPropagation();var z=b.dataset.mz;
+    if(z==="reset"){MAP_VIEW={x:0,y:0,w:W,h:H};apply();return}
+    zoomAt(z==="in"?0.78:1.28,MAP_VIEW.x+MAP_VIEW.w/2,MAP_VIEW.y+MAP_VIEW.h/2);
+  }});
 }
 function drawMapCargo(){
   var L=mapCargoList().filter(function(c){return !MAP_PICK||ptOf(c)===MAP_PICK});
@@ -3476,6 +3680,7 @@ function drawMapCargo(){
     ||'<tr><td colspan="6"><div class="empty"><b>Здесь пусто</b></div></td></tr>';
 }
 document.body.addEventListener("click",function(e){
+  if(MAP_DRAGGED)return; // это был перетаск карты, а не выбор точки
   var m=e.target.closest("[data-mp]");
   if(m){MAP_PICK=(MAP_PICK===m.dataset.mp)?"":m.dataset.mp;drawMap()}
 });
@@ -3489,6 +3694,15 @@ function mapFill(){
 }
 
 function boot(){applyRole();render();tariffs();preCalc();gsFill();gsTimer();dbStat();bkTick();if(gsCfg().url&&+(gsCfg().auto||0)<86400)gsGet(true)}
+/* Держим ПК и телефон в синхроне: при возврате на вкладку и при появлении сети
+   тихо перечитываем Google-таблицу (не чаще, чем раз в 30 секунд). */
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="visible"&&ME&&gsCfg().url){
+    var last=+new Date(gsCfg().last||0);
+    if(!last||Date.now()-last>30000)gsGet(true);
+  }
+});
+window.addEventListener("online",function(){if(ME&&gsCfg().url)gsGet(true)});
 load();
 </script>
 </body>
