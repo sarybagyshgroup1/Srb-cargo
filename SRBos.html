@@ -2133,240 +2133,6 @@ function editFin(id){
 
 
 
-/* ================= УМНЫЙ ИМПОРТ ================= */
-var CITY_CN={"广州":"Гуанчжоу","义乌":"Иу","乌鲁木齐":"Урумчи","佛山":"Фошань","托帕":"Торугарт","深圳":"Шэньчжэнь"};
-var HEADS={
-  id:["id","ид","№","номер строки","uid"],
-  code:["код","code","客户","货号","клиент","编号","номер груза","груз"],
-  name:["наимен","品名","товар","name","описан","货物","note","примеч"],
-  w:["вес","重量","weight","кг","kg"],
-  m3:["куб","体积","объ","volume","cbm","m3","м3","м³"],
-  pcs:["мест","件数","кол","pcs","qty","количество"],
-  dens:["плотн","密度","density"],
-  date:["дата","入库日期","date","日期"],
-  city:["склад","发货地","город","city","откуда"],
-  pack:["打包","расход","упаков","垫付","pack"],
-  cat:["катег","cat","类别","种类"],
-  phone:["телефон","phone","номер","моб","whatsapp","вотсап"],
-  fio:["имя","фио","клиент","name","фамил"],
-  st:["статус","status","состоян"],
-  sum:["сумма","sum","amount","итого"],
-  price:["цена","price","单价","тариф","ставка","rate"]
-};
-function findCols(head){
-  var map={},used={};
-  Object.keys(HEADS).forEach(function(f){
-    var best=-1,bl=99;
-    head.forEach(function(h,i){
-      if(used[i])return;
-      var lh=String(h).toLowerCase().trim();
-      if(!lh)return;
-      HEADS[f].forEach(function(w){
-        if(lh.indexOf(w.toLowerCase())>-1&&lh.length<bl){best=i;bl=lh.length}
-      });
-    });
-    if(best>-1){map[f]=best;used[best]=1}
-  });
-  return map;
-}
-/* находит строку заголовков в первых 15 строках */
-function findHead(aoa){
-  var best=0,score=-1;
-  for(var i=0;i<Math.min(15,aoa.length);i++){
-    var m=findCols(aoa[i]);
-    var n=Object.keys(m).length;
-    if(n>score){score=n;best=i}
-  }
-  return {row:best,map:findCols(aoa[best]||[]),score:score};
-}
-/* разбирает лист в объекты */
-function grabSheet(wb,name){
-  var sh=wb.Sheets[name];if(!sh)return null;
-  // отсекаем раздутый диапазон: берём только строки, где реально есть ячейки
-  var maxR=0,maxC=0;
-  Object.keys(sh).forEach(function(a){
-    if(a[0]==="!")return;
-    var m=a.match(/^([A-Z]+)(\d+)$/);
-    if(!m)return;
-    var r=+m[2];if(r>maxR)maxR=r;
-    var c=0,L=m[1];
-    for(var i=0;i<L.length;i++)c=c*26+(L.charCodeAt(i)-64);
-    if(c>maxC)maxC=c;
-  });
-  if(maxR>0){
-    var e=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:maxR-1,c:Math.max(0,maxC-1)}});
-    sh=Object.assign({},sh,{"!ref":e});
-  }
-  var aoa=XLSX.utils.sheet_to_json(sh,{header:1,defval:"",blankrows:false});
-  aoa=aoa.filter(function(r){return r.some(function(c){return String(c).trim()!==""})});
-  if(aoa.length<2)return null;
-  var h=findHead(aoa);
-  if(h.score<2)return null;
-  var m=h.map,out=[];
-  aoa.slice(h.row+1).forEach(function(r){
-    var o={};
-    Object.keys(m).forEach(function(f){o[f]=r[m[f]]});
-    if(String(o.code||"").trim()||String(o.fio||"").trim())out.push(o);
-  });
-  return {rows:out,map:m,head:aoa[h.row]};
-}
-/* определяет, что это за файл */
-function guessKind(pack){
-  var m=pack.map,n=pack.rows.length;
-  var hasW=m.w!==undefined,hasPhone=m.phone!==undefined,hasFio=m.fio!==undefined;
-  if(hasW)return "cargo";
-  if(hasPhone||hasFio)return "clients";
-  return "unknown";
-}
-function num(v){
-  var x=parseFloat(String(v==null?"":v).replace(/\s/g,"").replace(",","."));
-  return isNaN(x)?0:x;
-}
-function anyDate(v){
-  if(v===""||v==null)return "";
-  if(typeof v==="number"||/^\d{5}(\.\d+)?$/.test(String(v).trim())){
-    var n=parseFloat(v);
-    if(n>20000&&n<80000)return new Date(Math.round((n-25569)*86400000)).toISOString().slice(0,10);
-  }
-  var t=String(v).trim();
-  if(/^\d{4}-\d{2}-\d{2}/.test(t))return t.slice(0,10);
-  if(/^\d{1,2}[./]\d{1,2}[./]\d{4}/.test(t)){
-    var q=t.replace(/\./g,"/").split("/");
-    return q[2].slice(0,4)+"-"+("0"+q[1]).slice(-2)+"-"+("0"+q[0]).slice(-2);
-  }
-  var d=new Date(t);
-  if(!isNaN(d)&&d.getFullYear()>2000&&d.getFullYear()<2100)return d.toISOString().slice(0,10);
-  return "";
-}
-/* ключ для поиска дубля: код + вес (округлённый) */
-function matchKey(code,w){return normCode(code)+"|"+Math.round(num(w)*10)/10}
-/* ключ с датой — точное совпадение */
-function matchKeyD(code,w,d){return matchKey(code,w)+"|"+String(d||"").slice(0,10)}
-/* сдвиг дат между источниками: китайский склад раньше прихода в Бишкек */
-function nearDate(a,b,maxDays){
-  if(!a||!b)return true;
-  var d1=new Date(a),d2=new Date(b);
-  if(isNaN(d1)||isNaN(d2))return true;
-  return Math.abs(d2-d1)<=maxDays*86400000;
-}
-
-/* ---------- ГЛАВНАЯ ФУНКЦИЯ ---------- */
-function smartImport(wb,fname){
-  var res={files:fname,cargoNew:0,cargoUpd:0,cliNew:0,cliUpd:0,skip:0,sheets:[],details:[]};
-  // индекс грузов, которые были ДО этого файла
-  var idx={};
-  S.cargo.forEach(function(c){
-    c._pre=1;
-    var k=matchKey(c.code,c.w);
-    (idx[k]=idx[k]||[]).push(c);
-  });
-  var seenId={};
-  S.cargo.forEach(function(c){
-    if(c.id)seenId[String(c.id).toUpperCase()]=1;
-    if(c.rid)seenId[String(c.rid).toUpperCase()]=1;
-    [c.date,c.wh,""].forEach(function(dd){
-      seenId[keyId([normCode(c.code),num(c.w),dd||"",c.name||"",c.city||"",c.pcs||1]).toUpperCase()]=1;
-    });
-  });
-
-  wb.SheetNames.forEach(function(sn){
-    var pack=grabSheet(wb,sn);
-    if(!pack){res.sheets.push(sn+" — пропущен");return}
-    var kind=guessKind(pack);
-    res.sheets.push(sn+" → "+(kind==="cargo"?"грузы":(kind==="clients"?"клиенты":"неизвестно"))+" ("+pack.rows.length+")");
-    if(kind==="clients"){
-      pack.rows.forEach(function(r){
-        var code=normCode(r.code);
-        if(!code||code.length<3)return;
-        var nm=String(r.fio||"").trim(), ph=normPhone(r.phone);
-        var ex=S.clients.find(function(x){return x.code===code});
-        if(ex){
-          var ch=0;
-          if(nm&&nm!==ex.name){ex.name=nm;ch=1}
-          if(ph&&ph!==ex.phone){ex.phone=ph;ch=1}
-          if(ch){ex.u=nowISO();res.cliUpd++}
-        }else{
-          S.clients.push({code:code,name:nm,phone:ph,u:nowISO()});
-          res.cliNew++;
-        }
-      });
-      return;
-    }
-    if(kind!=="cargo")return;
-
-    pack.rows.forEach(function(r){
-      var code=normCode(r.code);
-      var w=num(r.w);
-      if(!code&&!w&&!String(r.name||"").trim()){res.skip++;return}
-      var m3=num(r.m3);
-      if(!m3&&num(r.dens)>0&&w>0)m3=Math.round(w/num(r.dens)*10000)/10000;
-      var nm=String(r.name||"").trim();
-      var dt=anyDate(r.date);
-      var city=String(r.city||"").trim();
-      city=CITY_CN[city]||city;
-      var pcs=Math.round(num(r.pcs))||1;
-      var pack$=num(String(r.pack||"").replace(/[^\d.,]/g,""));
-      var cat=Math.round(num(r.cat));
-      if(!(cat>=1&&cat<=4))cat=autoCat(nm)||0;
-
-      // 0) ключ строки: свой id из файла, иначе отпечаток по содержимому
-      var fileId=String(r.id||"").trim();
-      var rid=fileId||keyId([code,w,dt,nm,city,pcs]);
-      if(seenId[rid.toUpperCase()]){res.skip++;return}
-
-      // 1) ищем тот же груз: код + вес, дата в пределах 21 дня
-      var k=matchKey(code,w);
-      var free=(idx[k]||[]).filter(function(c){return c._pre&&!c._touched});
-      var hit=null;
-      // сначала точное совпадение по дате
-      for(var q=0;q<free.length;q++){
-        if(dt&&(free[q].date===dt||free[q].wh===dt)){hit=free[q];break}
-      }
-      // затем ближайшая по дате в пределах трёх недель
-      if(!hit&&dt){
-        var bestD=1e9;
-        free.forEach(function(c){
-          var base=c.wh||c.date;
-          if(!base)return;
-          var diff=Math.abs(new Date(base)-new Date(dt));
-          if(!isNaN(diff)&&diff<bestD&&diff<=21*86400000){bestD=diff;hit=c}
-        });
-      }
-      // без даты — берём первый свободный
-      if(!hit&&!dt)hit=free[0];
-
-      if(hit){
-        // дополняем недостающее, ничего не затирая
-        var ch=[];
-        if(!hit.m3&&m3){hit.m3=m3;ch.push("объём")}
-        if(!hit.name&&nm){hit.name=nm;ch.push("наимен.")}
-        if(!hit.city&&city){hit.city=city;ch.push("город")}
-        if((!hit.pcs||hit.pcs===1)&&pcs>1){hit.pcs=pcs;ch.push("места")}
-        if(!hit.pack&&pack$){hit.pack=pack$;ch.push("упаковка")}
-        if(!hit.cat&&cat){hit.cat=cat;ch.push("категория")}
-        if(!hit.wh&&dt){hit.wh=dt;ch.push("дата склада")}
-        if(ch.length){hit.u=nowISO();res.cargoUpd++;
-          if(res.details.length<6)res.details.push(code+" "+w+"кг · дополнено: "+ch.join(", "))}
-        hit._touched=1;
-        seenId[rid.toUpperCase()]=1;
-        if(fileId)seenId[fileId.toUpperCase()]=1;
-        if(!hit.rid)hit.rid=rid;
-        return;
-      }
-      // 2) новый груз
-      var id=rid;
-      seenId[id.toUpperCase()]=1;
-      if(code)ensure(code);
-      var obj={id:id,code:code,name:nm,cat:cat||1,pcs:pcs,w:w,m3:m3,pack:pack$,svc:0,sell:0,
-        track:"",trip:"",city:city,st:"В Бишкеке",date:dt||today(),wh:dt,arc:1,rid:rid,u:nowISO()};
-      S.cargo.push(obj);
-      res.cargoNew++;
-    });
-  });
-  S.cargo.forEach(function(c){delete c._touched;delete c._pre});
-  return res;
-}
-
 /* ===== СОРТИРОВКА И МАССОВЫЕ ДЕЙСТВИЯ ===== */
 var SORT={k:"",dir:1},PICK={};
 function sortList(L){
@@ -2887,9 +2653,29 @@ if(el("undoBtn")){el("undoBtn").onclick=doUndo;el("undoX").onclick=function(){UN
 
 
 /* ===== УМНЫЙ ИМПОРТ: РАЗБОР ЛЮБЫХ ФАЙЛОВ ===== */
+function trimSheet(sh){
+  var maxR=0,maxC=0;
+  Object.keys(sh).forEach(function(a){
+    if(a[0]==="!")return;
+    var m=a.match(/^([A-Z]+)(\d+)$/);
+    if(!m)return;
+    var r=+m[2];if(r>maxR)maxR=r;
+    var c=0,L=m[1];
+    for(var i=0;i<L.length;i++)c=c*26+(L.charCodeAt(i)-64);
+    if(c>maxC)maxC=c;
+  });
+  if(!maxR)return sh;
+  var e=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:maxR-1,c:Math.max(0,maxC-1)}});
+  return Object.assign({},sh,{"!ref":e});
+}
+var SHEET_CACHE={};
 function sheetRows(wb,name){
   var sh=wb.Sheets[name];if(!sh)return [];
-  return XLSX.utils.sheet_to_json(sh,{header:1,defval:"",blankrows:false});
+  var key=name;
+  if(SHEET_CACHE[key])return SHEET_CACHE[key];
+  var rows=XLSX.utils.sheet_to_json(trimSheet(sh),{header:1,defval:"",blankrows:false});
+  SHEET_CACHE[key]=rows;
+  return rows;
 }
 function findHeader(rows,words){
   for(var i=0;i<Math.min(12,rows.length);i++){
@@ -3501,6 +3287,7 @@ if(el("pickAny")){
   dz.addEventListener("drop",function(e){if(e.dataTransfer.files.length)handleFiles([].slice.call(e.dataTransfer.files))});
 }
 function handleFiles(list){
+  SHEET_CACHE={};
   var asArc=el("asArc")?el("asArc").checked:true;
   var reps=[],left=list.length;
   snap("Загрузка "+list.length+" файл(ов)");
