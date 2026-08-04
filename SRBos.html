@@ -52,10 +52,19 @@ button{cursor:pointer;border:0;background:none}
 .ub.on{border-color:var(--acc);box-shadow:var(--glow)}
 .ub b{display:block;font-family:Manrope;font-size:14px}
 .ub span{color:var(--tx3);font-size:11px}
-.av{width:32px;height:32px;border-radius:11px;display:grid;place-items:center;font-family:Manrope;font-weight:700;font-size:13px;color:#07160F}
+.av{width:32px;height:32px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;
+  font-family:Manrope;font-weight:700;font-size:13px;color:#fff;line-height:1;flex:0 0 32px;
+  text-align:center;letter-spacing:0;padding:0;background:var(--acc);text-transform:uppercase}
 .pin{display:flex;gap:7px;justify-content:center;margin-bottom:12px}
 .pin input{width:46px;height:52px;text-align:center;font-size:21px;font-family:"JetBrains Mono";
   background:var(--card);border:1px solid var(--line);border-radius:13px;outline:0;transition:.18s}
+.lg .fld{text-align:left;margin-bottom:12px}
+.lg .fld label{display:block;font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:6px}
+.lg .fld input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:13px;
+  padding:13px 15px;outline:0;font-size:16px;transition:.18s}
+.lg .fld input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(47,160,110,.16)}
+.lgerr{background:rgba(238,106,85,.13);border:1px solid rgba(238,106,85,.4);color:#FFB3A6;
+  border-radius:12px;padding:11px 13px;font-size:13px;margin-bottom:13px}
 .pin input:focus{border-color:var(--acc);box-shadow:var(--glow);transform:scale(1.05)}
 .shake{animation:sh .4s}
 @keyframes sh{0%,100%{transform:none}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
@@ -64,7 +73,9 @@ button{cursor:pointer;border:0;background:none}
 .app{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
 aside{background:var(--bg2);border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:3px;position:sticky;top:0;height:100vh}
 .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 14px}
-.brand .b{width:32px;height:32px;border-radius:11px;background:linear-gradient(140deg,var(--acc2),var(--acc));color:#07160F;display:grid;place-items:center;font-family:Manrope;font-weight:800;font-size:16px}
+.brand .b{width:32px;height:32px;border-radius:11px;background:linear-gradient(140deg,var(--acc2),var(--acc));
+  color:#07160F;display:inline-flex;align-items:center;justify-content:center;font-family:Manrope;
+  font-weight:800;font-size:16px;line-height:1;flex:0 0 32px}
 .brand b{font-family:Manrope;font-size:17px}
 .brand small{display:block;color:var(--tx3);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-top:-2px}
 .nlab{color:var(--tx3);font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:12px 10px 5px}
@@ -77,7 +88,9 @@ html[data-theme=light] .nav.on{color:#fff}
 .nav.on .cnt{background:rgba(255,255,255,.22);color:#fff}
 .nav.hide{display:none}
 aside .foot{margin-top:auto;border-top:1px solid var(--line);padding-top:11px}
-.me{display:flex;align-items:center;gap:9px;padding:7px;border-radius:12px}
+.me{display:flex;align-items:center;gap:10px;padding:7px;border-radius:12px}
+.me>div{min-width:0}
+.me b{display:block;line-height:1.25}
 .me b{font-size:12.5px;font-family:Manrope}.me span{color:var(--tx3);font-size:10.5px;display:block}
 
 main{padding:18px 22px 44px;min-width:0}
@@ -254,7 +267,9 @@ html[data-theme=light] .col{background:var(--card2)}
 .rq .m{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--tx3);margin-bottom:6px}
 .rq .money{display:flex;justify-content:space-between;font-family:"JetBrains Mono";font-size:11.5px;padding-top:6px;border-top:1px solid var(--line);margin-bottom:6px}
 .rq select{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:5px 7px;font-size:11.5px}
-.who{display:inline-grid;place-items:center;width:19px;height:19px;border-radius:50%;background:var(--acc);color:#fff;font-size:10px;font-weight:700;font-family:Manrope}
+.who{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;
+  background:var(--acc);color:#fff;font-size:10px;font-weight:700;font-family:Manrope;line-height:1;
+  flex:0 0 20px;text-transform:uppercase}
 
 /* drawer */
 .scrim{position:fixed;inset:0;background:rgba(3,10,7,.62);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:.25s;z-index:80}
@@ -536,13 +551,13 @@ td .ck,th .ck{width:17px;height:17px;cursor:pointer;accent-color:var(--acc)}
   <div class="lg">
     <div class="lgb">S</div>
     <h1>SRB Cargo OS</h1>
-    <p>Выберите сотрудника и введите PIN</p>
-    <div class="users" id="users"></div>
-    <div class="pin" id="pinbox">
-      <input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric">
-      <input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric">
-    </div>
-    <p style="font-size:11.5px;color:var(--tx3)">Демо-коды: владелец 1111 · бухгалтер 2222 · склад 3333</p>
+    <p>Вход в систему</p>
+    <div id="lgErr"></div>
+    <div class="fld"><label>Логин</label>
+      <input id="lgUser" autocomplete="username" autocapitalize="none" placeholder="Логин"></div>
+    <div class="fld"><label>Пароль</label>
+      <input id="lgPass" type="password" autocomplete="current-password" placeholder="••••"></div>
+    <button class="btn" id="lgGo" style="width:100%;margin-top:6px">Войти</button>
   </div>
 </div>
 
@@ -904,7 +919,8 @@ td .ck,th .ck{width:17px;height:17px;cursor:pointer;accent-color:var(--acc)}
       <div class="chead"><div><h3>Сотрудники и доступы</h3><div class="cs">Включайте и отключайте каждый раздел отдельно</div></div></div>
       <div class="f" style="grid-template-columns:1fr 1fr">
         <div class="fi"><label>Имя</label><input id="u_n" placeholder="Нурия"></div>
-        <div class="fi"><label>PIN (4 цифры)</label><input id="u_p" maxlength="4" placeholder="4444"></div>
+        <div class="fi"><label>Логин</label><input id="u_l" placeholder="nuria"></div>
+        <div class="fi"><label>Пароль</label><input id="u_p" placeholder="4444"></div>
         <div class="fi"><label>Шаблон прав</label><select id="u_r"><option value="acc">Бухгалтер</option><option value="wh">Склад</option><option value="mgr">Менеджер</option><option value="owner">Владелец</option></select></div>
         <div class="fi"><label>&nbsp;</label><button class="btn" id="adduser" style="width:100%">Добавить</button></div>
       </div>
@@ -934,6 +950,7 @@ td .ck,th .ck{width:17px;height:17px;cursor:pointer;accent-color:var(--acc)}
         <button class="btn g" id="gsGet">Забрать из таблицы</button>
         <button class="btn g" id="gsPut">Отправить в таблицу</button>
         <button class="btn g" id="gsBoth">Синхронизировать всё</button>
+        <button class="btn g" id="gsCheck">Проверить связь</button>
       </div>
       <div class="hint" id="gsLog">Вставьте ссылку и токен из меню «SRB Cargo → Показать ссылку и токен»</div>
       <div class="chead" style="margin-top:18px"><div><h3>Автоматическая копия</h3><div class="cs">Файл с базой скачивается сам по расписанию</div></div>
@@ -1000,9 +1017,7 @@ var PRESET={
   mgr:{n:"Менеджер",p:["dash","cargo","trip","cli","buy","money"]},
   custom:{n:"Свои права",p:[]}};
 var DEF={usd:87.5,arcEst:8400,mkKg:0.45,mkM3:45,pref:"SRB",
-  users:[{n:"Владелец",pin:"1111",r:"owner",p:PRESET.owner.p.slice()},
-    {n:"Бухгалтер",pin:"2222",r:"acc",p:PRESET.acc.p.slice()},
-    {n:"Склад Иу",pin:"3333",r:"wh",p:PRESET.wh.p.slice()}],
+  users:[{n:"Владелец",login:"srbadmin",pin:"4493",r:"owner",p:PRESET.owner.p.slice()}],
   cats:[
     {n:1,g:"Мебель, посуда, канцелярия, ткань, велосипед, зонт, вешалка, полки, шурупы, гвозди",
      t:[[600,0.70],[400,0.75],[300,0.80],[200,0.85],[150,0.90],[100,1.00]],m3:115},
@@ -1017,22 +1032,35 @@ var S={cargo:[],clients:[],fin:[],trips:[],buys:[],goals:[],pays:[],notes:[],cfg
 /* ================= КАРТА МАРШРУТА ================= */
 var MAP_PICK="";
 var MAP_PTS=[
-  {id:"urumqi", n:"Урумчи",   sub:"склад",     x:250, y:120, t:"cn"},
-  {id:"yiwu",   n:"Иу",       sub:"склад",     x:600, y:150, t:"cn"},
-  {id:"guang",  n:"Гуанчжоу", sub:"склад",     x:560, y:290, t:"cn"},
-  {id:"kashgar",n:"Кашгар",   sub:"перевалка", x:150, y:175, t:"cn"},
-  {id:"irkesh", n:"Иркештам", sub:"КПП",       x:105, y:215, t:"br"},
-  {id:"torugart",n:"Торугарт",sub:"КПП",       x:120, y:140, t:"br"},
-  {id:"naryn",  n:"Нарын",    sub:"транзит",   x:78,  y:110, t:"kg"},
-  {id:"osh",    n:"Ош",       sub:"транзит",   x:58,  y:200, t:"kg"},
-  {id:"kant",   n:"Кант",     sub:"таможня",   x:48,  y:80,  t:"kg"},
-  {id:"bishkek",n:"Бишкек",   sub:"склад",     x:26,  y:70,  t:"kg"}
+  {id:"bishkek", n:"Бишкек",   sub:"склад выдачи", x:173, y:70,  t:"kg"},
+  {id:"kant",    n:"Кант",     sub:"таможня",      x:196, y:69,  t:"kg"},
+  {id:"naryn",   n:"Нарын",    sub:"транзит",      x:236, y:92,  t:"kg"},
+  {id:"torugart",n:"Торугарт", sub:"КПП",          x:210, y:112, t:"br"},
+  {id:"osh",     n:"Ош",       sub:"транзит",      x:62,  y:112, t:"kg"},
+  {id:"irkesh",  n:"Иркештам", sub:"КПП",          x:140, y:132, t:"br"},
+  {id:"kashgar", n:"Кашгар",   sub:"перевалка",    x:262, y:128, t:"cn"},
+  {id:"urumqi",  n:"Урумчи",   sub:"склад",        x:479, y:55,  t:"cn"},
+  {id:"yiwu",    n:"Иу",       sub:"склад",        x:920, y:278, t:"cn"},
+  {id:"guang",   n:"Гуанчжоу", sub:"склад",        x:846, y:373, t:"cn"},
+  {id:"foshan",  n:"Фошань",   sub:"склад",        x:790, y:381, t:"cn"}
 ];
 var MAP_ROUTES=[
-  ["urumqi","kashgar"],["yiwu","guang"],["guang","kashgar"],["yiwu","kashgar"],
+  ["guang","kashgar"],["foshan","kashgar"],["yiwu","kashgar"],
+  ["guang","urumqi"],["yiwu","urumqi"],["urumqi","kashgar"],
   ["kashgar","torugart"],["kashgar","irkesh"],
-  ["torugart","naryn"],["irkesh","osh"],
-  ["naryn","kant"],["osh","kant"],["kant","bishkek"]
+  ["torugart","naryn"],["naryn","kant"],
+  ["irkesh","osh"],["osh","bishkek"],["kant","bishkek"]
+];
+/* контуры суши для фона карты — упрощённые, чтобы был рельеф, а не пустота */
+var MAP_LAND=[
+  "M40,40 L300,28 L360,52 L470,40 L560,62 L700,86 L860,132 L960,196 L980,300 L930,392 L800,410 L700,392 L600,352 L470,300 L360,232 L250,178 L140,152 L60,116 Z",
+  "M120,60 L250,50 L300,80 L262,128 L210,112 L140,132 L62,112 L70,80 Z"
+];
+var MAP_RIDGE=[
+  "M140,130 L200,112 L262,126 L330,118",
+  "M180,96 L236,92 L300,104",
+  "M300,140 L400,120 L480,60",
+  "M520,120 L650,170 L780,250 L860,320"
 ];
 /* какой статус к какой точке относится */
 var ST_POINT={"Склад Китай":["urumqi","yiwu","guang"],"В пути Китай":["kashgar"],
@@ -1141,17 +1169,28 @@ function normCode(v){
   return raw.replace(/[<>]/g,"").replace(/\s+/g," ").trim();
 }
 function normPhone(v){
-  var raw=String(v||"").trim();
-  if(!raw||/error|none|#/i.test(raw))return "";
+  var raw=String(v==null?"":v).trim();
+  if(!raw||/error|none|н\/д|#/i.test(raw))return "";
+  var plus=raw.indexOf("+")===0;
   var d=raw.replace(/\D/g,"");
   if(!d)return "";
-  if(d.length===9)return "+996"+d;
+  // убираем ведущий 8 (российская привычка) при 11 знаках
+  if(d.length===11&&d[0]==="8")d="7"+d.slice(1);
+  // уже с кодом Кыргызстана
+  if(d.indexOf("996")===0){
+    var rest=d.slice(3);
+    if(rest.length>9)rest=rest.slice(-9);
+    if(rest.length===9)return "+996"+rest;
+    return "+996"+rest;
+  }
+  // местный с ведущим нулём: 0555123456
   if(d.length===10&&d[0]==="0")return "+996"+d.slice(1);
-  if(d.length===12&&d.indexOf("996")===0)return "+"+d;
-  if(d.length===11&&d[0]==="1")return "+"+d;
-  if(d.length===13&&d.indexOf("996")===0)return "+"+d.slice(0,12);
-  if(d.length>=10)return "+"+d;
-  return "";
+  // ровно девять цифр — местный без кода и без нуля
+  if(d.length===9)return "+996"+d;
+  // восемь цифр с нулём спереди уже отсечены; прочее — иностранные
+  if(plus||d.length>=10)return "+"+d;
+  if(d.length<9)return "";
+  return "+996"+d.slice(-9);
 }
 function dens(w,m3){return (+m3>0)?(+w/+m3):99999}
 function tierFor(cat,d){
@@ -1224,30 +1263,37 @@ async function load(){
 async function save(){if(MEM)return;try{await window.storage.set("srb:v5",JSON.stringify(S))}catch(e){MEM=true;toast("Не поместилось в хранилище")}}
 
 /* ============ ВХОД ============ */
-function drawUsers(){
-  el("users").innerHTML=S.cfg.users.map(function(u,i){
-    var col=["var(--acc)","var(--blue)","var(--amber)","var(--vio)"][i%4];
-    return'<button class="ub'+(i===selUser?" on":"")+'" data-u="'+i+'"><span class="av" style="background:'+col+'">'+esc(u.n[0])+'</span><div><b>'+esc(u.n)+'</b><span>'+roleName(u)+'</span></div></button>';
-  }).join("");
-  document.querySelectorAll("[data-u]").forEach(function(b){b.onclick=function(){selUser=+b.dataset.u;drawUsers();el("pinbox").children[0].focus()}});
+function drawUsers(){}
+function loginTry(){
+  var u=(el("lgUser").value||"").trim().toLowerCase();
+  var p=(el("lgPass").value||"").trim();
+  if(!u||!p)return lgErr("Введите логин и пароль");
+  var found=S.cfg.users.filter(function(x){
+    var lg=String(x.login||x.n||"").toLowerCase();
+    return (lg===u||String(x.n||"").toLowerCase()===u)&&String(x.pin)===p;
+  })[0];
+  if(!found){lgErr("Неверный логин или пароль");
+    el("lgPass").value="";el("lgPass").focus();
+    var b=el("login").querySelector(".lg");
+    b.classList.add("shake");setTimeout(function(){b.classList.remove("shake")},420);
+    return;}
+  ME=found;lgErr("");
+  el("login").classList.add("off");el("app").style.display="grid";
+  el("lgPass").value="";
+  boot();
 }
-var pins=el("pinbox").children;
-for(var i=0;i<4;i++)(function(i){
-  pins[i].oninput=function(){
-    if(this.value&&i<3)pins[i+1].focus();
-    var v=[].map.call(pins,function(p){return p.value}).join("");
-    if(v.length===4)tryLogin(v);
-  };
-  pins[i].onkeydown=function(e){if(e.key==="Backspace"&&!this.value&&i>0)pins[i-1].focus()};
-})(i);
-function tryLogin(v){
-  var u=S.cfg.users[selUser];
-  if(u&&u.pin===v){ME=u;el("login").classList.add("off");el("app").style.display="grid";boot()}
-  else{el("pinbox").classList.add("shake");setTimeout(function(){el("pinbox").classList.remove("shake");
-    [].forEach.call(pins,function(p){p.value=""});pins[0].focus()},420)}
+function lgErr(t){
+  var e=el("lgErr");if(e)e.innerHTML=t?('<div class="lgerr">'+esc(t)+'</div>'):"";
 }
-el("logout").onclick=function(){ME=null;el("app").style.display="none";el("login").classList.remove("off");
-  [].forEach.call(pins,function(p){p.value=""});};
+if(el("lgGo")){
+  el("lgGo").onclick=loginTry;
+  el("lgPass").addEventListener("keydown",function(e){if(e.key==="Enter")loginTry()});
+  el("lgUser").addEventListener("keydown",function(e){if(e.key==="Enter")el("lgPass").focus()});
+}
+el("logout").onclick=function(){ME=null;el("app").style.display="none";
+  el("login").classList.remove("off");
+  if(el("lgPass"))el("lgPass").value="";
+  if(el("lgUser"))el("lgUser").focus();};
 
 function applyRole(){
   el("mename").textContent=ME.n;el("merole").textContent=roleName(ME);
@@ -1578,19 +1624,83 @@ function users(){
   var cols=["var(--acc)","var(--blue)","var(--amber)","var(--vio)","var(--cyan)"];
   el("ucards").innerHTML=S.cfg.users.map(function(u,i){
     if(!u.p)u.p=(PRESET[u.r]||PRESET.custom).p.slice();
+    if(!u.login)u.login=(i===0?"srbadmin":translit(u.n));
     var chips=PERMS.map(function(P){
       var on=u.p.indexOf(P[0])>-1;
       return'<button class="pchip'+(on?" on":"")+'" data-pu="'+i+'" data-pk="'+P[0]+'"'+(i===0?' disabled':'')+'>'+
         '<span class="sw"><i></i></span>'+P[1]+'</button>';
     }).join("");
-    return'<div class="ucard"><div class="uh"><span class="av" style="background:'+cols[i%5]+'">'+esc(u.n[0])+'</span>'+
-      '<div style="flex:1"><b>'+esc(u.n)+'</b><span>PIN '+esc(u.pin)+' · '+u.p.length+' из '+PERMS.length+' прав</span></div>'+
-      '<select data-ur="'+i+'" '+(i===0?"disabled":"")+' style="background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:5px 8px;font-size:12px">'+
+    var mine=(ME&&ME.n===u.n);
+    return'<div class="ucard"><div class="uh">'+
+      '<span class="av" style="background:'+cols[i%5]+'">'+esc((u.n||"?").trim().charAt(0))+'</span>'+
+      '<div style="flex:1;min-width:0"><b>'+esc(u.n)+(mine?' <span class="tag t-2" style="font-size:9.5px">это вы</span>':'')+'</b>'+
+      '<span>'+esc(u.login)+' · '+u.p.length+' из '+PERMS.length+' прав</span></div>'+
+      '<select data-ur="'+i+'" style="background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:5px 8px;font-size:12px">'+
         Object.keys(PRESET).map(function(k){return'<option value="'+k+'"'+(u.r===k?" selected":"")+'>'+PRESET[k].n+'</option>'}).join("")+'</select>'+
-      (i===0?'<span class="tag t-2">нельзя менять</span>':'<button class="btn g sm" data-delu="'+i+'">✕</button>')+'</div>'+
+      '<button class="iconb" data-edu="'+i+'" title="Изменить">✎</button>'+
+      (i===0?'':'<button class="iconb dg" data-delu="'+i+'" title="Удалить">✕</button>')+'</div>'+
       '<div class="pgrid">'+chips+'</div></div>';
   }).join("");
 }
+function translit(v){
+  var m={а:"a",б:"b",в:"v",г:"g",д:"d",е:"e",ё:"e",ж:"zh",з:"z",и:"i",й:"y",к:"k",л:"l",м:"m",
+    н:"n",о:"o",п:"p",р:"r",с:"s",т:"t",у:"u",ф:"f",х:"h",ц:"c",ч:"ch",ш:"sh",щ:"sch",ъ:"",
+    ы:"y",ь:"",э:"e",ю:"yu",я:"ya"};
+  return String(v||"").toLowerCase().split("").map(function(c){
+    return m[c]!==undefined?m[c]:(/[a-z0-9]/.test(c)?c:"")}).join("")||"user";
+}
+/* редактор сотрудника: имя, логин, пароль, роль */
+function editUser(i){
+  var u=S.cfg.users[i];if(!u)return;
+  curCli="";curTrip="";
+  el("drawer").innerHTML=
+   '<div class="dh"><div><div class="crumb">Сотрудник</div><h2>'+esc(u.n)+'</h2>'+
+   '<div class="mut" style="font-size:12px">'+u.p.length+' из '+PERMS.length+' прав</div></div>'+
+   '<button class="x" id="dclose">✕</button></div>'+
+   fRow("Имя",inp("u_e_n",u.n,"","Нурия"))+
+   fRow("Логин для входа",inp("u_e_l",u.login||"","","nuria"))+
+   fRow("Пароль",'<div style="display:flex;gap:7px">'+
+     inp("u_e_p",u.pin,"password","новый пароль").replace("<input","<input style=\"flex:1\"")+
+     '<button type="button" class="btn g sm" id="u_e_pv" style="flex:0 0 auto">Показать</button></div>')+
+   fRow("Шаблон прав",sel("u_e_r",u.r,Object.keys(PRESET).map(function(k){return[k,PRESET[k].n]})))+
+   '<div class="mut" style="font-size:12px;margin-top:11px">Смена шаблона перезапишет галочки прав. '+
+   'Чтобы настроить точечно, закройте окно и включайте переключатели на карточке.</div>'+
+   '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">'+
+   '<button class="btn" id="u_e_save">Сохранить</button>'+
+   (i===0?'':'<button class="btn g" id="u_e_del" style="color:var(--red);margin-left:auto">Удалить</button>')+
+   '</div>';
+  el("drawer").classList.add("on");el("scrim").classList.add("on");
+  el("dclose").onclick=closeD;
+  if(el("u_e_pv"))el("u_e_pv").onclick=function(){
+    var f=el("u_e_p");var show=f.type==="password";
+    f.type=show?"text":"password";this.textContent=show?"Скрыть":"Показать";
+  };
+  el("u_e_save").onclick=function(){
+    var nn=el("u_e_n").value.trim();
+    var nl=el("u_e_l").value.trim().toLowerCase();
+    var np=el("u_e_p").value.trim();
+    if(!nn)return toast("Имя не может быть пустым");
+    if(!nl)nl=translit(nn);
+    if(!np)return toast("Пароль не может быть пустым");
+    var busy=S.cfg.users.some(function(x,k){return k!==i&&String(x.login||"").toLowerCase()===nl});
+    if(busy)return toast("Логин "+nl+" уже занят");
+    snap("Изменён сотрудник "+u.n);
+    var wasR=u.r,newR=el("u_e_r").value;
+    u.n=nn;u.login=nl;u.pin=np;
+    if(newR!==wasR){u.r=newR;u.p=(PRESET[newR]||PRESET.custom).p.slice()}
+    if(ME&&ME===u)applyRole();
+    save();render();closeD();toast("Сохранено");
+  };
+  var dl2=el("u_e_del");
+  if(dl2)dl2.onclick=function(){
+    snap("Удалён сотрудник "+u.n);
+    S.cfg.users.splice(i,1);save();render();closeD();toast("Сотрудник удалён");
+  };
+}
+document.body.addEventListener("click",function(e){
+  var b=e.target.closest("[data-edu]");
+  if(b){e.stopImmediatePropagation();editUser(+b.dataset.edu)}
+});
 
 function notes(){
   var mine=S.notes.filter(function(n){return n.to===ME.n&&!n.done});
@@ -2641,10 +2751,13 @@ el("addg").onclick=function(){
 };
 el("adduser").onclick=function(){
   var n=el("u_n").value.trim(),p=el("u_p").value.trim();
-  if(!n||p.length!==4)return toast("Имя и PIN из 4 цифр");
+  var lg=(el("u_l")?el("u_l").value.trim().toLowerCase():"")||translit(n);
+  if(!n||!p)return toast("Заполните имя и пароль");
+  if(S.cfg.users.some(function(x){return String(x.login||"").toLowerCase()===lg}))
+    return toast("Логин "+lg+" уже занят");
   var r=el("u_r").value;
-  S.cfg.users.push({n:n,pin:p,r:r,p:(PRESET[r]||PRESET.custom).p.slice()});
-  el("u_n").value="";el("u_p").value="";
+  S.cfg.users.push({n:n,login:lg,pin:p,r:r,p:(PRESET[r]||PRESET.custom).p.slice()});
+  el("u_n").value="";el("u_p").value="";if(el("u_l"))el("u_l").value="";
   save();render();drawUsers();toast("Сотрудник добавлен");
 };
 el("b_photo").onchange=function(){
@@ -3178,7 +3291,7 @@ function touchAll(){
     (S[GS_MAP[k].arr]||[]).forEach(function(o){if(!o.u)o.u=nowISO()});
   });
 }
-function gsCfg(){S.cfg.gs=S.cfg.gs||{url:"",token:"",auto:0,push:1};return S.cfg.gs}
+function gsCfg(){S.cfg.gs=S.cfg.gs||{url:"https://script.google.com/macros/s/AKfycbxOHX1eeIXs-kMW5wk4rJYmnTg8PlB9Fs8ckuzmVHD5WmIP0cHZnQtcoGfqsQUdIt4gAw/exec",token:"srb-9f3k2p7x1q8w4z6m",auto:300,push:1};return S.cfg.gs}
 function gsLog(html,cls){
   var e=el("gsLog");if(e)e.innerHTML=html;
   var st=el("gsState");
@@ -3188,6 +3301,43 @@ function gsLog(html,cls){
 function gsChip(t,cls){var c=el("gsChip");if(!c)return;
   c.style.display=t?"":"none";c.className="tag "+(cls||"t-5");c.textContent=t}
 
+
+/* Единая обёртка над fetch для Apps Script: таймаут, один автоповтор,
+   понятная диагностика вместо "Unexpected token <" */
+async function gsFetch(url,opt,retry){
+  var ctrl=new AbortController();
+  var timer=setTimeout(function(){ctrl.abort()},20000);
+  try{
+    var r=await fetch(url,Object.assign({redirect:"follow",mode:"cors",cache:"no-store",
+      signal:ctrl.signal},opt||{}));
+    clearTimeout(timer);
+    var raw=await r.text();
+    var j;
+    try{j=JSON.parse(raw)}
+    catch(pe){
+      if(/accounts\.google\.com|ServiceLogin|<html/i.test(raw)){
+        throw new Error("Таблица не отдаёт данные: доступ к веб-приложению закрыт. "+
+          "В Apps Script → Развернуть → Управление развёртываниями → Доступ должен быть «Все», а не «Только я».");
+      }
+      throw new Error("Ответ пришёл не в виде JSON. Проверьте, что ссылка ведёт на опубликованный /exec, "+
+        "а не на редактор скрипта.");
+    }
+    if(!r.ok&&!j.error)throw new Error("Сервер ответил кодом "+r.status);
+    return j;
+  }catch(err){
+    clearTimeout(timer);
+    if(err.name==="AbortError")throw new Error("Таблица не ответила за 20 секунд. Проверьте интернет или попробуйте ещё раз.");
+    if(!retry&&/Failed to fetch|NetworkError|Load failed/i.test(err.message||"")){
+      await new Promise(function(res){setTimeout(res,700)});
+      return gsFetch(url,opt,true);
+    }
+    if(/Failed to fetch|NetworkError|Load failed/i.test(err.message||"")){
+      throw new Error("Нет связи с таблицей. Проверьте ссылку веб-приложения и подключение к интернету.");
+    }
+    throw err;
+  }
+}
+
 /* --- ЧТЕНИЕ --- */
 async function gsGet(quiet){
   var g=gsCfg();
@@ -3195,8 +3345,7 @@ async function gsGet(quiet){
   if(!quiet)gsLog("Читаю таблицу…");
   gsChip("чтение…","t-1");
   try{
-    var r=await fetch(g.url+(g.url.indexOf("?")>-1?"&":"?")+"token="+encodeURIComponent(g.token||""));
-    var j=await r.json();
+    var j=await gsFetch(g.url+(g.url.indexOf("?")>-1?"&":"?")+"token="+encodeURIComponent(g.token||""));
     if(j.error)throw new Error(j.error);
     var rep=[];
     Object.keys(GS_MAP).forEach(function(k){
@@ -3279,9 +3428,8 @@ async function gsPut(quiet){
   if(!quiet)gsLog("Отправляю "+total+" строк…");
   gsChip("запись…","t-1");
   try{
-    var r=await fetch(g.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+    var j=await gsFetch(g.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
       body:JSON.stringify(body)});
-    var j=await r.json();
     if(j.error)throw new Error(j.error);
     var rep=Object.keys(j.written||{}).map(function(k){
       var w=j.written[k];return k+": +"+w.added+" / ~"+w.updated}).join(" · ");
@@ -3321,6 +3469,23 @@ if(el("gsSave")){
   el("gsGet").onclick=function(){gsGet()};
   el("gsPut").onclick=function(){gsPut()};
   el("gsBoth").onclick=function(){gsBoth()};
+  el("gsCheck").onclick=async function(){
+    var g=gsCfg();
+    if(!g.url)return gsLog("Сначала вставьте ссылку","t-5");
+    gsLog("Проверяю связь…");gsChip("проверка…","t-1");
+    try{
+      var j=await gsFetch(g.url+(g.url.indexOf("?")>-1?"&":"?")+"token="+encodeURIComponent(g.token||""));
+      if(j.error)throw new Error(j.error);
+      var c=j.counts||{};
+      var rows=Object.keys(c).map(function(k){return k+": "+c[k]}).join(" · ");
+      gsChip("связь есть","t-2");
+      gsLog("<span style='color:var(--acc2)'>Связь работает.</span><span>"+esc(rows||"листы пустые")+"</span>","t-2");
+      toast("Таблица отвечает корректно");
+    }catch(err){
+      gsChip("нет связи","t-r");
+      gsLog("<span style='color:var(--red)'>"+esc(err.message)+"</span>","t-r");
+    }
+  };
 }
 
 
@@ -3399,9 +3564,21 @@ function drawMap(){
   MAP_PTS.forEach(function(p){byPt[p.id]=0;kgPt[p.id]=0});
   L.forEach(function(c){var p=ptOf(c);byPt[p]=(byPt[p]||0)+1;kgPt[p]=(kgPt[p]||0)+(+c.w||0)});
 
-  var W=640,H=360;
-  var pos={};MAP_PTS.forEach(function(p){
-    pos[p.id]={x:W-(p.x/640*W)*0.92-20,y:p.y/360*H*0.88+22}});
+  var W=1000,H=440;
+  var pos={};MAP_PTS.forEach(function(p){pos[p.id]={x:p.x,y:p.y}});
+
+  // фон: суша и горные хребты
+  var land=MAP_LAND.map(function(d){
+    return '<path d="'+d+'" fill="var(--card2)" stroke="var(--line)" stroke-width="1.2" opacity=".55"/>'}).join("");
+  var ridge=MAP_RIDGE.map(function(d){
+    return '<path d="'+d+'" fill="none" stroke="var(--line)" stroke-width="2" opacity=".5" stroke-linecap="round"/>'+
+           '<path d="'+d+'" fill="none" stroke="var(--tx3)" stroke-width="1" opacity=".25" stroke-dasharray="2 6" stroke-linecap="round"/>'}).join("");
+  var grid="";
+  for(var gx=80;gx<W;gx+=110)grid+='<line x1="'+gx+'" y1="18" x2="'+gx+'" y2="'+(H-14)+'" stroke="var(--line)" stroke-width="1" opacity=".18"/>';
+  for(var gy=60;gy<H;gy+=80)grid+='<line x1="24" y1="'+gy+'" x2="'+(W-16)+'" y2="'+gy+'" stroke="var(--line)" stroke-width="1" opacity=".18"/>';
+  var labels='<text x="150" y="34" font-size="11" fill="var(--tx3)" font-family="Onest" letter-spacing="2">КЫРГЫЗСТАН</text>'+
+    '<text x="560" y="34" font-size="11" fill="var(--tx3)" font-family="Onest" letter-spacing="2">КИТАЙ</text>'+
+    '<text x="300" y="'+(H-18)+'" font-size="10" fill="var(--tx3)" font-family="Onest" opacity=".8">Памир · Тянь-Шань</text>';
 
   var lines=MAP_ROUTES.map(function(r){
     var a=pos[r[0]],b=pos[r[1]];
@@ -3429,9 +3606,13 @@ function drawMap(){
   }).join("");
 
   el("mapBox").innerHTML='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+
-    '<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="none"/>'+
-    '<text x="'+(W-30)+'" y="20" text-anchor="end" font-size="10.5" fill="var(--tx3)">КИТАЙ</text>'+
-    '<text x="30" y="20" text-anchor="start" font-size="10.5" fill="var(--tx3)">КЫРГЫЗСТАН</text>'+
+    '<defs>'+
+      '<linearGradient id="mgSky" x1="0" y1="0" x2="1" y2="1">'+
+        '<stop offset="0" stop-color="var(--acc)" stop-opacity=".07"/>'+
+        '<stop offset="1" stop-color="var(--blue)" stop-opacity=".07"/></linearGradient>'+
+    '</defs>'+
+    '<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="url(#mgSky)" rx="14"/>'+
+    grid+land+ridge+labels+
     lines+dots+'</svg>';
 
   el("mapLegs").innerHTML=MAP_PTS.filter(function(p){return byPt[p.id]>0}).map(function(p){
