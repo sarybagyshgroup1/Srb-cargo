@@ -1336,19 +1336,54 @@ async function load(){
     ?"Постоянное хранилище недоступно — данные живут до закрытия вкладки. Обязательно скачивайте копию."
     :"Данные сохраняются автоматически после каждого действия и будут на месте при следующем открытии. Копию можно скачать и восстановить в один клик.";
   drawUsers();
+  gsPullCfg(); // подтянуть сотрудников/настройки из таблицы к моменту входа (в фоне)
 }
 async function save(){if(MEM)return;try{await window.storage.set("srb:v5",JSON.stringify(S))}catch(e){MEM=true;toast("Не поместилось в хранилище")}}
 
 /* ============ ВХОД ============ */
 function drawUsers(){}
-function loginTry(){
+/* Тянем пользователей/настройки из таблицы ДО входа — иначе новые сотрудники
+   не смогут войти на своём устройстве (их логина ещё нет локально). */
+var CFG_PULLED=false;
+async function gsPullCfg(force){
+  var g=gsCfg();
+  if(!g.url||!g.meta)return false;
+  if(CFG_PULLED&&!force)return false;
+  try{
+    var j=await gsFetch(g.url+(g.url.indexOf("?")>-1?"&":"?")+"token="+encodeURIComponent(g.token||""));
+    CFG_PULLED=true;
+    if(j&&j.meta&&j.meta.length){
+      var row=j.meta.filter(function(r){return String(r.k)==="cfg"})[0];
+      if(row&&row.v){
+        var inc=JSON.parse(row.v);
+        if(inc){
+          if(inc.users&&inc.users.length)S.cfg.users=inc.users; // логины для входа — всегда из таблицы
+          applyRemoteCfg(inc);
+          try{await save()}catch(e){}
+          return true;
+        }
+      }
+    }
+  }catch(e){}
+  return false;
+}
+function findUser(u,p){
+  return S.cfg.users.filter(function(x){
+    var lg=String(x.login||x.n||"").toLowerCase();
+    return (lg===u||String(x.n||"").toLowerCase()===u)&&String(x.pin)===String(p);
+  })[0];
+}
+async function loginTry(){
   var u=(el("lgUser").value||"").trim().toLowerCase();
   var p=(el("lgPass").value||"").trim();
   if(!u||!p)return lgErr("Введите логин и пароль");
-  var found=S.cfg.users.filter(function(x){
-    var lg=String(x.login||x.n||"").toLowerCase();
-    return (lg===u||String(x.n||"").toLowerCase()===u)&&String(x.pin)===p;
-  })[0];
+  var found=findUser(u,p);
+  if(!found){
+    // Возможно, сотрудника добавили только что на другом устройстве — обновим список из таблицы и попробуем ещё раз
+    lgErr("Проверяю…");
+    var got=await gsPullCfg(true);
+    if(got)found=findUser(u,p);
+  }
   if(!found){lgErr("Неверный логин или пароль");
     el("lgPass").value="";el("lgPass").focus();
     var b=el("login").querySelector(".lg");
