@@ -2832,41 +2832,73 @@ function parseClients(wb){
 
 /* ===== СЛИЯНИЕ: только то, чего нет ===== */
 function cargoKey(c){
-  return [normCode(c.code),String(c.date||"").slice(0,10),
-    Math.round(num(c.w)*10),String(c.name||"").trim().toLowerCase()].join("|");
+  return normCode(c.code)+"|"+Math.round(num(c.w)*10);
 }
 function smartMerge(data,opt){
   opt=opt||{};
   var rep={cargoNew:0,cargoUpd:0,cliNew:0,cliUpd:0,fin:0,goals:0,fields:0,same:0};
-  var byKey={},byId={};
-  S.cargo.forEach(function(c){byKey[cargoKey(c)]=c;if(c.id)byId[String(c.id)]=c});
+
+  /* груз узнаётся по коду клиента и весу — не по дате и не по наименованию,
+     потому что склад в Китае и приход в Бишкек пишут разные даты и разные
+     названия для одного и того же физического места. Дата используется
+     только чтобы выбрать нужного из нескольких похожих. */
+  var idx={},byId={};
+  S.cargo.forEach(function(c){
+    var k=cargoKey(c);(idx[k]=idx[k]||[]).push(c);
+    c._touched=false;
+    if(c.id)byId[String(c.id)]=c;
+  });
 
   (data.cargo||[]).forEach(function(r){
-    var code=normCode(r.code);
-    var ex=(r.id&&byId[String(r.id)])||byKey[cargoKey(r)];
+    var code=normCode(r.code),w=num(r.w),k=code+"|"+Math.round(w*10);
+    var ex=null;
+
+    if(r.id&&byId[String(r.id)]&&!byId[String(r.id)]._touched)ex=byId[String(r.id)];
+
+    if(!ex){
+      var cand=(idx[k]||[]).filter(function(c){return !c._touched});
+      if(cand.length===1)ex=cand[0];
+      else if(cand.length>1){
+        if(r.date){
+          var best=null,bestDiff=Infinity;
+          cand.forEach(function(c){
+            var base=c.wh||c.date;if(!base)return;
+            var diff=Math.abs(new Date(base)-new Date(r.date));
+            if(!isNaN(diff)&&diff<bestDiff){bestDiff=diff;best=c}
+          });
+          ex=best||cand[0];
+        }else ex=cand[0];
+      }
+    }
+
     if(ex){
+      ex._touched=true;
       var got=0;
       if(!ex.m3&&r.m3){ex.m3=r.m3;got++}
       if((!ex.pcs||ex.pcs===1)&&r.pcs>1){ex.pcs=r.pcs;got++}
       if(!ex.pack&&r.pack){ex.pack=r.pack;got++}
       if(!ex.name&&r.name){ex.name=r.name;got++}
       if(!ex.city&&r.city){ex.city=r.city;got++}
+      if(!ex.wh&&r.date){ex.wh=r.date;got++}
       if(!ex.date&&r.date){ex.date=r.date;got++}
-      if(!ex.w&&r.w){ex.w=r.w;got++}
       if(!ex.code&&code){ex.code=code;got++}
       if(got){ex.u=nowISO();rep.cargoUpd++;rep.fields+=got}else rep.same++;
       return;
     }
-    var nc={id:r.id||("c"+Math.abs(hashStr(cargoKey(r))).toString(36)),
+
+    var nc={id:r.id||("c"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)),
       code:code,name:r.name||"",cat:r.cat||autoCat(r.name)||1,
-      pcs:r.pcs||1,w:num(r.w),m3:num(r.m3),pack:num(r.pack),svc:0,sell:0,
+      pcs:r.pcs||1,w:w,m3:num(r.m3),pack:num(r.pack),svc:0,sell:0,
       track:"",trip:"",city:r.city||"",st:r.st?mapStatus(r.st):"В Бишкеке",
-      date:r.date||"",arc:opt.asArc?1:0,u:nowISO()};
-    S.cargo.push(nc);byKey[cargoKey(nc)]=nc;if(nc.id)byId[nc.id]=nc;
+      date:r.date||"",wh:r.date||"",arc:opt.asArc?1:0,u:nowISO(),_touched:true};
+    S.cargo.push(nc);
+    (idx[k]=idx[k]||[]).push(nc);
+    if(nc.id)byId[nc.id]=nc;
     rep.cargoNew++;
     if(code&&!S.clients.find(function(x){return x.code===code}))
       S.clients.push({code:code,name:"",phone:"",u:nowISO()});
   });
+  S.cargo.forEach(function(c){delete c._touched});
 
   (data.clients||[]).forEach(function(r){
     if(!r.code)return;
@@ -3286,25 +3318,44 @@ if(el("pickAny")){
   ["dragleave","drop"].forEach(function(v){dz.addEventListener(v,function(e){e.preventDefault();dz.classList.remove("over")})});
   dz.addEventListener("drop",function(e){if(e.dataTransfer.files.length)handleFiles([].slice.call(e.dataTransfer.files))});
 }
+var IMPORT_BUSY=false;
+function importLock(on){
+  IMPORT_BUSY=on;
+  var z=el("dropAny"),b=el("pickAny");
+  if(z)z.style.opacity=on?".5":"";
+  if(z)z.style.pointerEvents=on?"none":"";
+  if(b){b.disabled=on;b.textContent=on?"Идёт загрузка…":"Выбрать файлы"}
+}
 function handleFiles(list){
+  if(IMPORT_BUSY){toast("Уже идёт загрузка — подождите, пока закончится текущая");return}
+  importLock(true);
   SHEET_CACHE={};
   var asArc=el("asArc")?el("asArc").checked:true;
-  var reps=[],left=list.length;
+  var reps=[],left=list.length,done=0;
   snap("Загрузка "+list.length+" файл(ов)");
-  el("impSub").textContent="Читаю "+list.length+" файл(ов)…";
-  list.forEach(function(f){
+  el("impSub").textContent="Читаю файл 1 из "+list.length+"…";
+  list.forEach(function(f,idx){
     var rd=new FileReader();
     rd.onload=function(ev){
-      try{
-        var wb=XLSX.read(new Uint8Array(ev.target.result),{type:"array"});
-        reps.push(importWorkbook(wb,f.name,asArc));
-      }catch(err){reps.push({kind:"error",name:f.name,msg:err.message})}
-      if(--left===0)finishImport(reps);
+      /* уступаем браузеру такт, чтобы вкладка успела перерисоваться
+         и осталась отзывчивой между тяжёлыми синхронными этапами */
+      setTimeout(function(){
+        try{
+          var wb=XLSX.read(new Uint8Array(ev.target.result),{type:"array"});
+          reps.push(importWorkbook(wb,f.name,asArc));
+        }catch(err){reps.push({kind:"error",name:f.name,msg:err.message})}
+        done++;
+        if(done<list.length)el("impSub").textContent="Читаю файл "+(done+1)+" из "+list.length+"…";
+        if(--left===0)setTimeout(function(){finishImport(reps)},0);
+      },0);
     };
+    rd.onerror=function(){reps.push({kind:"error",name:f.name,msg:"не удалось прочитать файл"});
+      if(--left===0)setTimeout(function(){finishImport(reps)},0)};
     rd.readAsArrayBuffer(f);
   });
 }
 function finishImport(reps){
+  importLock(false);
   save();render();
   var KN={panel:"грузы и деньги",china:"китайская отгрузка",clients:"справочник клиентов",
     unknown:"формат не распознан",error:"ошибка чтения"};
