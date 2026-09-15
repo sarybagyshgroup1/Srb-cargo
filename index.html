@@ -72,7 +72,7 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
 .calc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.75rem;margin-bottom:1rem;}
 .step-label{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .step-num{width:20px;height:20px;background:var(--black);color:var(--white);border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.city-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.city-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
 .city-btn{padding:13px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--black);font-family:'Inter',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .18s;text-align:center;}
 .city-btn:hover{border-color:var(--green);color:var(--green);}
 .city-btn.active{border-color:var(--green);background:var(--green-light);color:var(--green-dark);font-weight:600;}
@@ -174,7 +174,7 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
   <div class="hero-inner">
     <div class="hero-badge rise d1">Доставка из Китая · Cargo</div>
     <div class="hero-logo rise d2">SRB<span>.</span></div>
-    <div class="hero-tagline rise d3">Фошань · Иу · Урумчи → Кыргызстан</div>
+    <div class="hero-tagline rise d3">Фошань · Иу → Кыргызстан</div>
 
     <div class="hero-q rise d4">С чего начнём?</div>
     <div class="choice-grid rise d5">
@@ -214,7 +214,6 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
       <div class="city-row">
         <button class="city-btn active" data-city="foshan" onclick="selectCity(this)">Фошань</button>
         <button class="city-btn" data-city="yiwu" onclick="selectCity(this)">Иу</button>
-        <button class="city-btn" data-city="urumqi" onclick="selectCity(this)">Урумчи</button>
       </div>
     </div>
     <div class="calc-card reveal">
@@ -316,10 +315,6 @@ body{font-family:'Inter',sans-serif;background:var(--white);color:var(--black);o
       <div class="address-city">Иу</div>
       <pre class="address-pre" id="addr-yiwu-full"></pre>
     </div>
-    <div class="address-block">
-      <div class="address-city">Урумчи</div>
-      <pre class="address-pre" id="addr-urumqi-full"></pre>
-    </div>
     <button class="popup-copy-btn" onclick="copyAddresses()">Скопировать все адреса</button>
   </div>
 </div>
@@ -418,16 +413,14 @@ function showPopup(name, fullCode) {
   document.getElementById('popup-code').textContent = fullCode;
 
   document.getElementById('addr-foshan-full').textContent =
-    fullCode + ' 广东省佛山市南海区里水镇大石社区石紫岗工业区石一石二工业路27号321国际仓 13763369694\n' +
-    fullCode + ' Город Фошань';
+    '名字：' + fullCode + '\n' +
+    '电话：17633321256\n' +
+    '广东省佛山市南海区大沥镇黄岐北村公路名雅花园后门中俄物流仓' + fullCode;
 
   document.getElementById('addr-yiwu-full').textContent =
-    fullCode + ' 义乌市福田街道荷叶塘工业功能区物华路60号院里321库房 马经理联系电话:17699862999\n' +
-    fullCode + ' Город Иу';
-
-  document.getElementById('addr-urumqi-full').textContent =
-    fullCode + ' 乌鲁木齐市沙依巴克区兵团 物流园北区玉树环宇B区23-27号9999库房 马成 17509082999\n' +
-    fullCode + ' Город Урумчи';
+    '名字：' + fullCode + '\n' +
+    '电话：15801551835\n' +
+    '浙江省义乌市后宅街道十二山头42栋1楼' + fullCode;
 
   document.getElementById('popup-overlay').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -445,12 +438,14 @@ function closePopupOutside(e) {
 function copyAddresses() {
   const code = document.getElementById('popup-code').textContent;
   const text =
-    code + ' 广东省佛山市南海区里水镇大石社区石紫岗工业区石一石二工业路27号321国际仓 13763369694\n' +
-    code + ' Город Фошань\n\n' +
-    code + ' 义乌市福田街道荷叶塘工业功能区物华路60号院里321库房 马经理联系电话:17699862999\n' +
-    code + ' Город Иу\n\n' +
-    code + ' 乌鲁木齐市沙依巴克区兵团 物流园北区玉树环宇B区23-27号9999库房 马成 17509082999\n' +
-    code + ' Город Урумчи';
+    'Город Фошань\n' +
+    '名字：' + code + '\n' +
+    '电话：17633321256\n' +
+    '广东省佛山市南海区大沥镇黄岐北村公路名雅花园后门中俄物流仓' + code + '\n\n' +
+    'Город Иу\n' +
+    '名字：' + code + '\n' +
+    '电话：15801551835\n' +
+    '浙江省义乌市后宅街道十二山头42栋1楼' + code;
 
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.querySelector('.popup-copy-btn');
