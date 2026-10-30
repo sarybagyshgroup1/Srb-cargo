@@ -358,19 +358,19 @@ const io = new IntersectionObserver((entries) => {
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
 // ═══ GOOGLE SHEETS ═══
-const GS_URL = 'https://script.google.com/macros/s/AKfycbyohbGFEibniB_zF38j60cMBWfp43hgL9DAm0HcIKigtSwlQNXp0YQR2XhPLkf0CgZfGw/exec';
+// Вставьте сюда ссылку на веб-приложение Apps Script, привязанное к новой таблице
+// «Копия SRB код учет последние». Код выдаёт сама таблица: следующий после максимального SRB-номера.
+const GS_URL = 'https://script.google.com/macros/s/AKfycbwosaUVzANukMh43OelbSH7eR0Cb2LYTTz6TtYLMSTc1HqdOvkcahFERbTV3DucUuII/exec';
 
-async function fetchNextCode() {
-  try {
-    const res = await fetch(GS_URL, { method: 'GET' });
-    const data = await res.json();
-    const lastNum = parseInt(data.lastCode) || 50;
-    return String(lastNum + 1).padStart(3, '0');
-  } catch(e) {
-    console.warn('Не удалось получить код из таблицы, используем localStorage:', e);
-    const stored = parseInt(localStorage.getItem('srb_last_code') || '50');
-    return String(stored + 1).padStart(3, '0');
-  }
+async function requestCode(name, phone, date) {
+  const res = await fetch(GS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ name, phone, date })
+  });
+  const data = await res.json();
+  if (!data.ok || !data.code) throw new Error(data.error || 'Нет кода в ответе');
+  return data.code;
 }
 
 async function registerClient() {
@@ -379,33 +379,25 @@ async function registerClient() {
   const btn   = document.getElementById('reg-btn');
 
   if (!name)  { document.getElementById('reg-name').focus();  return; }
-  if (phone.length < 6) { document.getElementById('reg-phone').focus(); return; }
+  if (phone.replace(/\D/g, '').length < 9) { document.getElementById('reg-phone').focus(); return; }
 
   btn.disabled    = true;
   btn.textContent = 'Создаём код...';
 
-  const code     = await fetchNextCode();
-  const fullCode = 'SRB' + code;
-  const date     = new Date().toLocaleString('ru-RU');
-  const phoneClear = phone.replace(/\s+/g, '');
-
-  localStorage.setItem('srb_last_code', parseInt(code));
+  const date       = new Date().toLocaleString('ru-RU');
+  const phoneClear = phone.replace(/\D/g, '');
 
   try {
-    await fetch(GS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, phone: phoneClear, code: fullCode, date })
-    });
-  } catch(e) {
-    console.warn('Ошибка записи в таблицу:', e);
+    const fullCode = await requestCode(name, phoneClear, date);
+    showPopup(name, fullCode);
+    btn.textContent = 'Получить код →';
+  } catch (e) {
+    console.warn('Ошибка получения кода:', e);
+    btn.textContent = 'Не получилось — попробуйте ещё раз или напишите в WhatsApp';
+    setTimeout(() => { btn.textContent = 'Получить код →'; }, 4000);
+  } finally {
+    btn.disabled = false;
   }
-
-  showPopup(name, fullCode);
-
-  btn.disabled    = false;
-  btn.textContent = 'Получить код →';
 }
 
 function showPopup(name, fullCode) {
@@ -455,12 +447,12 @@ function copyAddresses() {
 }
 
 // ═══ CALCULATOR ═══
-// База + $0.05/кг (кат.2 до плотности 200: +$0.10/кг) + $10/м³
+// Сетка цен SRB Cargo (ставка по плотности кг/м³; ниже 100 кг/м³ — по объёму)
 const PURCHASE_FEE = 10;
 
 const RATES = {
   cat1: { tiers:[[600,0.70],[400,0.75],[300,0.80],[200,0.85],[150,0.90],[0,0.95]], m3:115 },
-  cat2: { tiers:[[600,0.85],[400,0.95],[250,1.00],[0,1.20]],                        m3:135 },
+  cat2: { tiers:[[600,0.85],[400,0.95],[300,1.00],[0,1.20]],                        m3:135 },
   cat3: { tiers:[[600,1.05],[400,1.10],[300,1.20],[200,1.30],[150,1.40],[0,1.55]], m3:180 },
   cat4: { tiers:[[400,1.45],[300,1.50],[250,1.60],[200,1.70],[150,1.80],[0,1.90]], m3:210 }
 };
