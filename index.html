@@ -360,9 +360,10 @@ document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 // ═══ GOOGLE SHEETS ═══
 // Вставьте сюда ссылку на веб-приложение Apps Script, привязанное к новой таблице
 // «Копия SRB код учет последние». Код выдаёт сама таблица: следующий после максимального SRB-номера.
-const GS_URL = 'https://script.google.com/macros/s/AKfycbwosaUVzANukMh43OelbSH7eR0Cb2LYTTz6TtYLMSTc1HqdOvkcahFERbTV3DucUuII/exec';
+const GS_URL = 'https://script.google.com/macros/s/AKfycbyQOpf7pR6ZDHDzsD5rkkGGjMQPJHdwnSWgHg8tZzI141EnDr0givScC5TOyhRdyDto/exec';
 
-async function requestCode(name, phone, date) {
+// Способ 1: скрипт сам выдаёт код и возвращает его
+async function requestCodeDirect(name, phone, date) {
   const res = await fetch(GS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -371,6 +372,31 @@ async function requestCode(name, phone, date) {
   const data = await res.json();
   if (!data.ok || !data.code) throw new Error(data.error || 'Нет кода в ответе');
   return data.code;
+}
+
+// Способ 2 (запасной, как раньше): берём последний код, считаем следующий, отправляем строку
+async function requestCodeFallback(name, phone, date) {
+  const res  = await fetch(GS_URL + '?t=' + Date.now());
+  const data = await res.json();
+  const last = parseInt(String(data.lastCode).replace(/\D/g, ''), 10);
+  if (isNaN(last)) throw new Error('Таблица не вернула последний код');
+  const code = 'SRB' + String(last + 1).padStart(3, '0');
+  await fetch(GS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ name, phone, code, date })
+  });
+  return code;
+}
+
+async function requestCode(name, phone, date) {
+  try {
+    return await requestCodeDirect(name, phone, date);
+  } catch (e) {
+    console.warn('Прямой способ не сработал, пробуем запасной:', e);
+    return await requestCodeFallback(name, phone, date);
+  }
 }
 
 async function registerClient() {
