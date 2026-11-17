@@ -827,6 +827,11 @@ function evalCargo(c){
     else{var mk2=mkFor(c.code),a2=T.unit==="м³"?mk2.m:mk2.k;c._rate=T.rate+a2;c._rev=tableCost+tq*a2}
     c._how="цены нет в счёте — по таблице себестоимости (оценка)";
   }
+  var K=cliOf(c.code);
+  if(K&&((K.costK!==""&&K.costK!=null)||(K.costM!==""&&K.costM!=null))){   // своя себестоимость клиента/агента
+    var useM=c._unit==="м³"&&+K.costM>0,rate=useM?+K.costM:(+K.costK>0?+K.costK:0);
+    if(rate>0){var cq=useM?m3:w;c._cost=cq*rate+pk+ad;c._how+=" · себестоимость этого кода $"+f2(rate)+"/"+(useM?"м³":"кг")}
+  }
   if(+c.sell>0){var q3=c._unit==="м³"?m3:w;c._rate=+c.sell;c._rev=q3*(+c.sell)+pk+ad;c._how="ручная цена $"+f2(c.sell)+"/"+c._unit}
   c._cost=r2(c._cost);c._rev=r2(c._rev);c._prof=r2(c._rev-c._cost);
   c._som=c.sentAt&&+c.sentSom>0?+c.sentSom:Math.round(c._rev*(+S.cfg.usd||0));
@@ -864,12 +869,12 @@ function whoOf(c){return c._ag&&(c.sub||c.subName)?((c.sub||"")+(c.subName&&c.su
 /* ================= GOOGLE ТАБЛИЦА =================
    Тот же скрипт (протокол 3). Чтение и запись по полям: побеждает более свежая правка каждого поля.
    Удаления: помним, какие строки видели в таблице при прошлой синхронизации. */
-var GS_DEFAULT="https://script.google.com/macros/s/AKfycbx6Cm17AAo_RJe7FgqCZPsJo0c089Fh8cWWEDDpQmiKJUqoKix33ifeoEqCs8SHw5QzPw/exec";
-var GS_OLD=["AKfycbxid2HfxEsQes4CWOzUM2gaoTJUWmz-sAURIREBCQyBH4QeAVYX593fnflKdUe3y_Aqvw","AKfycbw2NYWmQr66kSZZboterH6jLCT_QEjE2PR8mfosFXklGSX_xjnR7ewW72dDxPKXUxv4-A",
+var GS_DEFAULT="https://script.google.com/macros/s/AKfycbx55i5WPOfbKD6mZKsyOnznRoREEpdSLSkUm-atU-z3irIq3O_WnefaCdtOQcyGqdqK2w/exec";
+var GS_OLD=["AKfycbx6Cm17AAo_RJe7FgqCZPsJo0c089Fh8cWWEDDpQmiKJUqoKix33ifeoEqCs8SHw5QzPw","AKfycbxid2HfxEsQes4CWOzUM2gaoTJUWmz-sAURIREBCQyBH4QeAVYX593fnflKdUe3y_Aqvw","AKfycbw2NYWmQr66kSZZboterH6jLCT_QEjE2PR8mfosFXklGSX_xjnR7ewW72dDxPKXUxv4-A",
   "AKfycbwlsa58l30NI5Qe7Fyrv6jJ94XwJQxNGIvcps1olImX0JmHUEzt2x1VnUZlBDvboMc9Uw","AKfycbzOW5dPUzqgmZ2vlD4m8S84Vr0OXCcKa_TVWG1vfTmGlCtRMYpfnZk9C9OKnvmY0tFf1g"];
 var PROTO=3;
 var FIELDS={
-  clients:["code","name","phone","type","city","note","mkK","mkM","agK","ph","since","u","uf"],
+  clients:["code","name","phone","type","city","note","mkK","mkM","agK","costK","costM","ph","since","u","uf"],
   cargo:["id","wb","code","date","pcs","w","m3","cat","dens","clsRaw","price","mode","pack","adv","svc","sell","bill","agPrice","agSum","agRet","hasAg","sheet",
     "sub","subName","dest","file","st","trip","recv","recvPcs","wh","sentAt","sentRate","sentUsd","sentSom","issuedAt","issuedBy","issuedTo","issuedPcs","issueNote","note","warn","catManual","u","uf"],
   fin:["id","d","t","k","s","c","n","by","cid","u","uf"],
@@ -879,8 +884,8 @@ var FIELDS={
 };
 var OUTF={cargo:["costUsd","usd","som","payst","paidSom"],clients:["acc","paidSom","debt"]};
 var NUMF={pcs:1,w:1,m3:1,cat:1,dens:1,price:1,pack:1,adv:1,svc:1,sell:1,bill:1,agPrice:1,agSum:1,agRet:1,hasAg:1,recv:1,recvPcs:1,
-  sentRate:1,sentUsd:1,sentSom:1,issuedPcs:1,catManual:1,s:1,sum:1,usd:1,rate:1,mkK:1,mkM:1,agK:1};
-var EMPTYOK={mkK:1,mkM:1,agK:1,sell:1,sentSom:1,sentRate:1,sentUsd:1,recvPcs:1,issuedPcs:1};
+  sentRate:1,sentUsd:1,sentSom:1,issuedPcs:1,catManual:1,s:1,sum:1,usd:1,rate:1,mkK:1,mkM:1,agK:1,costK:1,costM:1};
+var EMPTYOK={costK:1,costM:1,mkK:1,mkM:1,agK:1,sell:1,sentSom:1,sentRate:1,sentUsd:1,recvPcs:1,issuedPcs:1};
 function gsOn(){return !!(S.gs.url&&S.gs.token)}
 function chip(state,text){$$(".synchip").forEach(function(e){e.className="chip synchip "+state;e.querySelector("span").textContent=text});
   var m=$("syncChipM");if(m){m.className="chip r "+state;m.querySelector("span").textContent=text}}
@@ -914,14 +919,15 @@ function cleanRow(kind,r){
   return o;
 }
 var SYNC_BUSY=false,SYNC_AGAIN=false,SYNC_T=null;
-function syncSoon(){if(!ME||ME.cab||!gsOn())return;clearTimeout(SYNC_T);SYNC_T=setTimeout(function(){sync(true)},3500)}
+var DIRTY=false;
+function syncSoon(){if(!ME||ME.cab||!gsOn())return;DIRTY=true;chip("busy","сохраняю…");clearTimeout(SYNC_T);SYNC_T=setTimeout(function(){sync(true)},900)}
 async function sync(quiet){
   if(!gsOn())return false;
   if(SYNC_BUSY){SYNC_AGAIN=true;return}
   SYNC_BUSY=true;chip("busy","синхронизация…");
-  try{await pull();await push();
-    S.gs.last=nowISO();save(true);chip("ok","таблица · "+when(S.gs.last).slice(6));if(!quiet)toast("Синхронизировано с таблицей");renderAll();return true}
-  catch(e){chip("bad","нет связи");S.gs.err=e.message;if(!quiet)toast(e.message,null,7000);renderAll();return false}
+  try{DIRTY=false;await pull();await push();
+    S.gs.last=nowISO();save(true);chip(DIRTY?"busy":"ok",DIRTY?"сохраняю…":"сохранено · "+when(S.gs.last).slice(6));if(!quiet)toast("Синхронизировано с таблицей");renderAll();return true}
+  catch(e){DIRTY=true;chip("bad","не сохранено в таблицу");S.gs.err=e.message;if(!quiet)toast(e.message,null,7000);renderAll();return false}
   finally{SYNC_BUSY=false;if(SYNC_AGAIN){SYNC_AGAIN=false;setTimeout(function(){sync(true)},1200)}}
 }
 async function pull(){
@@ -1347,6 +1353,13 @@ $("modal").onclick=function(e){if(e.target===$("modal"))closeModal()};
 $("menuBtn").onclick=function(){$("side").classList.toggle("on")};
 $("outBtn").onclick=logout;
 $("themeBtn").onclick=function(){var d=document.documentElement,t=d.dataset.theme==="dark"?"light":"dark";d.dataset.theme=t;try{localStorage.setItem("srb:theme",t)}catch(e){}};
+/* автосохранение: любое поле сохраняется сразу при изменении, без кнопки */
+var SAVED_HTML='<span class="mut" style="font-size:12px" data-saved>Изменения сохраняются сами</span>';
+function autoSave(ids,fn){
+  ids.forEach(function(id){var e=$(id);if(!e)return;
+    e.addEventListener("change",function(){fn();calc();counters();if(CUR)renderPage(CUR);
+      $$("[data-saved]").forEach(function(x){x.innerHTML='<b style="color:var(--acc)">✓ Сохранено</b>';clearTimeout(x._t);x._t=setTimeout(function(){x.textContent="Изменения сохраняются сами"},2000)})})});
+}
 function reopenDrawer(){var d=DRAWER;if(!d)return;var sc=$("drawer").scrollTop;
   if(d.kind==="cli")openClient(d.key,d.tab);else if(d.kind==="cargo")openCargo(d.key);else if(d.kind==="trip")openTrip(d.key);$("drawer").scrollTop=sc}
 function dhead(title,sub,extra){return '<div class="dh"><div style="flex:1;min-width:0"><div class="mut" style="font-size:12px;font-weight:700">'+sub+'</div><h2>'+title+'</h2></div>'+(extra||"")+'<button class="x" onclick="closeDrawer()">×</button></div>'}
@@ -1525,16 +1538,16 @@ function openCargo(id){
       '<div class="fld"><label>Объём, м³</label><input id="eM3" type="number" step="0.001" value="'+(+c.m3||0)+'"></div>'+
       (M?'<div class="fld"><label>Доп. услуги, $</label><input id="eSvc" type="number" step="0.01" value="'+(+c.svc||0)+'"></div>':'')+
       '</div><div class="fld" style="margin-top:12px"><label>Заметка</label><textarea id="eNote" rows="2">'+esc(c.note||"")+'</textarea></div>'+
-      '<div class="row" style="margin-top:12px"><button class="btn" id="eSave">Сохранить</button>'+(can("del")?'<button class="btn g r" id="eDel">Удалить накладную</button>':'')+'</div></div>';
+      '<div class="row" style="margin-top:12px">'+SAVED_HTML+(can("del")?'<button class="btn g r" id="eDel">Удалить накладную</button>':'')+'</div></div>';
   }
   if(c.warn)h+='<details class="card"><summary>Замечания из счёта</summary><div class="det">'+String(c.warn).split(" | ").map(esc).join("<br>")+'</div></details>';
   h+='</div>';openDrawer(h);
   $$("[data-cst]").forEach(function(b){b.onclick=function(){var s=b.dataset.cst,p={st:s};if(s==="В Бишкеке"&&!c.wh)p.wh=today();upd("cargo",c,p);renderAll()}});
-  if($("eSave"))$("eSave").onclick=function(){
+  if($("eCode"))autoSave(["eCode","eTrip","eCat","eSell","ePcs","eW","eM3","eSvc","eNote"],function(){
     var code=normCode($("eCode").value)||c.code;if(code!==c.code)ensureClient(code,"client");
     var p={code:code,trip:$("eTrip").value,cat:+$("eCat").value,pcs:+$("ePcs").value||0,w:+$("eW").value||0,m3:+$("eM3").value||0,note:$("eNote").value.trim()};
     if(+p.cat!==+c.cat)p.catManual=1;if($("eSell"))p.sell=$("eSell").value===""?"":+$("eSell").value;if($("eSvc"))p.svc=+$("eSvc").value||0;
-    upd("cargo",c,p);renderAll();toast("Сохранено")};
+    upd("cargo",c,p)});
   if($("eDel"))$("eDel").onclick=async function(){if(!await ask("Удалить накладную "+c.wb+"?","","Удалить",true))return;snap("удаление "+c.wb);del("cargo",c.id);closeDrawer();renderAll();toast("Удалено",undo)};
   if($("cUnsend"))$("cUnsend").onclick=function(){upd("cargo",c,{sentAt:"",sentRate:"",sentUsd:"",sentSom:""});renderAll();toast("Отметка снята")};
 }
@@ -1589,10 +1602,10 @@ function openTrip(id){
     '<div class="card"><div class="ch"><h3>Данные рейса</h3></div><div class="grid g2"><div class="fld"><label>Название</label><input id="trN" value="'+esc(t.name)+'"></div><div class="fld"><label>Дата выезда</label><input id="trD" type="date" value="'+esc(t.d||"")+'"></div>'+
       '<div class="fld"><label>Водитель</label><input id="trDr" value="'+esc(t.driver||"")+'"></div><div class="fld"><label>Телефон</label><input id="trPh" value="'+esc(t.phone||"")+'"></div></div>'+
       '<div class="fld" style="margin-top:10px"><label>Заметка</label><input id="trNote" value="'+esc(t.note||"")+'"></div>'+
-      '<div class="row" style="margin-top:12px"><button class="btn" id="trSave">Сохранить</button>'+(t.phone?'<a class="btn wa sm" target="_blank" href="https://wa.me/'+waNum(t.phone)+'">'+ic("wa")+'Водитель</a>':'')+(can("del")?'<button class="btn g r" id="trDel">Удалить рейс</button>':'')+'</div></div></div>');
+      '<div class="row" style="margin-top:12px">'+SAVED_HTML+(t.phone?'<a class="btn wa sm" target="_blank" href="https://wa.me/'+waNum(t.phone)+'">'+ic("wa")+'Водитель</a>':'')+(can("del")?'<button class="btn g r" id="trDel">Удалить рейс</button>':'')+'</div></div></div>');
   $$("[data-tst]").forEach(function(b){b.onclick=function(){tripSet(t,b.dataset.tst)}});
   $$("[data-untrip]").forEach(function(b){b.onclick=function(e){e.stopPropagation();upd("cargo",b.dataset.untrip,{trip:""});renderAll()}});
-  $("trSave").onclick=function(){upd("trips",t,{name:$("trN").value.trim()||t.name,d:$("trD").value,driver:$("trDr").value.trim(),phone:normPhone($("trPh").value)||$("trPh").value.trim(),note:$("trNote").value.trim()});renderAll();toast("Сохранено")};
+  autoSave(["trN","trD","trDr","trPh","trNote"],function(){upd("trips",t,{name:$("trN").value.trim()||t.name,d:$("trD").value,driver:$("trDr").value.trim(),phone:normPhone($("trPh").value)||$("trPh").value.trim(),note:$("trNote").value.trim()})});
   if($("trDel"))$("trDel").onclick=async function(){if(!await ask("Удалить рейс «"+t.name+"»?","Грузы останутся, просто без рейса.","Удалить",true))return;
     snap("удаление рейса");S.cargo.forEach(function(c){if(c.trip===id)upd("cargo",c,{trip:""},true)});del("trips",id);closeDrawer();renderAll();toast("Рейс удалён",undo)};
 }
@@ -1734,7 +1747,10 @@ function openClient(code,tab){
       (M?(ag?'<div class="fld"><label>Ваш доход с агента, $/кг</label><input id="csAgK" type="number" step="0.01" value="'+esc(c.agK)+'" placeholder="общий '+S.cfg.agK+'"><div class="mut" style="font-size:11.5px">для старых файлов без агентской цены</div></div>':
         '<div class="fld"><label>Наценка клиенту, $/кг</label><input id="csMk" type="number" step="0.01" value="'+esc(c.mkK)+'" placeholder="общая '+S.cfg.mkK+'"></div><div class="fld"><label>Наценка, $/м³</label><input id="csMm" type="number" step="0.5" value="'+esc(c.mkM)+'" placeholder="общая '+S.cfg.mkM+'"></div>'):'')+
       '</div><div class="fld" style="margin-top:10px"><label>Заметка</label><textarea id="csNote" rows="2"'+(E?"":" disabled")+'>'+esc(c.note||"")+'</textarea></div>'+
-      (E?'<div class="row" style="margin-top:12px"><button class="btn" id="csSave">Сохранить</button></div>':'')+'</div>'+
+      (E?'<div class="row" style="margin-top:12px">'+SAVED_HTML+'</div>':'')+'</div>'+
+      (C&&E?'<div class="card"><div class="ch"><div><h3>Себестоимость для '+esc(code)+'</h3><div class="cs">Если заполнить — для всех накладных этого '+(ag?"агента":"клиента")+' ваша себестоимость считается по этим ставкам, а не по общей таблице и не по цене из счёта. Пусто — как обычно</div></div></div>'+
+        '<div class="grid g2"><div class="fld"><label>Себестоимость, $/кг</label><input id="csCk" type="number" step="0.01" value="'+esc(c.costK)+'" placeholder="по таблице"></div><div class="fld"><label>Себестоимость, $/м³</label><input id="csCm" type="number" step="0.5" value="'+esc(c.costM)+'" placeholder="по таблице"></div></div>'+
+        '<div class="row" style="margin-top:10px">'+SAVED_HTML+'</div></div>':'')+
       (E?'<div class="card"><div class="ch"><div><h3>Вход в личный кабинет</h3><div class="cs">'+(c.ph?"PIN задан. Клиент входит: код "+esc(code)+" + PIN.":"PIN не задан — клиент не может войти.")+'</div></div></div>'+
         '<div class="row"><input class="in" id="csPin" placeholder="Новый PIN (4–8 цифр)" inputmode="numeric" style="max-width:220px"><button class="btn g sm" id="csPinGen">Придумать</button><button class="btn sm" id="csPinSave">Сохранить PIN</button></div>'+
         '<div class="mut" style="font-size:12px;margin-top:8px">После сохранения отправьте клиенту PIN и ссылку на сайт в WhatsApp.</div></div>':'')+
@@ -1746,9 +1762,10 @@ function openClient(code,tab){
   if($("ccSend"))$("ccSend").onclick=function(){sendForCode(code)};
   if($("ccPay"))$("ccPay").onclick=function(){payModal(code)};
   $$("[data-delpay]").forEach(function(b){b.onclick=async function(){if(!await ask("Удалить оплату?","","Удалить",true))return;snap("удаление оплаты");del("fin",b.dataset.delpay);renderAll();toast("Оплата удалена",undo)}});
-  if($("csSave"))$("csSave").onclick=function(){var p={name:$("csN").value.trim(),phone:normPhone($("csP").value)||$("csP").value.trim(),city:$("csCity").value.trim(),type:$("csT").value,note:$("csNote").value.trim()};
+  if($("csN")&&E)autoSave(["csN","csP","csCity","csT","csNote","csMk","csMm","csAgK"],function(){var p={name:$("csN").value.trim(),phone:normPhone($("csP").value)||$("csP").value.trim(),city:$("csCity").value.trim(),type:$("csT").value,note:$("csNote").value.trim()};
     if($("csMk")){p.mkK=$("csMk").value===""?"":+$("csMk").value;p.mkM=$("csMm").value===""?"":+$("csMm").value}if($("csAgK"))p.agK=$("csAgK").value===""?"":+$("csAgK").value;
-    upd("clients",c,p);renderAll();toast("Сохранено")};
+    upd("clients",c,p)});
+  if($("csCk"))autoSave(["csCk","csCm"],function(){upd("clients",c,{costK:$("csCk").value===""?"":+$("csCk").value,costM:$("csCm").value===""?"":+$("csCm").value})});
   if($("csPinGen"))$("csPinGen").onclick=function(){$("csPin").value=String(Math.floor(1000+Math.random()*9000))};
   if($("csPinSave"))$("csPinSave").onclick=async function(){var pin=$("csPin").value.trim();if(!/^\d{4,8}$/.test(pin))return toast("PIN — от 4 до 8 цифр");
     upd("clients",c,{ph:await clientHash(code,pin)});renderAll();
@@ -2225,8 +2242,9 @@ function renderCab(){
   // та же вкладка после обновления страницы — без повторного входа
   try{var me=JSON.parse(sessionStorage.getItem("srb:me")||"null");
     if(me){var u=(S.cfg.users||[]).find(function(x){return String(x.login).toLowerCase()===String(me.login).toLowerCase()});if(u)enter(u,me.master?{master:true}:{})}}catch(e){}
-  setInterval(function(){if(ME&&gsOn()&&!document.hidden)sync(true)},120000);
-  document.addEventListener("visibilitychange",function(){if(!document.hidden&&ME&&gsOn())sync(true)});
+  setInterval(function(){if(ME&&gsOn()&&!document.hidden)sync(true)},30000);
+  document.addEventListener("visibilitychange",function(){if(!ME||!gsOn())return;if(document.hidden){if(DIRTY){clearTimeout(SYNC_T);sync(true)}}else sync(true)});
+  window.addEventListener("beforeunload",function(e){if(ME&&gsOn()&&DIRTY){clearTimeout(SYNC_T);sync(true);e.preventDefault();e.returnValue=""}});
   window.addEventListener("online",function(){if(ME&&gsOn())sync(true)});
 })();
 
