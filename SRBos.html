@@ -986,7 +986,13 @@ async function push(){
 /* настройки: свежее побеждает; локальные отпечатки паролей не теряем */
 function cfgOut(){var c=JSON.parse(JSON.stringify(S.cfg));(c.users||[]).forEach(function(u){delete u.pin});return c}
 function applyRemoteCfg(rc){
-  if(!rc||String(rc._u||"")<=String(S.cfg._u||""))return false;
+  if(rc&&String(rc._u||"")<=String(S.cfg._u||"")){
+    var have={};(S.cfg.users||[]).forEach(function(u){have[String(u.login).toLowerCase()]=1});
+    var add_=(rc.users||[]).filter(function(u){return u.login&&!have[String(u.login).toLowerCase()]});
+    if(add_.length){S.cfg.users=(S.cfg.users||[]).concat(add_);S.cfg._u=nowISO()}
+    return false;
+  }
+  if(!rc)return false;
   var ph={};(S.cfg.users||[]).forEach(function(u){if(u.ph)ph[String(u.login).toLowerCase()]=u.ph});
   Object.keys(rc).forEach(function(k){if(k==="cats"&&!rc.cats)return;S.cfg[k]=rc[k]});
   (S.cfg.users||[]).forEach(function(u){if(!u.ph&&ph[String(u.login).toLowerCase()])u.ph=ph[String(u.login).toLowerCase()]});
@@ -1229,14 +1235,18 @@ async function staffLogin(login,pw){
         var me=(S.cfg.users||[]).find(function(x){return String(x.login).toLowerCase()===lg});save(true);return enter(me||{login:lg,n:login,r:"",p:[]})}
       if(j.error==="no_users"&&!local)return firstRun(login,pw);
       if(j.error&&!local)throw new Error(j.error);
-    }catch(e){if(!local)throw e}
+    }catch(e){
+      // таблица недоступна, а на этом устройстве ещё никого нет — даём войти без таблицы, подключим позже
+      if(!local&&!(S.cfg.users||[]).length){S.gs.err=e.message;return firstRun(login,pw,e.message)}
+      if(!local)throw e}
   }
   if(local)return enter(local);
   if(!(S.cfg.users||[]).length)return firstRun(login,pw);
   throw new Error("Неверный логин или пароль");
 }
-function firstRun(login,pw){
+function firstRun(login,pw,netErr){
   modal('<h3>Первый запуск</h3><div class="mut" style="margin-bottom:14px">Создаём владельца системы. Потом в Настройках добавите сотрудников с их правами.</div>'+
+    (netErr?'<div class="tag amber" style="white-space:normal;line-height:1.45;padding:9px 12px;border-radius:10px;margin-bottom:12px">Таблица пока недоступна: '+esc(netErr)+'. Можно войти и работать на этом устройстве — таблицу подключите потом в Настройках.</div>':'')+
     '<div class="col"><div class="fld"><label>Ваше имя</label><input id="frName" placeholder="Например: Азамат"></div>'+
     '<div class="fld"><label>Логин</label><input id="frLogin" value="'+esc(login)+'"></div>'+
     '<div class="fld"><label>Пароль</label><input id="frPass" type="password" value="'+esc(pw)+'"></div>'+
@@ -1246,8 +1256,9 @@ function firstRun(login,pw){
     var n=$("frName").value.trim(),l=$("frLogin").value.trim().toLowerCase(),p=$("frPass").value,t=$("frTok").value.trim();
     if(!n||!l||p.length<4){$("frErr").textContent="Заполните имя, логин и пароль (от 4 символов)";return}
     var u={login:l,n:n,r:"owner",p:ROLES.owner.p.slice(),ph:await userHash(l,p)};
-    if(t){S.gs.token=t;try{var j=await gsFetch(S.gs.url+"?token="+encodeURIComponent(t));if(j.error)throw new Error(j.error);protoOk(j);
+    if(t&&!netErr){S.gs.token=t;try{var j=await gsFetch(S.gs.url+"?token="+encodeURIComponent(t));if(j.error)throw new Error(j.error);protoOk(j);
       var m=(j.meta||[]).find(function(r){return r.k==="cfg"});if(m&&m.v)applyRemoteCfg(JSON.parse(m.v))}catch(e){$("frErr").textContent=e.message;S.gs.token="";return}}
+    if(t&&netErr)S.gs.token=t;
     S.cfg.users=(S.cfg.users||[]).filter(function(x){return x.login!==l});S.cfg.users.push(u);cfgTouch();closeModal();enter(u,t?{master:true}:{});
   };
 }
